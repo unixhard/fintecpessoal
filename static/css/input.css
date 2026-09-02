@@ -808,3 +808,417 @@ html.dark .app-shell .ai-report strong {
   color: var(--color-white, #fff);
 }
 
+/* ========================================================================== *
+ *  LANDING PAGE (aquisição) — página pública /; escopo .landing para não
+ *  afetar a aplicação interna. Mobile-first, leve, dark-aware (html.dark),
+ *  com respeito a prefers-reduced-motion.
+ *
+ *  MELHORIA (performance): este arquivo é a *fonte* do Tailwind. Em produção
+ *  o static/css/tailwind.css (`?v=`) deve vir de um build com purge + minify
+ *  (npm run tailwind:build — já gera --minify). Fontes, se custom, devem usar
+ *  font-display: swap para evitar bloqueio de render.
+ * ========================================================================== */
+.landing {
+  background: var(--color-white, #fff);
+  color: var(--color-surface-900, #111827);
+  font-feature-settings: "kern" 1;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+html.dark .landing {
+  background: var(--color-surface-950, #0b1220);
+  color: #f1f5f9;
+}
+.landing * { box-sizing: border-box; }
+.landing a { text-decoration: none; }
+
+/* ---- Layout helpers ---- */
+.landing .lp-wrap { width: 100%; max-width: 1180px; margin-inline: auto; padding-inline: 1.25rem; }
+@media (min-width: 640px) { .landing .lp-wrap { padding-inline: 2rem; } }
+
+/* ---- Buttons (escopo landing, reusando os tokens) ---- */
+.landing .lp-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem;
+  font-weight: 700; border-radius: 999px; line-height: 1; cursor: pointer;
+  transition: transform 0.18s ease-out, box-shadow 0.22s ease-out, background 0.22s ease-out, border-color 0.22s ease-out;
+}
+.landing .lp-btn:focus-visible { outline: 3px solid var(--color-brand-500, #9a87fd); outline-offset: 3px; }
+.landing .lp-btn-lg { padding: 1.05rem 1.85rem; font-size: 1rem; }
+.landing .lp-btn-md { padding: 0.75rem 1.3rem; font-size: 0.875rem; }
+.landing .lp-btn-primary {
+  color: #fff; background: var(--color-brand-600, #7a5cf5);
+  box-shadow: 0 12px 26px -10px rgb(122 92 245 / 0.6);
+}
+.landing .lp-btn-primary:hover { background: var(--color-brand-700, #6b4dec); transform: translateY(-2px); box-shadow: 0 16px 32px -12px rgb(122 92 245 / 0.7); }
+.landing .lp-btn-primary:active { transform: translateY(0); }
+.landing .lp-btn-ghost {
+  color: var(--color-surface-700, #475467); border: 1px solid var(--color-surface-200, #e7eaee); background: #fff;
+}
+html.dark .landing .lp-btn-ghost { color: #e7eaee; background: var(--color-surface-900, #111827); border-color: var(--color-surface-700, #475467); }
+.landing .lp-btn-ghost:hover { border-color: var(--color-surface-300, #d7dbe1); transform: translateY(-1px); }
+
+/* MELHORIA (C): seta animada nos CTAs — desliza para a direita no hover */
+.landing .lp-btn .lp-arrow { transition: transform 0.22s ease-out; }
+.landing .lp-btn:hover .lp-arrow { transform: translateX(4px); }
+
+/* ---- Eyebrow ---- */
+.landing .lp-eyebrow {
+  display: inline-flex; align-items: center; gap: 0.55rem;
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--color-brand-700, #6b4dec); padding: 0.45rem 0.9rem; border-radius: 999px;
+  background: var(--color-brand-50, #f3f0ff); border: 1px solid var(--color-brand-100, #e9e3ff);
+}
+html.dark .landing .lp-eyebrow { color: var(--color-brand-300, #bda9ff); background: rgb(154 135 253 / .12); border-color: rgb(154 135 253 / .24); }
+
+/* ---- Header ---- */
+.landing .lp-header {
+  position: sticky; top: 0; z-index: 60; border-bottom: 1px solid transparent;
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+html.dark .landing .lp-header { background: transparent; }
+.landing .lp-header.is-scrolled {
+  background: rgb(255 255 255 / 0.82);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border-color: var(--color-surface-100, #f1f5f9); box-shadow: 0 6px 24px -18px rgb(17 24 39 / .2);
+}
+html.dark .landing .lp-header.is-scrolled { background: rgb(11 18 32 / 0.82); border-color: rgb(71 84 103 / .5); }
+.landing .lp-logo { font-weight: 800; letter-spacing: -0.02em; color: var(--color-ink, #191714); }
+html.dark .landing .lp-logo { color: #fff; }
+.landing .lp-logo .dot { color: var(--color-pink-500, #fe3e6d); }
+.landing .lp-nav a {
+  position: relative; color: var(--color-surface-600, #64748b); font-weight: 600; font-size: 0.875rem;
+  padding-block: 0.25rem; transition: color 0.2s ease;
+}
+html.dark .landing .lp-nav a { color: #9eacbd; }
+.landing .lp-nav a::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: 99px;
+  background: var(--color-brand-500, #9a87fd); transform: scaleX(0); transform-origin: left;
+  transition: transform 0.25s ease;
+}
+.landing .lp-nav a:hover { color: var(--color-surface-900, #111827); }
+html.dark .landing .lp-nav a:hover { color: #fff; }
+.landing .lp-nav a:hover::after { transform: scaleX(1); }
+.landing .lp-nav a:focus-visible { outline: 3px solid var(--color-brand-500, #9a87fd); outline-offset: 4px; border-radius: 4px; }
+
+/* ---- Hero ---- */
+.landing .lp-hero {
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(820px 360px at 85% -10%, rgb(154 135 253 / 0.16), transparent 62%),
+    radial-gradient(600px 300px at -8% 12%, rgb(254 62 109 / 0.08), transparent 60%),
+    var(--color-white, #fff);
+}
+html.dark .landing .lp-hero {
+  background:
+    radial-gradient(820px 360px at 85% -10%, rgb(122 92 245 / 0.28), transparent 62%),
+    radial-gradient(600px 300px at -8% 12%, rgb(239 45 92 / 0.12), transparent 60%),
+    var(--color-surface-950, #0b1220);
+}
+/* MELHORIA (A): assinatura gráfica — blur de marca + grain sutil */
+.landing .lp-hero::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(420px 260px at 12% 8%, rgb(154 135 253 / 0.30), transparent 70%),
+    radial-gradient(500px 320px at 90% 82%, rgb(254 62 109 / 0.14), transparent 70%);
+  -webkit-filter: blur(14px); filter: blur(14px);
+}
+.landing .lp-hero::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+html.dark .landing .lp-hero::after { mix-blend-mode: screen; }
+.landing .lp-hero > .lp-wrap { position: relative; z-index: 1; }
+.landing .lp-hero-title {
+  font-size: clamp(2.2rem, 6vw, 3.8rem); line-height: 1.04; letter-spacing: -0.03em; font-weight: 800;
+  color: var(--color-surface-900, #111827);
+}
+html.dark .landing .lp-hero-title { color: #fff; }
+.landing .lp-hero-title .grad {
+  background: linear-gradient(110deg, var(--color-brand-600, #7a5cf5), var(--color-pink-500, #fe3e6d));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.landing .lp-hero-sub { color: var(--color-surface-600, #475467); font-size: clamp(1.02rem, 2.6vw, 1.22rem); line-height: 1.6; }
+html.dark .landing .lp-hero-sub { color: #9eacbd; }
+.landing .lp-microcopy { color: var(--color-surface-400, #9ca3af); font-size: 0.8rem; }
+html.dark .landing .lp-microcopy { color: #6b7a90; }
+
+/* ---- Hero: composição de produto (dashboard + painéis) ---- */
+.landing .lp-hero-art { position: relative; perspective: 1400px; }
+.landing .lp-dash {
+  position: relative; z-index: 2; border: 1px solid var(--color-surface-200, #e7eaee);
+  border-radius: 1.4rem; background: var(--color-surface-50, #f9fafb);
+  box-shadow: 0 30px 70px -30px rgb(17 24 39 / 0.35); overflow: hidden;
+}
+html.dark .landing .lp-dash { background: var(--color-surface-900, #111827); border-color: rgb(71 84 103 / .6); }
+.landing .lp-dash-bar {
+  display: flex; align-items: center; gap: 0.4rem; padding: 0.7rem 1rem;
+  background: var(--color-surface-900, #111827);
+}
+.landing .lp-dash-bar i { width: 8px; height: 8px; border-radius: 99px; display: inline-block; background: var(--color-surface-400, #9ca3af); }
+.landing .lp-dot-row { display: flex; align-items: center; gap: 0.55rem; }
+.landing .lp-card {
+  background: #fff; border: 1px solid var(--color-surface-200, #e7eaee); border-radius: 1rem; padding: 1rem;
+}
+html.dark .landing .lp-card { background: var(--color-surface-850, #1c2434); border-color: rgb(51 58 69 / .8); }
+/* MELHORIA (A): números com tabular-nums e cor de destaque no mockup */
+.landing .lp-num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1, "lnum" 1; }
+.landing .lp-chart { display: flex; align-items: flex-end; gap: 0.4rem; height: 120px; }
+.landing .lp-chart i {
+  flex: 1; border-radius: 5px 5px 2px 2px; background: var(--color-brand-200, #d5caff);
+  transition: height 0.7s cubic-bezier(0.22, 1, 0.36, 1); height: 30%; transform-origin: bottom;
+}
+html.dark .landing .lp-chart i { background: var(--color-brand-500, #9a87fd); }
+.landing .lp-chart i.hot { background: var(--color-pink-500, #fe3e6d); }
+.landing .lp-chart i.hi { background: var(--color-brand-500, #9a87fd); }
+.landing .lp-float {
+  position: absolute; z-index: 3; background: #fff; border: 1px solid var(--color-surface-200, #e7eaee);
+  border-radius: 0.9rem; box-shadow: 0 18px 40px -18px rgb(17 24 39 / 0.35); padding: 0.7rem 0.9rem;
+  animation: lp-float 6s ease-in-out infinite;
+}
+html.dark .landing .lp-float { background: var(--color-surface-900, #111827); border-color: rgb(71 84 103 / .6); color: #e7eaee; }
+.landing .lp-float--auditor { top: -1.4rem; right: -0.8rem; transform: rotate(2deg); animation-delay: 0.6s; }
+.landing .lp-float--card { bottom: -1.2rem; left: -0.9rem; transform: rotate(-2deg); animation-delay: 1.4s; }
+.landing .lp-float--insight { top: 34%; left: -1rem; animation-delay: 2.2s; }
+@keyframes lp-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+
+/* ---- Faixa de confiança ---- */
+.landing .lp-trust { border-block: 1px solid var(--color-surface-100, #f1f5f9); background: var(--color-surface-50, #f9fafb); }
+html.dark .landing .lp-trust { background: var(--color-surface-900, #111827); border-color: rgb(51 58 69 / .6); }
+.landing .lp-trust-list { display: grid; gap: 0.7rem 1rem; grid-template-columns: repeat(2, minmax(0,1fr)); }
+@media (min-width: 760px) { .landing .lp-trust-list { grid-template-columns: repeat(5, minmax(0,1fr)); } }
+.landing .lp-trust-list span { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.8rem; font-weight: 600; color: var(--color-surface-600, #475467); }
+html.dark .landing .lp-trust-list span { color: #9eacbd; }
+/* MELHORIA (A/D): check em SVG dentro de chip verde (decorativo, texto é o rótulo acessível) */
+.landing .lp-check {
+  display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 99px; flex: none;
+  color: #fff; background: var(--color-success-500, #22c55e);
+}
+
+/* ---- Seções genéricas ---- */
+.landing .lp-section { padding-block: clamp(3.5rem, 9vw, 6rem); }
+/* MELHORIA (A): ritmo — seções-chave com mais "respiro" */
+.landing .lp-section--breath { padding-block: clamp(4.5rem, 12vw, 8.5rem); }
+.landing .lp-kicker { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-brand-700, #6b4dec); }
+html.dark .landing .lp-kicker { color: var(--color-brand-300, #bda9ff); }
+.landing .lp-h2 { font-size: clamp(1.75rem, 4.5vw, 2.7rem); line-height: 1.1; letter-spacing: -0.02em; font-weight: 800; color: var(--color-surface-900, #111827); }
+html.dark .landing .lp-h2 { color: #fff; }
+.landing .lp-lead { color: var(--color-surface-600, #475467); line-height: 1.65; }
+html.dark .landing .lp-lead { color: #9eacbd; }
+
+/* ---- Problema ---- */
+.landing .lp-problem { background: var(--color-surface-50, #f9fafb); }
+html.dark .landing .lp-problem { background: var(--color-surface-900, #111827); }
+.landing .lp-chip {
+  display: inline-flex; align-items: center; gap: 0.5rem; background: #fff; border: 1px solid var(--color-surface-200, #e7eaee);
+  border-radius: 0.9rem; padding: 0.7rem 0.95rem; font-size: 0.85rem; font-weight: 600; color: var(--color-surface-700, #475467);
+}
+html.dark .landing .lp-chip { background: var(--color-surface-850, #1c2434); color: #cfd8e3; border-color: rgb(51 58 69 / .8); }
+.landing .lp-chip .x { color: var(--color-danger-400, #f87171); font-weight: 800; }
+
+/* MELHORIA (A): cards de citação do problema — aspas grandes, rotação, autor */
+.landing .lp-quote {
+  position: relative; background: #fff; border: 1px solid var(--color-surface-200, #e7eaee);
+  border-radius: 1.1rem; padding: 1.5rem 1.5rem 1.25rem; box-shadow: 0 18px 40px -30px rgb(17 24 39 / .35);
+  transition: transform 0.22s ease-out, box-shadow 0.25s ease-out;
+}
+html.dark .landing .lp-quote { background: var(--color-surface-850, #1c2434); border-color: rgb(51 58 69 / .8); }
+.landing .lp-quote::before {
+  content: "“"; position: absolute; top: -.4rem; left: 1rem; font-size: 3.4rem; line-height: 1;
+  color: var(--color-brand-400, #a895ff); font-weight: 800; pointer-events: none;
+}
+.landing .lp-quote--rot-l { transform: rotate(-0.8deg); }
+.landing .lp-quote--rot-r { transform: rotate(0.8deg); }
+.landing .lp-quote:hover { transform: rotate(0) translateY(-3px); box-shadow: 0 26px 50px -30px rgb(17 24 39 / .45); }
+.landing .lp-quote blockquote { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--color-surface-900, #111827); }
+html.dark .landing .lp-quote blockquote { color: #fff; }
+.landing .lp-quote figcaption { margin-top: 0.9rem; display: flex; align-items: center; gap: 0.6rem; }
+.landing .lp-quote .lp-avatar {
+  flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 99px;
+  font-weight: 800; font-size: 0.66rem; color: #fff; background: linear-gradient(135deg, var(--color-brand-500, #9a87fd), var(--color-pink-500, #fe3e6d));
+}
+.landing .lp-quote .lp-meta { font-size: 0.72rem; font-weight: 600; color: var(--color-surface-400, #9ca3af); }
+
+/* ---- Cards de recurso / pilares ---- */
+.landing .lp-pillar {
+  border: 1px solid var(--color-surface-200, #e7eaee); border-radius: 1.1rem; padding: 1.5rem;
+  background: #fff; transition: transform 0.22s ease-out, box-shadow 0.25s ease-out, border-color 0.22s ease-out;
+}
+html.dark .landing .lp-pillar { background: var(--color-surface-850, #1c2434); border-color: rgb(51 58 69 / .8); }
+.landing .lp-pillar:hover { transform: translateY(-4px); box-shadow: 0 26px 50px -30px rgb(17 24 39 / .35); border-color: var(--color-brand-300, #bda9ff); }
+.landing .lp-pillar-ic {
+  display: grid; place-items: center; width: 46px; height: 46px; border-radius: 0.85rem; color: var(--color-brand-700, #6b4dec);
+  background: var(--color-brand-50, #f3f0ff); transition: transform 0.22s ease-out, background 0.22s ease-out, color 0.22s ease-out;
+}
+html.dark .landing .lp-pillar-ic { color: var(--color-brand-300, #bda9ff); background: rgb(154 135 253 / .14); }
+.landing .lp-pillar:hover .lp-pillar-ic { transform: scale(1.06) rotate(-3deg); }
+.landing .lp-pillar svg { width: 22px; height: 22px; display: block; }
+
+/* ---- AJUSTE (5): pilares compactos (ícone + palavra-chave) ---- */
+.landing .lp-pills { row-gap: 0.6rem; }
+.landing .lp-pill {
+  display: inline-flex; align-items: center; gap: 0.55rem;
+  border: 1px solid var(--color-surface-200, #e7eaee); border-radius: 999px; padding: 0.5rem 1rem 0.5rem 0.6rem;
+  background: #fff; font-weight: 700; font-size: 0.9rem; color: var(--color-surface-900, #111827);
+  transition: transform 0.22s ease-out, box-shadow 0.22s ease-out, border-color 0.22s ease-out;
+}
+html.dark .landing .lp-pill { background: var(--color-surface-850, #1c2434); border-color: rgb(51 58 69 / .8); color: #f1f5f9; }
+.landing .lp-pill:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -26px rgb(17 24 39 / .4); border-color: var(--color-brand-300, #bda9ff); }
+.landing .lp-pill-ic {
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 99px;
+  color: var(--color-brand-700, #6b4dec); background: var(--color-brand-50, #f3f0ff);
+}
+html.dark .landing .lp-pill-ic { color: var(--color-brand-300, #bda9ff); background: rgb(154 135 253 / .14); }
+.landing .lp-pill svg { width: 14px; height: 14px; display: block; }
+
+/* ---- Timeline passado→presente→futuro ---- */
+.landing .lp-timeline { position: relative; display: grid; gap: 0; grid-template-columns: 1fr; margin-top: 1.5rem; }
+@media (min-width: 860px) {
+  .landing .lp-timeline { grid-template-columns: repeat(4, minmax(0,1fr)); }
+  .landing .lp-timeline::before {
+    content: ""; position: absolute; top: 13px; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--color-surface-200, #e7eaee), var(--color-brand-400, #a895ff));
+  }
+}
+.landing .lp-tl-item { position: relative; padding: 0 1rem 0 2.4rem; }
+@media (min-width: 860px) { .landing .lp-tl-item { padding: 2.2rem 1.25rem 0; } }
+.landing .lp-tl-dot {
+  display: grid; place-items: center; width: 28px; height: 28px; border-radius: 99px;
+  background: var(--color-brand-500, #9a87fd); color: #fff; font-weight: 800; font-size: 0.75rem; position: absolute; top: 0; left: 0;
+}
+@media (min-width: 860px) { .landing .lp-tl-dot { top: 0; left: 1.25rem; } }
+.landing .lp-tl-item h4 { font-weight: 800; font-size: 0.95rem; color: var(--color-surface-900, #111827); }
+html.dark .landing .lp-tl-item h4 { color: #fff; }
+.landing .lp-tl-item p { font-size: 0.85rem; color: var(--color-surface-600, #475467); }
+html.dark .landing .lp-tl-item p { color: #9eacbd; }
+/* ---- AJUSTE (9): reforço da progressão Passado → Presente → Futuro ---- */
+.landing .lp-tl-phase {
+  display: inline-block; margin-bottom: 0.45rem; font-size: 0.66rem; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-brand-600, #7c5cf6);
+}
+html.dark .landing .lp-tl-phase { color: var(--color-brand-300, #bda9ff); }
+.landing .lp-tl-item { position: relative; }
+.landing .lp-tl-arrow {
+  position: absolute; top: 1px; right: -14px; display: grid; place-items: center;
+  width: 24px; height: 24px; color: var(--color-surface-300, #cbd5e1); z-index: 2;
+}
+html.dark .landing .lp-tl-arrow { color: #4b5a6d; }
+.landing .lp-tl-arrow svg { width: 16px; height: 16px; display: block; }
+@media (max-width: 859px) { .landing .lp-tl-arrow { display: none; } }
+
+/* ---- Segurança ---- */
+.landing .lp-sec-card { display: flex; gap: 1rem; align-items: flex-start; }
+.landing .lp-sec-ic {
+  flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 0.85rem;
+  color: var(--color-success-600, #16a34a); background: var(--color-success-50, #ecfdf3);
+  transition: transform 0.22s ease-out;
+}
+html.dark .landing .lp-sec-ic { color: var(--color-success-400, #4ade80); background: rgb(34 197 94 / .14); }
+.landing .lp-sec-card:hover .lp-sec-ic { transform: scale(1.06); }
+.landing .lp-sec-ic svg { width: 22px; height: 22px; display: block; }
+
+/* ---- Como funciona ---- */
+.landing .lp-steps { display: grid; gap: 1.25rem; grid-template-columns: 1fr; counter-reset: step; }
+@media (min-width: 760px) { .landing .lp-steps { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+.landing .lp-step {
+  position: relative; border: 1px solid var(--color-surface-200, #e7eaee); border-radius: 1rem; padding: 1.4rem; background: #fff;
+  transition: transform 0.22s ease-out, box-shadow 0.25s ease-out, border-color 0.22s ease-out;
+}
+html.dark .landing .lp-step { background: var(--color-surface-850, #1c2434); border-color: rgb(51 58 69 / .8); }
+.landing .lp-step:hover { transform: translateY(-3px); box-shadow: 0 22px 44px -30px rgb(17 24 39 / .35); }
+.landing .lp-step::before {
+  counter-increment: step; content: "0" counter(step); font-weight: 800; font-size: 0.8rem; color: var(--color-brand-600, #7a5cf5);
+}
+.landing .lp-step h4 { margin-top: 0.6rem; font-weight: 800; font-size: 1rem; color: var(--color-surface-900, #111827); }
+html.dark .landing .lp-step h4 { color: #fff; }
+.landing .lp-step p { margin-top: 0.35rem; font-size: 0.85rem; color: var(--color-surface-600, #475467); }
+html.dark .landing .lp-step p { color: #9eacbd; }
+
+/* ---- FAQ ---- */
+.landing .lp-faq details {
+  border: 1px solid var(--color-surface-200, #e7eaee); border-radius: 0.9rem; background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+html.dark .landing .lp-faq details { background: var(--color-surface-850, #1c2434); border-color: rgb(51 58 69 / .8); }
+.landing .lp-faq details[open] { border-color: var(--color-brand-300, #bda9ff); box-shadow: 0 14px 30px -26px rgb(122 92 245 / .4); }
+.landing .lp-faq summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.25rem;
+  cursor: pointer; font-weight: 700; font-size: 0.95rem; color: var(--color-surface-900, #111827); list-style: none;
+  transition: color 0.2s ease;
+}
+html.dark .landing .lp-faq summary { color: #fff; }
+.landing .lp-faq summary::-webkit-details-marker { display: none; }
+/* MELHORIA (D): highlight de foco acessível no summary */
+.landing .lp-faq summary:focus-visible { outline: 3px solid var(--color-brand-500, #9a87fd); outline-offset: -3px; border-radius: 0.9rem; }
+.landing .lp-faq summary .ic {
+  display: grid; place-items: center; width: 24px; height: 24px; flex: none; color: var(--color-brand-600, #7a5cf5);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease;
+}
+.landing .lp-faq details[open] summary .ic { transform: rotate(135deg); color: var(--color-pink-500, #fe3e6d); }
+.landing .lp-faq details[open] summary { color: var(--color-brand-700, #6b4dec); }
+html.dark .landing .lp-faq details[open] summary { color: var(--color-brand-300, #bda9ff); }
+.landing .lp-faq .lp-faq-body { padding: 0 1.25rem 1.15rem; color: var(--color-surface-600, #475467); font-size: 0.9rem; line-height: 1.65; }
+html.dark .landing .lp-faq .lp-faq-body { color: #9eacbd; }
+
+/* ---- CTA final (MELHORIA: botão branco com hover expressivo) ---- */
+.landing .lp-cta {
+  border-radius: 1.6rem; overflow: hidden; position: relative;
+  background:
+    radial-gradient(700px 260px at 15% 0%, rgb(255 255 255 / 0.14), transparent 60%),
+    linear-gradient(120deg, var(--color-brand-700, #6b4dec), var(--color-pink-600, #ef2d5c));
+  color: #fff;
+}
+.landing .lp-cta-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem;
+  background: #fff; color: var(--color-brand-700, #6b4dec); font-weight: 800;
+  border-radius: 999px; padding: 1.05rem 1.9rem; font-size: 1rem; line-height: 1;
+  box-shadow: 0 14px 30px -10px rgb(0 0 0 / .35);
+  transition: transform 0.18s ease-out, box-shadow 0.25s ease-out;
+}
+.landing .lp-cta-btn:hover { transform: scale(1.04); box-shadow: 0 22px 44px -12px rgb(0 0 0 / .45); }
+.landing .lp-cta-btn:active { transform: scale(0.99); }
+.landing .lp-cta-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.landing .lp-cta-btn .lp-arrow { transition: transform 0.22s ease-out; }
+.landing .lp-cta-btn:hover .lp-arrow { transform: translateX(4px); }
+.landing .lp-cta-soft {
+  color: rgb(255 255 255 / 0.92); font-size: 0.8rem;
+}
+.landing .lp-cta-strong { color: #fff; }
+
+/* ---- Reveal on scroll (leve, MELHORIA: stagger via custom property) ---- */
+.landing [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity 0.55s ease, transform 0.55s ease; transition-delay: var(--rv-delay, 0ms); }
+.landing [data-reveal].is-in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .landing { scroll-behavior: auto; }
+  .landing [data-reveal], .landing .lp-float, .landing .lp-chart i { opacity: 1 !important; transform: none !important; transition: none !important; animation: none !important; }
+}
+
+/* ---- Utilitário: números tabulares (saldo, valores) ---- */
+.landing .lp-token-chip { font-variant-numeric: tabular-nums; }
+
+/* ---- Rodapé ---- */
+.landing .lp-footer { border-top: 1px solid var(--color-surface-100, #f1f5f9); background: #fff; }
+html.dark .landing .lp-footer { background: var(--color-surface-950, #0b1220); border-color: rgb(51 58 69 / .6); }
+.landing .lp-footer a { color: var(--color-surface-600, #64748b); font-size: 0.875rem; transition: color 0.2s ease; }
+html.dark .landing .lp-footer a { color: #9eacbd; }
+.landing .lp-footer a:hover { color: var(--color-surface-900, #111827); }
+html.dark .landing .lp-footer a:hover { color: #fff; }
+.landing .lp-footer a:focus-visible { outline: 3px solid var(--color-brand-500, #9a87fd); outline-offset: 2px; border-radius: 4px; }
+.landing .lp-footer h5 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; color: var(--color-surface-500, #8a97a8); }
+html.dark .landing .lp-footer h5 { color: #7b899b; }
+/* AJUSTE (11): parágrafos do footer com cor explícita e contraste AA em ambos os modos.
+   Antes surface-400 (#9ca3af ~2.9:1 no claro) ficava abaixo de 4.5:1. */
+.landing .lp-footer p { color: var(--color-surface-600, #64748b); }
+html.dark .landing .lp-footer p { color: #9eacbd; }
+
+/* ---- MELHORIA (D): dark mode de texto das utils dentro da landing ----
+   Os utilitários text-surface-* são fixos em dark; sobrepondo-os scoped na
+   .landing mantém o contraste AA quando html.dark (cada conta isolada etc.). */
+html.dark .landing .text-surface-900 { color: #f1f5f9; }
+html.dark .landing .text-surface-800 { color: #e2e8f0; }
+html.dark .landing .text-surface-700 { color: #cfd8e3; }
+html.dark .landing .text-surface-600 { color: #9eacbd; }
+html.dark .landing .text-surface-500 { color: #8a97a8; }
+html.dark .landing .text-surface-400 { color: #6b7a90; }
+

@@ -11,9 +11,11 @@
 
   {# CSS gerado pelo Tailwind (npm run tailwind:build / :watch) #}
   {# ?v=15 quebra o cache do navegador após o redesign visual (Ordem 15) #}
-    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}?v=24">
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}?v=27">
 
   {% block extra_css %}{% endblock %}
+
+  {% block extra_head %}{% endblock %}
 
   {# Aplica o tema escuro antes do primeiro render (evita "flash" e mantém tudo local). #}
   <script>
