@@ -1,0 +1,67 @@
+{% comment %}
+  Gráfico de barras moderno (Neumorfismo 2026) — CSS puro, sem JS/biblioteca.
+  Evolução mensal com gradientes, animação de crescimento e tooltip no hover.
+  Acessível: cada barra tem aria-label + tabela textual alternativa.
+  Uso: {% include "components/chart_bars.html" with buckets=... max_value=... %}
+{% endcomment %}
+{% load money %}
+{% if buckets %}
+<div class="mt-5">
+  <div class="mb-4 flex items-center justify-between">
+    <p class="text-xs font-medium text-surface-500 dark:text-surface-400">Evolução mensal — Receitas × Despesas</p>
+    <div class="flex items-center gap-4 text-theme-xs text-surface-400 dark:text-surface-500">
+      <span class="inline-flex items-center gap-1.5">
+        <span class="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-success-300 to-success-600" aria-hidden="true"></span>Receitas
+      </span>
+      <span class="inline-flex items-center gap-1.5">
+        <span class="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-danger-300 to-danger-600" aria-hidden="true"></span>Despesas
+      </span>
+    </div>
+  </div>
+
+  <div class="rounded-2xl px-2 pb-2 pt-4">
+    <div class="flex items-end gap-1.5 sm:gap-3" role="img" aria-label="Gráfico de barras da evolução mensal de receitas e despesas">
+      {% for b in buckets %}
+      <div class="group flex flex-1 flex-col items-center gap-2">
+        <div class="flex w-full items-end justify-center gap-0.5 sm:gap-1" style="height: 150px" aria-hidden="true">
+          <div class="chart-bar flex h-full w-2.5 items-end sm:w-4">
+            <div
+              class="bar-grow w-full rounded-t-md bg-gradient-to-t from-success-600 to-success-300 transition-all duration-300 group-hover:from-success-700 group-hover:to-success-200"
+              style="height: {{ b.receitas_ratio }}%; animation-delay: {{ forloop.counter0 }}0ms"
+              title="Receitas {{ b.receitas|centavos }}"></div>
+            <span class="bar-tip bottom-full left-1/2 mb-2 whitespace-nowrap rounded-lg bg-surface-900 px-2.5 py-1.5 text-xs font-medium text-surface-100 shadow-float dark:bg-surface-700">
+              Receitas: {{ b.receitas|centavos }}
+            </span>
+          </div>
+          <div class="chart-bar flex h-full w-2.5 items-end sm:w-4">
+            <div
+              class="bar-grow w-full rounded-t-md bg-gradient-to-t from-danger-600 to-danger-300 transition-all duration-300 group-hover:from-danger-700 group-hover:to-danger-200"
+              style="height: {{ b.despesas_ratio }}%; animation-delay: {{ forloop.counter0 }}0ms"
+              title="Despesas {{ b.despesas|centavos }}"></div>
+            <span class="bar-tip bottom-full left-1/2 mb-2 whitespace-nowrap rounded-lg bg-surface-900 px-2.5 py-1.5 text-xs font-medium text-surface-100 shadow-float dark:bg-surface-700">
+              Despesas: {{ b.despesas|centavos }}
+            </span>
+          </div>
+        </div>
+        <span class="text-[10px] font-medium text-surface-400 dark:text-surface-500">{{ b.label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <table class="sr-only">
+    <caption>Evolução mensal ({{ period_label|default:"" }})</caption>
+    <thead><tr><th>Mês</th><th>Receitas</th><th>Despesas</th><th>Resultado</th></tr></thead>
+    <tbody>
+      {% for b in buckets %}
+      <tr>
+        <td>{{ b.label }}</td>
+        <td>{{ b.receitas|centavos }}</td>
+        <td>{{ b.despesas|centavos }}</td>
+        <td>{{ b.saldo|centavos }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}

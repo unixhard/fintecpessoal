@@ -1,0 +1,810 @@
+/*
+  FINTECPESSOAL — Design System
+  =============================
+  Arquivo-fonte do Tailwind CSS (versão 4). É deste arquivo que nascem os
+  estilos. NÃO edite o arquivo `tailwind.css` gerado — ele é sobrescrito
+  pelo build.
+
+  Build:
+    npm run tailwind:build   (gerar CSS minificado de produção)
+    npm run tailwind:watch   (gerar CSS em modo observação para dev)
+
+  Referência visual de dashboard: TailAdmin (layout/estrutura apenas —
+  sem copiar marca, textos ou ativos). Linguagem: limpa, cards brancos
+  com bordas sutis, fundo cinza-claro, acento azul-índigo.
+*/
+
+/* Escaneia arquivos-fonte do Django para gerar apenas o CSS utilizado. */
+@source "../templates/**/*.html";
+@source "../../apps/**/templates/**/*.html";
+
+@import "tailwindcss";
+
+/* Dark mode por classe `.dark` no <html> (escolha do cliente, tudo local).
+   O toggle (JS vanilla embutido no _shell.html) alterna essa classe e
+   persiste a preferência no localStorage. Sem bibliotecas externas. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------ *
+ *  DESIGN TOKENS  (mapeados automaticamente para utilitários Tailwind)
+ *  Usados como: bg-brand-600, text-brand-700, border-surface, etc.
+ * ------------------------------------------------------------------ */
+@theme {
+  /* Tipografia — fonte de sistema (sem download externo, mantém tudo local) */
+  --font-sans: "Avenir Next", "Segoe UI Variable", "Segoe UI", -apple-system,
+    BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji";
+  --font-body: "Avenir Next", "Segoe UI Variable", "Segoe UI", -apple-system,
+    BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: Georgia, "Times New Roman", "Noto Serif", serif;
+
+  /* Marca — lavanda #9a87fd (cor de identidade da marca).
+     Escala derivada para manter bom contraste em botões/links/acentos. */
+  --color-brand-50: #f3f0ff;
+  --color-brand-100: #e9e3ff;
+  --color-brand-200: #d5caff;
+  --color-brand-300: #bda9ff;
+  --color-brand-400: #a895ff;
+  --color-brand-500: #9a87fd;
+  --color-brand-600: #7a5cf5;
+  --color-brand-700: #6b4dec;
+  --color-brand-800: #5a3ecf;
+  --color-brand-900: #4a33ad;
+  --color-brand-950: #2c1d6b;
+
+  /* Tinta grafite e rosa — acentos da landing institucional */
+  --color-ink: #191714;
+  --color-ink-50: #f6f5f4;
+  --color-ink-600: #2a2723;
+  --color-ink-700: #1f1d19;
+  --color-ink-900: #191714;
+  --color-pink-100: #ffe4ea;
+  --color-pink-500: #fe3e6d;
+  --color-pink-600: #ef2d5c;
+
+  /* Cinzas neutros da interface (paleta TailAdmin/gray) */
+  --color-surface-0: #ffffff;
+  --color-surface-50: #f9fafb;
+  --color-surface-100: #f1f5f9;
+  --color-surface-200: #e7eaee;
+  --color-surface-300: #d7dbe1;
+  --color-surface-400: #9ca3af;
+  --color-surface-500: #64748b;
+  --color-surface-600: #475467;
+  --color-surface-700: #333a45;
+  --color-surface-800: #1c2434;
+  --color-surface-900: #111827;
+  --color-surface-950: #0b1220;
+
+  /* Semântica — dinheiro, erros, avisos, informação */
+  --color-success-50: #ecfdf3;
+  --color-success-100: #d1fadf;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-300: #fca5a5;
+  --color-danger-400: #f87171;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+  --color-warning-50: #fffaeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+
+  /* Escala tipográfica de título/nota (assinatura TailAdmin SaaS).
+     Usados como text-title-xs, text-title-sm, text-theme-xs, etc. */
+  --text-title-2xl: 72px;
+  --text-title-2xl--line-height: 90px;
+  --text-title-xl: 60px;
+  --text-title-xl--line-height: 72px;
+  --text-title-lg: 48px;
+  --text-title-lg--line-height: 60px;
+  --text-title-md: 36px;
+  --text-title-md--line-height: 44px;
+  --text-title-sm: 30px;
+  --text-title-sm--line-height: 38px;
+  --text-title-xs: 24px;
+  --text-title-xs--line-height: 32px;
+  --text-theme-xl: 20px;
+  --text-theme-xl--line-height: 30px;
+  --text-theme-sm: 14px;
+  --text-theme-sm--line-height: 20px;
+  --text-theme-xs: 12px;
+  --text-theme-xs--line-height: 18px;
+
+  /* Raio de borda */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+
+  /* Sombras — suaves e discretas */
+  --shadow-soft: 0 1px 2px 0 rgb(16 24 40 / 0.05);
+  --shadow-card: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 6px 16px -8px rgb(16 24 40 / 0.08);
+  --shadow-float: 0 20px 48px -12px rgb(16 24 40 / 0.18);
+  --shadow-theme-xs: 0 1px 2px 0 rgb(16 24 40 / 0.04);
+
+  /* Fundo do conteúdo (cinza-claro, estilo TailAdmin) */
+  --color-canvas: #f1f5f9;
+
+  /* Espaçamento base (1px extra de nitidez) */
+  --spacing: 0.25rem;
+}
+
+/* ------------------------------------------------------------------ *
+ *  ESTADOS / BÁSICOS GLOBAIS
+ * ------------------------------------------------------------------ */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-surface-900);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Dark theme — fundo profundo, texto claro */
+  html.dark body {
+    background-color: var(--color-surface-950);
+    color: var(--color-surface-100);
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+
+  /* Foco visível e acessível em todos os elementos interativos */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+
+  /* Hierarquia tipográfica padrão */
+  h1 { letter-spacing: -0.02em; }
+  h2 { letter-spacing: -0.01em; }
+
+  /* Controles de formulário — estilo base consistente (mobile-first) */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="date"],
+  select,
+  textarea {
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-surface-300);
+    background-color: var(--color-surface-0);
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9375rem;
+    color: var(--color-surface-900);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  input[type="number"]:focus,
+  input[type="tel"]:focus,
+  input[type="url"]:focus,
+  input[type="search"]:focus,
+  input[type="date"]:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--color-brand-600);
+    box-shadow: 0 0 0 3px rgb(154 135 253 / 0.15);
+    background-color: var(--color-surface-0);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-surface-400);
+  }
+
+  /* Dark theme — controles de formulário */
+  html.dark input[type="text"],
+  html.dark input[type="email"],
+  html.dark input[type="password"],
+  html.dark input[type="number"],
+  html.dark input[type="tel"],
+  html.dark input[type="url"],
+  html.dark input[type="search"],
+  html.dark input[type="date"],
+  html.dark select,
+  html.dark textarea {
+    background-color: var(--color-surface-900);
+    border-color: var(--color-surface-700);
+    color: var(--color-surface-100);
+  }
+  html.dark input:focus,
+  html.dark select:focus,
+  html.dark textarea:focus {
+    border-color: var(--color-brand-500);
+    background-color: var(--color-surface-900);
+  }
+
+  /* Dark theme — barra de rolagem */
+  html.dark *::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  html.dark *::-webkit-scrollbar-thumb {
+    background: var(--color-surface-700);
+    border-radius: 9999px;
+    border: 3px solid var(--color-surface-950);
+  }
+  html.dark *::-webkit-scrollbar-thumb:hover {
+    background: var(--color-surface-600);
+  }
+  html.dark *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  COMPONENTES REUTILIZÁVEIS
+ * ------------------------------------------------------------------ */
+@layer components {
+  .container-app {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* ---- Botões ---- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .btn:disabled {
+    @apply cursor-not-allowed opacity-60;
+  }
+  /* Primário — azul-índigo (acento da interface) */
+  .btn-primary {
+    @apply bg-brand-600 text-white shadow-soft;
+  }
+  .btn-primary:hover:not(:disabled) {
+    @apply bg-brand-700;
+  }
+  .btn-primary:active:not(:disabled) {
+    @apply bg-brand-800;
+  }
+  .btn-ghost {
+    @apply border border-surface-200 bg-white text-surface-700 shadow-soft;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    @apply bg-surface-50 text-surface-900;
+  }
+  .btn-dark {
+    @apply bg-ink text-white shadow-soft;
+  }
+  .btn-dark:hover:not(:disabled) {
+    @apply bg-ink-600;
+  }
+  .btn-danger {
+    @apply bg-danger-600 text-white shadow-soft;
+  }
+  .btn-danger:hover:not(:disabled) {
+    @apply bg-danger-700;
+  }
+  .btn-link {
+    @apply bg-transparent text-brand-700;
+  }
+  .btn-link:hover:not(:disabled) {
+    @apply bg-brand-50/60;
+  }
+  .btn-sm {
+    @apply px-3 py-2 text-xs;
+  }
+  .btn-md {
+    @apply px-4 py-2.5 text-sm;
+  }
+  .btn-lg {
+    @apply px-5 py-2.5 text-sm;
+  }
+
+  /* ---- Cartão / painel (estilo TailAdmin: branco, borda sutil, sombra leve) ---- */
+  .panel {
+    @apply rounded-lg border border-surface-200 bg-white shadow-card;
+  }
+
+  /* ---- Cabeçalho de página (display serifado para landing/auth) ---- */
+  .heading-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+  }
+
+  /* Seta à direita no botão — assinatura dos CTAs da landing */
+  .btn-arrow::after {
+    content: "→";
+    font-size: 1.1em;
+    line-height: 1;
+    transition: transform 0.15s ease;
+  }
+  .btn-arrow:hover:not(:disabled)::after {
+    transform: translateX(3px);
+  }
+
+  /* Link de destaque estilo "Saiba mais" */
+  .link-accent {
+    @apply inline-flex items-center gap-1.5 font-semibold text-pink-500;
+    transition: gap 0.15s ease;
+  }
+  .link-accent:hover {
+    gap: 0.5rem;
+  }
+
+  /* ---- Número financeiro (destaque, tabular, forte) ---- */
+  .num {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .num-display {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: var(--color-surface-900);
+    letter-spacing: -0.03em;
+  }
+
+  /* ---- Modo privacidade instantânea (desfoca valores numéricos) ---- */
+  .num,
+  .num-display {
+    transition: filter 0.15s ease;
+  }
+  /* Aplica o blur nos valores quando o usuário ativa o modo no shell.
+     Também cobre os cards de métrica do dashboard marcados com .num. */
+  html.privacy .app-shell .num,
+  html.privacy .app-shell .num-display {
+    filter: blur(7px);
+    user-select: none;
+  }
+
+  /* ---- Tabelas responsivas (sem quebrar no mobile) ---- */
+  .table-wrap {
+    @apply overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ---- Oculta a barra de rolagem (útil em sidebar) ---- */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* ---- Alertas / mensagens ---- */
+  .alert {
+    @apply flex items-start gap-3 rounded-lg border px-4 py-3 text-sm;
+  }
+  .alert-success {
+    @apply border-success-500/30 bg-success-500/10 text-success-600;
+  }
+  .alert-error {
+    @apply border-danger-500/30 bg-danger-500/10 text-danger-600;
+  }
+  .alert-warning {
+    @apply border-warning-500/30 bg-warning-500/10 text-warning-600;
+  }
+  .alert-info {
+    @apply border-info-500/30 bg-info-500/10 text-info-600;
+  }
+
+  /* ---- Badge pill (assinatura TailAdmin: fundo colorido, texto sólido) ---- */
+  .badge-pill {
+    @apply inline-flex items-center gap-1 rounded-full py-0.5 pr-2.5 pl-2 text-sm font-medium;
+  }
+
+  /* ---- Controle segmentado (ex.: período Weekly/Monthly/Yearly) ---- */
+  .segmented {
+    @apply inline-flex items-center gap-0.5 rounded-lg border border-surface-200 bg-surface-100 p-1;
+  }
+  .segmented-item {
+    @apply rounded-md px-4 py-2 text-sm font-medium text-surface-500 transition-colors;
+  }
+  .segmented-item:hover {
+    @apply text-surface-700;
+  }
+  .segmented-item-active {
+    @apply bg-white text-brand-600 shadow-theme-xs;
+  }
+
+  /* ---- Dark theme — variações dos componentes acima ---- */
+  html.dark .panel {
+    @apply border-surface-700 bg-surface-900;
+  }
+  html.dark .btn-ghost {
+    border-color: var(--color-surface-700);
+    background-color: var(--color-surface-900);
+    color: var(--color-surface-200);
+  }
+  html.dark .btn-ghost:hover:not(:disabled) {
+    background-color: var(--color-surface-800);
+    color: var(--color-surface-50);
+  }
+  html.dark .btn-link:hover:not(:disabled) {
+    background-color: rgb(154 135 253 / 0.14);
+  }
+  html.dark .alert-success { color: var(--color-success-400); }
+  html.dark .alert-error { color: var(--color-danger-400); }
+  html.dark .alert-warning { color: var(--color-warning-400); }
+  html.dark .alert-info { color: var(--color-info-400); }
+  html.dark .segmented {
+    background-color: var(--color-surface-800);
+    border-color: var(--color-surface-700);
+  }
+  html.dark .segmented-item { color: var(--color-surface-400); }
+  html.dark .segmented-item:hover { color: var(--color-surface-100); }
+  html.dark .segmented-item-active {
+    background-color: var(--color-surface-950);
+    color: var(--color-brand-400);
+  }
+  html.dark .num-display { color: var(--color-surface-50); }
+}
+
+/* ------------------------------------------------------------------ *
+ *  DARK THEME — remapeio global de TODA a área autenticada.
+ *  Escopado a `.app-shell` (adicionado no _shell.html) para que todo o
+ *  app fique escuro e legível em qualquer página (listas, formulários,
+ *  detalhes, placeholders), sem editar cada template. As páginas
+ *  públicas (landing/auth/onboarding) não são afetadas.
+ * ------------------------------------------------------------------ */
+html.dark .app-shell {
+  color-scheme: dark;
+}
+
+/* Garante que TODA a área de conteúdo interna fique escura em dark mode
+   (fundo da página + área de rolagem), independente de qualquer outro estilo. */
+html.dark .app-shell,
+html.dark .app-shell main,
+html.dark .app-shell #app-content,
+html.dark .app-shell #app-content > div {
+  background-color: var(--color-surface-950);
+}
+
+/* Fundos de cartões / superfícies */
+html.dark .app-shell .bg-white,
+html.dark .app-shell .bg-surface-0 { background-color: var(--color-surface-900); }
+html.dark .app-shell .bg-white\/60 { background-color: rgb(17 24 39 / 0.6); }
+html.dark .app-shell .bg-surface-50,
+html.dark .app-shell .bg-surface-50\/50 { background-color: var(--color-surface-800); }
+html.dark .app-shell .bg-surface-100 { background-color: var(--color-surface-800); }
+html.dark .app-shell .bg-surface-200 { background-color: var(--color-surface-700); }
+
+/* Texto — escurecer os tons claros da superfície torna legível sobre o fundo escuro */
+html.dark .app-shell .text-surface-900,
+html.dark .app-shell .text-ink-900 { color: var(--color-surface-50); }
+html.dark .app-shell .text-surface-800 { color: var(--color-surface-100); }
+html.dark .app-shell .text-surface-700 { color: var(--color-surface-200); }
+html.dark .app-shell .text-surface-600 { color: var(--color-surface-300); }
+html.dark .app-shell .text-surface-500 { color: var(--color-surface-400); }
+html.dark .app-shell .text-surface-400 { color: var(--color-surface-500); }
+
+/* Bordas e divisórias */
+html.dark .app-shell .border-surface-200,
+html.dark .app-shell .border-surface-300 { border-color: var(--color-surface-700); }
+html.dark .app-shell .border-surface-100 { border-color: var(--color-surface-800); }
+html.dark .app-shell .divide-surface-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--color-surface-700); }
+
+/* Hover / estados sutis dentro de cartões escuros */
+html.dark .app-shell .hover\:bg-surface-50:hover { background-color: var(--color-surface-800); }
+html.dark .app-shell .hover\:bg-surface-100:hover { background-color: var(--color-surface-800); }
+html.dark .app-shell .hover\:bg-surface-200:hover { background-color: var(--color-surface-700); }
+html.dark .app-shell .hover\:text-surface-700:hover,
+html.dark .app-shell .hover\:text-surface-900:hover { color: var(--color-surface-50); }
+
+/* Remapear os fundos semânticos (badges/status) para tints legíveis no escuro */
+html.dark .app-shell .bg-success-50 { background-color: rgb(34 197 94 / 0.14); }
+html.dark .app-shell .bg-danger-50 { background-color: rgb(239 68 68 / 0.14); }
+html.dark .app-shell .bg-warning-50 { background-color: rgb(245 158 11 / 0.14); }
+html.dark .app-shell .bg-info-50 { background-color: rgb(59 130 246 / 0.14); }
+html.dark .app-shell .text-success-600 { color: var(--color-success-400); }
+html.dark .app-shell .text-danger-600 { color: var(--color-danger-400); }
+html.dark .app-shell .text-warning-600 { color: var(--color-warning-400); }
+html.dark .app-shell .text-info-600 { color: var(--color-info-400); }
+
+/* Números / valores forts em cards */
+html.dark .app-shell .num,
+html.dark .app-shell .num-display { color: var(--color-surface-50); }
+
+/* Links/acentos da marca — tom lavanda claro para legibilidade no escuro */
+html.dark .app-shell .text-brand-500 { color: var(--color-brand-300); }
+html.dark .app-shell .text-brand-600,
+html.dark .app-shell .text-brand-700,
+html.dark .app-shell .text-brand-800,
+html.dark .app-shell .text-brand-900 { color: var(--color-brand-300); }
+html.dark .app-shell .hover\:text-brand-600:hover,
+html.dark .app-shell .hover\:text-brand-700:hover { color: var(--color-brand-200); }
+html.dark .app-shell .btn-link { color: var(--color-brand-300); }
+
+/* Controles dentro do app herdam o fundo escuro (input/select/textarea já
+   tratados no @layer base; reforço p/ os com classe bg-* explícita). */
+html.dark .app-shell .bg-white.border-surface-200 { background-color: var(--color-surface-900); }
+
+/* ------------------------------------------------------------------ *
+ *  AJUSTES DE LAYOUT (claro + escuro)
+ *  Garantem que nada vaze nem role para o lado dentro dos cards: o
+ *  conteúdo fica contido, textos longos quebram e o usuário vê tudo
+ *  facilmente. Aplicado a toda a área autenticada (.app-shell).
+ * ------------------------------------------------------------------ */
+html .app-shell,
+html .app-shell > .flex,
+html .app-shell main,
+html .app-shell #app-content {
+  min-width: 0;
+}
+html .app-shell main,
+html .app-shell #app-content {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+html .app-shell .table-wrap,
+html .app-shell .overflow-x-auto {
+  max-width: 100%;
+  overflow-x: auto;
+}
+html .app-shell h1,
+html .app-shell h2,
+html .app-shell h3,
+html .app-shell h4,
+html .app-shell p,
+html .app-shell a,
+html .app-shell li,
+html .app-shell span,
+html .app-shell dd,
+html .app-shell dt {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ================================================================== *
+ *  NEUMORFISMO MODERNO (2026)  —  dashboard & painéis da área autenticada
+ *  ------------------------------------------------------------------
+ *  Direção estética escolhida: "neumorfismo moderno".
+ *  - Cards elevados (soft extruded) com sombras duplas: luz topo-esquerda
+ *    + sombra base-direita, sem bordas.
+ *  - Elementos "pressionados" (inset) para chips/ícones que parecem côncavos.
+ *  - Animações de entrada, grow de barras e elevação no hover.
+ *  Tudo em CSS puro (regra do projeto: sem bibliotecas/JS externos).
+ *  Escopado a `.app-shell` para não afetar landing/auth.
+ * ================================================================== */
+
+/* Tokens de neumorfismo — claro e escuro */
+html .app-shell {
+  --neu-face: #f4f7fb;        /* face do card (levemente mais claro que o canvas) */
+  --neu-highlight: #ffffff;   /* sombra clara (luz topo-esquerda) */
+  --neu-shadow: #d4dae3;      /* sombra escura (base-direita) */
+  --neu-inset-soft: 0 1px 2px 0 rgb(16 24 40 / 0.04);
+}
+html.dark .app-shell {
+  --neu-face: #141d30;        /* face mais clara que o fundo escuro */
+  --neu-highlight: #24304d;   /* brilho/luz invertido */
+  --neu-shadow: #05080f;      /* sombra profunda */
+}
+
+/* ---- Card elevado (extruded) ---- */
+.app-shell .neu {
+  background-color: var(--neu-face);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    -7px -7px 16px 0 var(--neu-highlight),
+    7px 7px 18px 0 var(--neu-shadow),
+    var(--neu-inset-soft);
+}
+.app-shell .neu-sm {
+  background-color: var(--neu-face);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    -5px -5px 12px 0 var(--neu-highlight),
+    5px 5px 14px 0 var(--neu-shadow);
+}
+
+/* ---- Elemento pressionado (inset / côncavo) — chips, ícones, inputs de exibição ---- */
+.app-shell .neu-inset {
+  background-color: var(--neu-face);
+  border-radius: var(--radius-md);
+  box-shadow:
+    inset -4px -4px 8px 0 var(--neu-highlight),
+    inset 4px 4px 9px 0 var(--neu-shadow);
+}
+.app-shell .neu-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  box-shadow:
+    inset -4px -4px 9px 0 var(--neu-highlight),
+    inset 4px 4px 9px 0 var(--neu-shadow);
+}
+
+/* ---- Barra de progresso neumórfica (depressão + preenchimento em gradiente) ---- */
+.app-shell .neu-track {
+  background-color: var(--neu-face);
+  box-shadow:
+    inset 3px 3px 6px 0 var(--neu-shadow),
+    inset -3px -3px 6px 0 var(--neu-highlight);
+}
+.app-shell .neu-fill {
+  box-shadow:
+    1px 1px 3px 0 rgb(16 24 40 / 0.18);
+}
+
+/* ---- Hover: elevação suave (lift) ---- */
+.app-shell .neu-lift {
+  transition: transform 0.22s ease, box-shadow 0.28s ease;
+}
+.app-shell .neu-lift:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    -9px -9px 22px 0 var(--neu-highlight),
+    10px 10px 26px 0 var(--neu-shadow),
+    var(--neu-inset-soft);
+}
+
+/* ---- Animações de entrada (stagger via dashboards) ---- */
+@keyframes neu-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.app-shell .anim-rise {
+  opacity: 0;
+  animation: neu-rise 0.55s cubic-bezier(0.22, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes neu-pop {
+  0%   { opacity: 0; transform: scale(0.9); }
+  70%  { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.app-shell .anim-pop {
+  opacity: 0;
+  animation: neu-pop 0.5s ease forwards;
+}
+
+/* ---- Crescimento de barras (gráficos) ---- */
+@keyframes neu-grow-y {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+.app-shell .bar-grow {
+  transform-origin: bottom;
+  animation: neu-grow-y 0.6s cubic-bezier(0.24, 0.9, 0.3, 1) both;
+}
+@keyframes neu-grow-x {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+.app-shell .bar-grow-x {
+  transform-origin: left;
+  animation: neu-grow-x 0.7s cubic-bezier(0.24, 0.9, 0.3, 1) both;
+}
+
+/* ---- Tooltip moderno (apenas demonstra valor no hover; mantém tabela acessível) ---- */
+.app-shell .chart-bar {
+  position: relative;
+}
+.app-shell .chart-bar .bar-tip {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 20;
+}
+.app-shell .chart-bar:hover .bar-tip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---- Texto com gradiente sutil (destaque do saldo hero) ---- */
+.app-shell .neu-gradient-text {
+  background: linear-gradient(120deg, var(--color-brand-600), var(--color-pink-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+html.dark .app-shell .neu-gradient-text {
+  background: linear-gradient(120deg, var(--color-brand-300), var(--color-pink-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ---- Fundo decorativo suave (gradiente radial) para o estrondo visual ---- */
+.app-shell .neu-canvas-glow {
+  background:
+    radial-gradient(600px 220px at 8% -6%, rgb(154 135 253 / 0.10), transparent 60%),
+    radial-gradient(520px 200px at 95% -10%, rgb(254 62 109 / 0.07), transparent 60%);
+}
+
+/* ---- Reset: sem bordas nos cards neumórficos (override do .panel padrão) ---- */
+.app-shell .neu, .app-shell .neu-sm, .app-shell .neu-inset, .app-shell .neu-chip {
+  border: 0;
+}
+
+/* -------------------------------------------------------------------------- *
+ *  Relatório de Análise IA — renderização leve de Markdown (sem libs externas)
+ * -------------------------------------------------------------------------- */
+.app-shell .ai-report h2,
+.app-shell .ai-report h3,
+.app-shell .ai-report h4 {
+  margin-top: 1.15rem;
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+  color: var(--color-surface-900, #1f2937);
+}
+html.dark .app-shell .ai-report h2,
+html.dark .app-shell .ai-report h3,
+html.dark .app-shell .ai-report h4 {
+  color: var(--color-white, #fff);
+}
+.app-shell .ai-report h2:first-child,
+.app-shell .ai-report h3:first-child {
+  margin-top: 0;
+}
+.app-shell .ai-report h2 {
+  font-size: 1.05rem;
+}
+.app-shell .ai-report h3 {
+  font-size: 0.95rem;
+}
+.app-shell .ai-report h4 {
+  font-size: 0.875rem;
+}
+.app-shell .ai-report ul {
+  margin: 0.4rem 0 0.9rem;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+.app-shell .ai-report ol {
+  margin: 0.4rem 0 0.9rem;
+  padding-left: 1.25rem;
+  list-style: decimal;
+}
+.app-shell .ai-report li {
+  margin: 0.2rem 0;
+}
+.app-shell .ai-report p {
+  margin: 0.5rem 0;
+}
+.app-shell .ai-report .ai-quote {
+  margin: 0.75rem 0;
+  border-left: 3px solid var(--color-brand-500, #6366f1);
+  background: rgb(154 135 253 / 0.08);
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.5rem;
+  color: var(--color-surface-600, #4b5563);
+  font-size: 0.8rem;
+}
+html.dark .app-shell .ai-report .ai-quote {
+  color: var(--color-surface-300, #d1d5db);
+}
+.app-shell .ai-report strong {
+  color: var(--color-surface-900, #111827);
+  font-weight: 700;
+}
+html.dark .app-shell .ai-report strong {
+  color: var(--color-white, #fff);
+}
+

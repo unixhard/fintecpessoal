@@ -1,0 +1,646 @@
+{% extends "app/_shell.html" %}
+{% load money %}
+
+{% block title %}Início — FINTECPESSOAL{% endblock %}
+
+{% block shell_title %}Visão geral{% endblock %}
+
+{% block app_content %}
+
+  {# ===================== Cabeçalho + filtros (estilo TailAdmin SaaS) ===================== #}
+  <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+    <div>
+      <h1 class="text-title-sm font-bold text-surface-900 dark:text-white">Seu painel financeiro</h1>
+      <p class="text-theme-sm text-surface-500 dark:text-surface-400">Visão geral da sua vida financeira em um só lugar.</p>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+      {# Controle segmentado de período #}
+      <div class="segmented" role="group" aria-label="Período">
+        <a href="{% url 'dashboard:index' %}?period=7d{% if filters.account_id %}&account={{ filters.account_id }}{% endif %}{% if filters.card_id %}&card={{ filters.card_id }}{% endif %}" class="segmented-item {% if period == '7d' %}segmented-item-active{% endif %}">7d</a>
+        <a href="{% url 'dashboard:index' %}?period=30d{% if filters.account_id %}&account={{ filters.account_id }}{% endif %}{% if filters.card_id %}&card={{ filters.card_id }}{% endif %}" class="segmented-item {% if period == '30d' %}segmented-item-active{% endif %}">30d</a>
+        <a href="{% url 'dashboard:index' %}?period=3m{% if filters.account_id %}&account={{ filters.account_id }}{% endif %}{% if filters.card_id %}&card={{ filters.card_id }}{% endif %}" class="segmented-item {% if period == '3m' %}segmented-item-active{% endif %}">3m</a>
+        <a href="{% url 'dashboard:index' %}?period=6m{% if filters.account_id %}&account={{ filters.account_id }}{% endif %}{% if filters.card_id %}&card={{ filters.card_id }}{% endif %}" class="segmented-item {% if period == '6m' %}segmented-item-active{% endif %}">6m</a>
+        <a href="{% url 'dashboard:index' %}?period=12m{% if filters.account_id %}&account={{ filters.account_id }}{% endif %}{% if filters.card_id %}&card={{ filters.card_id }}{% endif %}" class="segmented-item {% if period == '12m' %}segmented-item-active{% endif %}">12m</a>
+      </div>
+
+      <form method="get" action="{% url 'dashboard:index' %}" class="flex flex-wrap items-end gap-2">
+        <input type="hidden" name="period" value="{{ period }}">
+        {% if filters.accounts %}
+        <label class="flex flex-col text-xs text-surface-500 dark:text-surface-400">
+          Conta
+          <select name="account" class="mt-1 w-auto">
+            <option value="">Todas</option>
+            {% for id, acc in filters.accounts.items %}
+            <option value="{{ id }}" {% if filters.account_id == id %}selected{% endif %}>{{ acc.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        {% endif %}
+        {% if filters.cards_filter %}
+        <label class="flex flex-col text-xs text-surface-500 dark:text-surface-400">
+          Cartão
+          <select name="card" class="mt-1 w-auto">
+            <option value="">Todos</option>
+            {% for c in filters.cards_filter %}
+            <option value="{{ c.pk }}" {% if filters.card_id == c.pk %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        {% endif %}
+        <button type="submit" class="btn btn-primary btn-sm">Aplicar</button>
+      </form>
+    </div>
+  </div>
+
+  {# ===================== Checklist de primeiros passos (progressivo) ===================== #}
+  {% if first_steps.show %}
+  <div class="neu neu-lift anim-rise p-6">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h2 class="text-lg font-bold text-surface-900 dark:text-white">Bem-vindo! Dê seus primeiros passos</h2>
+        <p class="mt-1 text-sm text-surface-500 dark:text-surface-400">
+          Complete os passos abaixo e aproveite todo o potencial do seu painel.
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-sm font-semibold text-surface-700 dark:text-surface-200">{{ first_steps.done_count }}/{{ first_steps.steps|length }} concluídos</span>
+        <span class="neu-track h-2 w-28 overflow-hidden rounded-full">
+          <span class="bar-grow-x block h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-300" style="width: {{ first_steps.progress }}%"></span>
+        </span>
+      </div>
+    </div>
+    <ul class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+      {% for step in first_steps.steps %}
+      <li>
+        {% if step.done %}
+        <div class="neu-inset flex items-center gap-2.5 rounded-xl p-3">
+          <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success-500/15 text-xs font-bold text-success-600 dark:text-success-400" aria-hidden="true">✓</span>
+          <span class="text-sm font-medium text-surface-400 line-through dark:text-surface-500">{{ step.label }}</span>
+        </div>
+        {% else %}
+        <a href="{{ step.url }}" class="neu-sm neu-lift flex items-center gap-2.5 rounded-xl p-3 text-surface-800 hover:text-brand-700 dark:text-surface-100 dark:hover:text-brand-300">
+          <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-500/15 text-brand-600 dark:text-brand-300" aria-hidden="true">→</span>
+          <span class="text-sm font-medium">{{ step.label }}</span>
+        </a>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {# ===================== Estado vazio contextual ===================== #}
+  {% if not has_data %}
+  <div class="rounded-2xl border border-dashed border-surface-300 bg-white px-6 py-12 text-center dark:border-surface-700 dark:bg-surface-900">
+    <span class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-100 text-2xl text-surface-400 dark:bg-surface-800 dark:text-surface-400" aria-hidden="true">◫</span>
+    <h2 class="heading-display text-2xl text-surface-900 dark:text-white">Comece a organizar suas finanças</h2>
+    <p class="mx-auto mt-2 max-w-md text-sm text-surface-500 dark:text-surface-400">
+      Seu painel ainda está vazio. Cadastre sua primeira conta e registre
+      receitas e despesas para ver aqui seu saldo, fluxo de caixa, orçamentos,
+      metas e dívidas.
+    </p>
+    <div class="mx-auto mt-6 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
+      <a href="{% url 'finance:account_create' %}" class="flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 p-4 text-left hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:hover:bg-surface-800/60">
+        <span class="text-sm font-medium text-surface-800 dark:text-surface-100">Criar conta</span>
+        <span class="text-xs text-surface-400">→</span>
+      </a>
+      <a href="{% url 'finance:transaction_create' %}?kind=expense" class="flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 p-4 text-left hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:hover:bg-surface-800/60">
+        <span class="text-sm font-medium text-surface-800 dark:text-surface-100">Registrar despesa</span>
+        <span class="text-xs text-surface-400">→</span>
+      </a>
+      <a href="{% url 'finance:transaction_create' %}?kind=income" class="flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 p-4 text-left hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:hover:bg-surface-800/60">
+        <span class="text-sm font-medium text-surface-800 dark:text-surface-100">Registrar receita</span>
+        <span class="text-xs text-surface-400">→</span>
+      </a>
+      <a href="{% url 'cards:card_create' %}" class="flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 p-4 text-left hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:hover:bg-surface-800/60">
+        <span class="text-sm font-medium text-surface-800 dark:text-surface-100">Adicionar cartão</span>
+        <span class="text-xs text-surface-400">→</span>
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if has_data %}
+
+  {# ===================== Atalhos rápidos persistentes (UX — criar sem navegar) ===================== #}
+  <div class="flex flex-wrap items-center gap-3" role="group" aria-label="Ações rápidas">
+    <a href="{% url 'finance:transaction_create' %}?kind=expense" class="neu-sm neu-lift inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-danger-600 dark:text-danger-400">
+      <span aria-hidden="true">−</span>Despesa
+    </a>
+    <a href="{% url 'finance:transaction_create' %}?kind=income" class="neu-sm neu-lift inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-success-600 dark:text-success-400">
+      <span aria-hidden="true">＋</span>Receita
+    </a>
+    <a href="{% url 'finance:transfer_create' %}" class="neu-sm neu-lift inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-info-600 dark:text-info-400">
+      <span aria-hidden="true">⇄</span>Transferência
+    </a>
+    <a href="{% url 'cards:card_create' %}" class="neu-sm neu-lift inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-surface-600 dark:text-surface-300">
+      <span aria-hidden="true">▰</span>Novo cartão
+    </a>
+  </div>
+
+  {# ===================== Cards de métricas (Neumorfismo Moderno 2026) ===================== #}
+  <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+    {# Saldo disponível #}
+    <div class="neu neu-lift anim-rise px-6 py-6" style="animation-delay: 30ms">
+      <div class="flex items-center justify-between gap-3">
+        <span class="text-theme-sm font-medium text-surface-500 dark:text-surface-400">Saldo disponível</span>
+        <span class="neu-chip h-11 w-11 shrink-0 bg-brand-500/15 text-lg text-brand-700 dark:text-brand-300" aria-hidden="true">◫</span>
+      </div>
+      <div class="mt-4 flex items-end gap-2">
+        <h4 class="num text-title-xs font-bold sm:text-title-sm {% if disponivel < 0 %}text-danger-600 dark:text-danger-400{% else %}text-surface-900 dark:text-white{% endif %}">
+          {{ disponivel|centavos }}
+        </h4>
+      </div>
+      <span class="badge-pill mt-3 bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400">hoje</span>
+      <p class="mt-1 text-theme-xs text-surface-400 dark:text-surface-500">em contas ativas</p>
+      <div class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-surface-200/50 dark:bg-surface-700/40">
+        <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-300 transition-all duration-700" style="width: 100%"></div>
+      </div>
+    </div>
+
+    {# Disponível após compromissos #}
+    <div class="neu neu-lift anim-rise px-6 py-6" style="animation-delay: 90ms">
+      <div class="flex items-center justify-between gap-3">
+        <span class="text-theme-sm font-medium text-surface-500 dark:text-surface-400">Disponível após compromissos</span>
+        <span class="neu-chip h-11 w-11 shrink-0
+          {% if disponivel_apos < 0 %}bg-danger-500/15 text-danger-700 dark:text-danger-400
+          {% elif disponivel_apos >= money_floor_low %}bg-success-500/15 text-success-700 dark:text-success-400
+          {% else %}bg-warning-500/15 text-warning-700 dark:text-warning-400{% endif %} text-lg" aria-hidden="true">◎</span>
+      </div>
+      <div class="mt-4 flex items-end gap-2">
+        <h4 class="num text-title-xs font-bold sm:text-title-sm {% if disponivel_apos < 0 %}text-danger-600 dark:text-danger-400{% else %}text-surface-900 dark:text-white{% endif %}">
+          {{ disponivel_apos|centavos }}
+        </h4>
+      </div>
+      {% if disponivel_apos < 0 %}
+      <span class="badge-pill mt-3 bg-danger-500/10 text-danger-600 dark:text-danger-400">Negativo</span>
+      {% elif disponivel_apos >= money_floor_low %}
+      <span class="badge-pill mt-3 bg-success-500/10 text-success-600 dark:text-success-400">Saudável</span>
+      {% else %}
+      <span class="badge-pill mt-3 bg-warning-500/10 text-warning-600 dark:text-warning-400">Apertado</span>
+      {% endif %}
+      <p class="mt-1 text-theme-xs text-surface-400 dark:text-surface-500">saldo menos cartões</p>
+      <div class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-surface-200/50 dark:bg-surface-700/40">
+        <div class="h-full rounded-full transition-all duration-700 {% if disponivel_apos < 0 %}bg-gradient-to-r from-danger-500 to-danger-300{% elif disponivel_apos >= money_floor_low %}bg-gradient-to-r from-success-500 to-success-300{% else %}bg-gradient-to-r from-warning-500 to-warning-300{% endif %}" style="width: 100%"></div>
+      </div>
+    </div>
+
+    {# Resultado no período (margem sobre receitas) #}
+    <div class="neu neu-lift anim-rise px-6 py-6" style="animation-delay: 150ms">
+      <div class="flex items-center justify-between gap-3">
+        <span class="text-theme-sm font-medium text-surface-500 dark:text-surface-400">Resultado no período</span>
+        <span class="neu-chip h-11 w-11 shrink-0 {% if cash_flow.resultado < 0 %}bg-danger-500/15 text-danger-700 dark:text-danger-400{% else %}bg-success-500/15 text-success-700 dark:text-success-400{% endif %} text-lg" aria-hidden="true">
+          {% if cash_flow.resultado >= 0 %}↗{% else %}↘{% endif %}
+        </span>
+      </div>
+      <div class="mt-4 flex items-end gap-2">
+        <h4 class="num text-title-xs font-bold sm:text-title-sm {% if cash_flow.resultado < 0 %}text-danger-600 dark:text-danger-400{% else %}text-success-600 dark:text-success-400{% endif %}">
+          {{ cash_flow.resultado|centavos }}
+        </h4>
+      </div>
+      {% if cash_flow.receitas > 0 %}
+      <span class="badge-pill mt-3 {% if cash_flow.resultado < 0 %}bg-danger-500/10 text-danger-600 dark:text-danger-400{% else %}bg-success-500/10 text-success-600 dark:text-success-400{% endif %}">
+        {% if cash_flow.resultado >= 0 %}▲{% else %}▼{% endif %}{% widthratio cash_flow.resultado cash_flow.receitas 100 %}%
+      </span>
+      {% endif %}
+      <p class="mt-1 text-theme-xs text-surface-400 dark:text-surface-500">{{ period_label }}</p>
+      <div class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-surface-200/50 dark:bg-surface-700/40">
+        <div class="h-full rounded-full transition-all duration-700 {% if cash_flow.resultado < 0 %}bg-gradient-to-r from-danger-500 to-danger-300{% else %}bg-gradient-to-r from-success-500 to-success-300{% endif %}" style="width: 100%"></div>
+      </div>
+    </div>
+
+    {# Comprometido em cartões (% do saldo) #}
+    <div class="neu neu-lift anim-rise px-6 py-6" style="animation-delay: 210ms">
+      <div class="flex items-center justify-between gap-3">
+        <span class="text-theme-sm font-medium text-surface-500 dark:text-surface-400">Comprometido em cartões</span>
+        <span class="neu-chip h-11 w-11 shrink-0 bg-info-500/15 text-lg text-info-700 dark:text-info-400" aria-hidden="true">▰</span>
+      </div>
+      <div class="mt-4 flex items-end gap-2">
+        <h4 class="num text-title-xs font-bold sm:text-title-sm text-surface-900 dark:text-white">− {{ comprometido|centavos }}</h4>
+      </div>
+      {% if disponivel > 0 %}
+      {% widthratio comprometido disponivel 100 as pct %}
+      <span class="badge-pill mt-3 {% if pct >= 100 %}bg-danger-500/10 text-danger-600 dark:text-danger-400{% elif pct >= 70 %}bg-warning-500/10 text-warning-600 dark:text-warning-400{% else %}bg-info-500/10 text-info-600 dark:text-info-400{% endif %}">{{ pct }}% do saldo</span>
+      {% endif %}
+      <p class="mt-1 text-theme-xs text-surface-400 dark:text-surface-500">faturas e parcelas</p>
+      {% if disponivel > 0 %}
+      {% widthratio comprometido disponivel 100 as pct %}
+      <div class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-surface-200/50 dark:bg-surface-700/40">
+        <div class="h-full rounded-full transition-all duration-700 {% if pct >= 100 %}bg-gradient-to-r from-danger-500 to-danger-300{% elif pct >= 70 %}bg-gradient-to-r from-warning-500 to-warning-300{% else %}bg-gradient-to-r from-info-500 to-info-300{% endif %}" style="width: {{ pct }}%"></div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ===================== Relatório com Análise IA (auditor de bolso) ===================== #}
+  <div class="neu neu-lift anim-rise relative overflow-hidden p-6">
+    <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+      <div class="absolute inset-0 bg-gradient-to-br from-brand-500/10 via-transparent to-success-500/10"></div>
+    </div>
+    <div class="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-start gap-3">
+        <span class="neu-chip flex h-12 w-12 shrink-0 items-center justify-center bg-brand-500/15 text-2xl text-brand-700 dark:text-brand-300" aria-hidden="true">✦</span>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-lg font-bold text-surface-900 dark:text-white">Relatório com Análise IA</h2>
+            {% if ai_report_card.has_report %}
+              <span class="badge-pill {% if ai_report_card.via_ai %}bg-brand-500/10 text-brand-700 dark:text-brand-300{% else %}bg-warning-500/10 text-warning-600 dark:text-warning-400{% endif %}">
+                {% if ai_report_card.via_ai %}✦ IA{% else %}resumo local{% endif %}
+              </span>
+            {% endif %}
+          </div>
+          <p class="mt-1 max-w-xl text-sm text-surface-500 dark:text-surface-400">
+            Seu auditor de bolso: sugestões, cuidados, alertas e um
+            planejamento para você aumentar seu patrimônio.
+          </p>
+          {% if ai_report_card.has_report and ai_report_card.summary %}
+          <p class="mt-2 text-sm font-medium text-surface-700 dark:text-surface-200">
+            ✓ {{ ai_report_card.summary }}
+          </p>
+          <p class="mt-0.5 text-theme-xs text-surface-400 dark:text-surface-500">
+            gerado em {{ ai_report_card.generated_at|date:"d/m/Y \à\s H:i" }}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+      <div class="flex flex-col items-stretch gap-2 sm:items-end">
+        <a href="{% url 'reports:ai_report' %}" class="btn btn-primary btn-md whitespace-nowrap">
+          {% if ai_report_card.has_report %}Ver relatório{% else %}Gerar relatório{% endif %}
+        </a>
+        {% if ai_report_card.has_report and ai_report_card.can_generate %}
+          <span class="text-theme-xs text-success-600 dark:text-success-400">Disponível para novo</span>
+        {% elif ai_report_card.has_report %}
+          <span class="text-theme-xs text-surface-400 dark:text-surface-500">
+            Novo a partir de {{ ai_report_card.next_available|date:"d/m/Y" }}
+          </span>
+        {% else %}
+          <span class="text-theme-xs text-surface-400 dark:text-surface-500">1x a cada 3 dias</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ===================== Alertas / decisões ===================== #}
+  {% if has_alerts %}
+  <section aria-labelledby="alerts-title" class="space-y-3">
+    <h2 id="alerts-title" class="text-lg font-semibold text-surface-900 dark:text-white">O que merece sua atenção?</h2>
+    {% for a in insights|slice:":4" %}
+      {% if a.severity == 'critical' %}
+        {% include "components/insight_card.html" with insight=a tone="critical" %}
+      {% elif a.severity == 'attention' %}
+        {% include "components/insight_card.html" with insight=a tone="attention" %}
+      {% else %}
+        {% include "components/insight_card.html" with insight=a tone="info" %}
+      {% endif %}
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {# ===================== Gráficos (fluxo + gastos) / Cartões + próximos ===================== #}
+  <div class="grid gap-6 xl:grid-cols-12">
+
+    <div class="space-y-6 xl:col-span-8">
+      <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
+        <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Fluxo de caixa</h3>
+            <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">{{ period_label }}</p>
+          </div>
+          <div class="flex gap-4 text-center">
+            <div>
+              <p class="text-theme-xs text-surface-400 dark:text-surface-500">Receitas</p>
+              <p class="text-sm font-semibold text-success-600 dark:text-success-400">{{ cash_flow.receitas|centavos }}</p>
+            </div>
+            <div>
+              <p class="text-theme-xs text-surface-400 dark:text-surface-500">Despesas</p>
+              <p class="text-sm font-semibold text-danger-600 dark:text-danger-400">{{ cash_flow.despesas|centavos }}</p>
+            </div>
+          </div>
+        </div>
+        {% if cash_flow.count %}
+          {% include "components/chart_bars.html" with buckets=evolution max_value=evolution_max %}
+        {% else %}
+          {% include "components/empty_state.html" with title="Sem movimentações no período" message="Registre receitas e despesas para ver seu fluxo de caixa." icon="⇅" %}
+        {% endif %}
+      </div>
+
+      <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Gastos por categoria</h3>
+          <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">{{ period_label }}</p>
+        </div>
+        {% if spending_rows %}
+          <ul class="space-y-4">
+            {% for c in spending_rows %}
+            <li>
+              <div class="mb-1 flex items-center justify-between gap-2 text-sm">
+                <span class="font-medium text-surface-700 dark:text-surface-200">{{ c.name }}</span>
+                <span class="flex items-center gap-2">
+                  {% if c.delta_percent is not None %}
+                  <span class="text-theme-xs {% if c.delta_percent > 0 %}text-danger-600 dark:text-danger-400{% elif c.delta_percent < 0 %}text-success-600 dark:text-success-400{% else %}text-surface-400{% endif %}">
+                    {% if c.delta_percent > 0 %}▲{% elif c.delta_percent < 0 %}▼{% endif %}{{ c.delta_percent }}%
+                  </span>
+                  {% endif %}
+                  <span class="font-semibold text-surface-900 dark:text-white">{{ c.amount|centavos }}</span>
+                </span>
+              </div>
+              <div class="h-2.5 w-full overflow-hidden rounded-full neu-track">
+                <div class="bar-grow-x h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-300" style="width: {{ c.share_percent }}%; animation-delay: {{ forloop.counter }}00ms"></div>
+              </div>
+              <p class="mt-0.5 text-theme-xs text-surface-400 dark:text-surface-500">{{ c.share_percent }}% das despesas{% if c.prev_amount is not None %} · anterior {{ c.prev_amount|centavos }}{% endif %}</p>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          {% include "components/empty_state.html" with title="Ainda sem gastos por categoria" message="Classifique suas despesas para ver a distribuição por categoria." icon="◌" %}
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="space-y-6 xl:col-span-4">
+      <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
+        <div class="mb-4">
+          <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Próximos 30 dias</h3>
+          <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Compromissos à frente</p>
+        </div>
+        {% if upcoming_events %}
+          <ol class="divide-y divide-surface-100 dark:divide-surface-800">
+            {% for ev in upcoming_events|slice:":6" %}
+            <li class="flex items-center justify-between gap-3 py-2.5">
+              <div class="flex items-center gap-3">
+                <span class="neu-chip h-9 w-9 shrink-0 text-xs font-semibold text-surface-600 dark:text-surface-300">
+                  {{ ev.date|date:"d/m" }}
+                </span>
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-medium text-surface-800 dark:text-surface-100">{{ ev.label }}</p>
+                  <p class="text-theme-xs text-surface-400 dark:text-surface-500">
+                    {% if ev.kind == 'invoice' %}Fatura{% else %}Recorrência{% endif %}
+                    {% if ev.date == today %}(hoje){% endif %}
+                  </p>
+                </div>
+              </div>
+              <span class="text-sm font-semibold text-surface-900 dark:text-white">{{ ev.amount|centavos }}</span>
+            </li>
+            {% endfor %}
+          </ol>
+        {% else %}
+          {% include "components/empty_state.html" with title="Nada nos próximos 30 dias" message="Sem faturas, recorrências ou compromissos agendados." icon="▸" %}
+        {% endif %}
+      </div>
+
+      <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
+        <div class="mb-4">
+          <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Cartões</h3>
+          <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Limite usado ≠ dinheiro disponível</p>
+        </div>
+        {% if cards %}
+          <div class="space-y-4">
+            {% for card in cards %}
+            <div class="neu-inset rounded-xl p-4">
+              <div class="flex items-center justify-between">
+                <p class="font-semibold text-surface-900 dark:text-white">{{ card.name }}</p>
+                {% if card.limit > 0 %}
+                <span class="text-theme-xs text-surface-500 dark:text-surface-400">{{ card.used|centavos }} / {{ card.limit|centavos }}</span>
+                {% endif %}
+              </div>
+              {% if card.limit > 0 %}
+              {% include "components/progress.html" with percent=card.used_pct tone=card.usage_tone label="Utilização" show_label=False %}
+              {% endif %}
+              <dl class="mt-3 grid grid-cols-2 gap-2 text-sm">
+                <div><dt class="text-theme-xs text-surface-500 dark:text-surface-400">Disponível</dt><dd class="font-semibold text-success-600 dark:text-success-400">{{ card.available|centavos }}</dd></div>
+                <div><dt class="text-theme-xs text-surface-500 dark:text-surface-400">Comprometido</dt><dd class="font-semibold text-warning-600 dark:text-warning-400">{{ card.used|centavos }}</dd></div>
+                {% if card.open_invoice_amount is not None %}
+                <div><dt class="text-theme-xs text-surface-500 dark:text-surface-400">Fatura aberta</dt><dd class="font-semibold dark:text-surface-100">{{ card.open_invoice_amount|centavos }}</dd></div>
+                <div><dt class="text-theme-xs text-surface-500 dark:text-surface-400">Vencimento</dt><dd class="font-semibold dark:text-surface-100">{{ card.next_invoice_due|date:"d/m" }}</dd></div>
+                {% endif %}
+              </dl>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          {% include "components/empty_state.html" with title="Sem cartões" message="Adicione um cartão para acompanhar limites e faturas." icon="▰" %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ===================== Movimentações recentes (tabela estilo Recent Invoices) ===================== #}
+  <div class="overflow-hidden rounded-2xl neu neu-lift anim-rise">
+    <div class="px-6 py-4">
+      <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Movimentações recentes</h3>
+      <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Últimas do período</p>
+    </div>
+    {% if recent_transactions %}
+    <div class="overflow-x-auto">
+      <table class="min-w-full">
+        <thead>
+          <tr class="bg-surface-50 dark:bg-surface-800/60">
+            <th class="px-6 py-4 text-left text-theme-sm font-medium whitespace-nowrap text-surface-500 dark:text-surface-400">Data</th>
+            <th class="px-6 py-4 text-left text-theme-sm font-medium whitespace-nowrap text-surface-500 dark:text-surface-400">Descrição</th>
+            <th class="px-6 py-4 text-left text-theme-sm font-medium whitespace-nowrap text-surface-500 dark:text-surface-400">Categoria</th>
+            <th class="px-6 py-4 text-left text-theme-sm font-medium whitespace-nowrap text-surface-500 dark:text-surface-400">Conta</th>
+            <th class="px-6 py-4 text-left text-theme-sm font-medium whitespace-nowrap text-surface-500 dark:text-surface-400">Status</th>
+            <th class="px-6 py-4 text-right text-theme-sm font-medium whitespace-nowrap text-surface-500 dark:text-surface-400">Valor</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-surface-100 dark:divide-surface-800">
+          {% for t in recent_transactions %}
+          <tr>
+            <td class="px-6 py-4 text-sm whitespace-nowrap text-surface-500 dark:text-surface-400">{{ t.date|date:"d/m" }}</td>
+            <td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-surface-800 dark:text-surface-100">{{ t.description }}</td>
+            <td class="px-6 py-4 text-sm whitespace-nowrap text-surface-500 dark:text-surface-400">{{ t.category|default:"—" }}</td>
+            <td class="px-6 py-4 text-sm whitespace-nowrap text-surface-500 dark:text-surface-400">{{ t.account }}</td>
+            <td class="px-6 py-4 text-left">
+              {% if t.type == 'income' %}
+              <span class="badge-pill bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400">Entrada</span>
+              {% elif t.type == 'expense' %}
+              <span class="badge-pill bg-danger-50 text-danger-600 dark:bg-danger-500/15 dark:text-danger-400">Saída</span>
+              {% else %}
+              <span class="badge-pill bg-info-50 text-info-600 dark:bg-info-500/15 dark:text-info-400">Transferência</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 text-right text-sm font-semibold whitespace-nowrap
+              {% if t.type == 'income' %}text-success-600 dark:text-success-400
+              {% elif t.type == 'expense' %}text-danger-600 dark:text-danger-400
+              {% else %}text-info-600 dark:text-info-400{% endif %}">
+              {% if t.type == 'income' %}+{% elif t.type == 'expense' %}−{% else %}⇄{% endif %} {{ t.amount|centavos }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="px-6 py-6">
+      {% include "components/empty_state.html" with title="Sem movimentações neste período" message="Registre receitas e despesas para vê-las aqui." icon="≡" %}
+    </div>
+    {% endif %}
+  </div>
+
+  {# ===================== Atividades (timeline estilo Activities) ===================== #}
+  <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
+    <div class="mb-4">
+      <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Atividades</h3>
+      <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Próximos compromissos e faturas</p>
+    </div>
+    {% if upcoming_events %}
+      <ol class="relative space-y-5 before:absolute before:top-2 before:bottom-2 before:left-[17px] before:w-px before:bg-surface-100 dark:before:bg-surface-800">
+        {% for ev in upcoming_events|slice:":5" %}
+        <li class="flex items-center gap-4">
+          <span class="neu-chip relative z-10 h-9 w-9 shrink-0 text-base
+                     {% if ev.kind == 'invoice' %}text-brand-600 dark:text-brand-300{% else %}text-success-600 dark:text-success-400{% endif %}">
+            {% if ev.kind == 'invoice' %}▤{% else %}↻{% endif %}
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium text-surface-800 dark:text-surface-100">{{ ev.label }}</p>
+            <p class="text-theme-xs text-surface-400 dark:text-surface-500">
+              {% if ev.kind == 'invoice' %}Fatura{% else %}Recorrência{% endif %} · {{ ev.date|date:"d/m" }}{% if ev.date == today %} (hoje){% endif %}
+            </p>
+          </div>
+          <span class="text-sm font-semibold text-surface-900 dark:text-white">{{ ev.amount|centavos }}</span>
+        </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      {% include "components/empty_state.html" with title="Sem atividades futuras" message="Suas próximas faturas e recorrências aparecerão aqui." icon="↻" %}
+    {% endif %}
+  </div>
+
+  {# ===================== Grid secundário ===================== #}
+  <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+
+    <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
+      <div class="mb-4">
+        <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Suas contas</h3>
+        <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Dinheiro por conta</p>
+      </div>
+      {% if accounts %}
+        <ul class="divide-y divide-surface-100 dark:divide-surface-800">
+          {% for a in accounts %}
+          <li class="flex items-center justify-between gap-3 py-2.5">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium text-surface-800 dark:text-surface-100">{{ a.name }}</p>
+              <p class="text-theme-xs text-surface-400 dark:text-surface-500">{{ a.type_label|default:"—" }} · {{ a.share_percent }}% do total</p>
+            </div>
+            <span class="text-sm font-semibold text-surface-900 dark:text-white">{{ a.balance|centavos }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        <a href="{% url 'finance:account_list' %}" class="link-accent mt-3 text-sm">Ver contas</a>
+      {% else %}
+        {% include "components/empty_state.html" with title="Sem contas" message="Cadastre uma conta para começar." icon="◫" %}
+      {% endif %}
+    </div>
+
+    <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
+      <div class="mb-4">
+        <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Próximas faturas</h3>
+      </div>
+      {% if invoices %}
+        <ul class="space-y-3">
+          {% for i in invoices %}
+          <li class="flex items-center justify-between gap-3 rounded-xl neu-sm neu-inset p-3">
+            <div>
+              <p class="text-sm font-medium text-surface-800 dark:text-surface-100">{{ i.card_name }}</p>
+              <p class="text-theme-xs text-surface-500 dark:text-surface-400">Vence {{ i.due_date|date:"d/m" }}</p>
+            </div>
+            <span class="text-sm font-semibold dark:text-white">{{ i.amount|centavos }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "components/empty_state.html" with title="Sem faturas abertas" message="Suas faturas futuras aparecerão aqui." icon="▤" %}
+      {% endif %}
+    </div>
+
+    <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
+      <div class="mb-4">
+        <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Parcelamentos</h3>
+        <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Quanto do futuro já está comprometido</p>
+      </div>
+      {% if installments %}
+        <ul class="space-y-3">
+          {% for p in installments %}
+          <li class="flex items-center justify-between gap-3 rounded-xl neu-sm neu-inset p-3">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium text-surface-800 dark:text-surface-100">{{ p.description }}</p>
+              <p class="text-theme-xs text-surface-500 dark:text-surface-400">{{ p.card_name }} · {{ p.remaining_count }}x restantes</p>
+            </div>
+            <span class="text-sm font-semibold dark:text-white">{{ p.remaining_total|centavos }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "components/empty_state.html" with title="Sem parcelamentos" message="Compras parceladas em cartão aparecerão aqui." icon="⋮" %}
+      {% endif %}
+    </div>
+
+    <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
+      <div class="mb-4">
+        <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Orçamentos</h3>
+        <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Mês atual</p>
+      </div>
+      {% if budgets %}
+        <ul class="space-y-3">
+          {% for b in budgets %}
+          <li>
+            <div class="mb-1 flex items-center justify-between text-sm">
+              <span class="font-medium text-surface-700 dark:text-surface-200">{{ b.name }}</span>
+              <span class="text-theme-xs text-surface-500 dark:text-surface-400">{{ b.spent|centavos }} / {{ b.limit|centavos }}</span>
+            </div>
+            {% include "components/progress.html" with percent=b.percent tone=b.status show_label=False %}
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "components/empty_state.html" with title="Sem orçamentos" message="Defina limites por categoria para controlar gastos." icon="◎" %}
+      {% endif %}
+    </div>
+
+    <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
+      <div class="mb-4">
+        <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Metas</h3>
+      </div>
+      {% if goals %}
+        <ul class="space-y-4">
+          {% for g in goals %}
+          <li>
+            <div class="mb-1 flex items-baseline justify-between">
+              <span class="font-medium text-surface-800 dark:text-surface-100">{{ g.name }}</span>
+              <span class="text-sm font-semibold dark:text-white">{{ g.current_amount|centavos }} / {{ g.target_amount|centavos }}</span>
+            </div>
+            {% include "components/progress.html" with percent=g.progress_percent label="Progresso" show_label=False %}
+            {% if g.target_date %}<p class="mt-1 text-theme-xs text-surface-400 dark:text-surface-500">Meta para {{ g.target_date|date:"d/m/Y" }}</p>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "components/empty_state.html" with title="Sem metas" message="Defina objetivos, como uma reserva de emergência." icon="◎" %}
+      {% endif %}
+    </div>
+
+    <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
+      <div class="mb-4">
+        <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Dívidas</h3>
+      </div>
+      {% if debts %}
+        <ul class="divide-y divide-surface-100 dark:divide-surface-800">
+          {% for d in debts %}
+          <li class="flex items-center justify-between gap-3 py-2.5">
+            <div>
+              <p class="text-sm font-medium text-surface-800 dark:text-surface-100">{{ d.name }}</p>
+              <p class="text-theme-xs text-surface-500 dark:text-surface-400">Pago {{ d.paid_amount|centavos }} de {{ d.total_amount|centavos }}</p>
+            </div>
+            <span class="text-sm font-semibold text-danger-600 dark:text-danger-400">{{ d.remaining_amount|centavos }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "components/empty_state.html" with title="Sem dívidas" message="Suas dívidas ativas aparecerão aqui." icon="☰" %}
+      {% endif %}
+    </div>
+
+  </div>
+{% endblock %}

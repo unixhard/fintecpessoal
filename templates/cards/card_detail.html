@@ -1,0 +1,88 @@
+{% extends "app/_shell.html" %}
+{% load money %}
+
+{% block title %}{{ card.name }} · FINTECPESSOAL{% endblock %}
+
+{% block app_content %}
+  {% include "components/page_header.html" with title=card.name subtitle=card.institution|default:"Cartão de crédito" %}
+
+  <div class="mb-6 grid gap-4 sm:grid-cols-3">
+    <div class="panel p-5">
+      <p class="text-sm text-surface-500">Limite total</p>
+      <p class="mt-1 text-xl font-bold">{% include "components/money.html" with cents=limit %}</p>
+    </div>
+    <div class="panel p-5">
+      <p class="text-sm text-surface-500">Utilizado</p>
+      <p class="mt-1 text-xl font-bold text-danger-600">{% include "components/money.html" with cents=used %}</p>
+    </div>
+    <div class="panel p-5">
+      <p class="text-sm text-surface-500">Disponível</p>
+      <p class="mt-1 text-xl font-bold text-success-600">{% include "components/money.html" with cents=available %}</p>
+    </div>
+  </div>
+
+  {% if open_invoice %}
+  <div class="mb-6 flex flex-col gap-4 rounded-2xl border border-brand-200 bg-brand-50 p-5 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p class="text-sm font-medium text-brand-800">Fatura atual</p>
+      <p class="mt-1 text-2xl font-bold text-brand-900">{% include "components/money.html" with cents=open_invoice.amount %}</p>
+      <p class="text-xs text-brand-700">Vence em {{ open_invoice.due_date|date:"d/m/Y" }}</p>
+    </div>
+    <a href="{% url 'cards:invoice_detail' open_invoice.pk %}" class="btn btn-primary btn-sm">Ver fatura</a>
+  </div>
+  {% endif %}
+
+  <div class="mb-6 grid gap-4 lg:grid-cols-2">
+    <div class="panel p-5">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="font-semibold text-surface-800">Faturas</h2>
+        <a href="{% url 'cards:invoice_list' %}" class="text-sm text-brand-700 hover:underline">Ver todas</a>
+      </div>
+      {% if invoices %}
+      <ul class="divide-y divide-surface-100">
+        {% for inv in invoices %}
+        <li class="flex items-center justify-between py-2.5">
+          <a href="{% url 'cards:invoice_detail' inv.pk %}" class="text-sm font-medium text-surface-800 hover:text-brand-700">{{ inv.period_start|date:"d/m/Y" }} a {{ inv.period_end|date:"d/m/Y" }}</a>
+          <span class="text-sm font-medium">{% include "components/money.html" with cents=inv.amount %}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="text-sm text-surface-500">Nenhuma fatura registrada.</p>
+      {% endif %}
+    </div>
+    <div class="panel p-5">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="font-semibold text-surface-800">Compras</h2>
+        <a href="{% url 'cards:purchase_create' %}" class="text-sm text-brand-700 hover:underline">Nova compra</a>
+      </div>
+      {% if purchases %}
+      <ul class="divide-y divide-surface-100">
+        {% for p in purchases %}
+        <li class="flex items-center justify-between py-2.5">
+          <div>
+            <p class="text-sm font-medium text-surface-800">{{ p.description }}</p>
+            <p class="text-xs text-surface-500">{{ p.installment_count }}x · 1ª em {{ p.first_due_date|date:"d/m/Y" }}</p>
+          </div>
+          <span class="text-sm font-medium">{% include "components/money.html" with cents=p.total_amount %}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="text-sm text-surface-500">Nenhuma compra registrada.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <a href="{% url 'cards:purchase_create' %}" class="btn btn-primary btn-sm">Nova compra</a>
+    <a href="{% url 'cards:card_edit' card.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+    {% if card.status == 'active' %}
+    <form method="post" action="{% url 'cards:card_block' card.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Bloquear</button></form>
+    <form method="post" action="{% url 'cards:card_close' card.pk %}" onsubmit="return confirm('Encerrar este cartão?');">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Encerrar</button></form>
+    {% else %}
+    <form method="post" action="{% url 'cards:card_reactivate' card.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Reativar</button></form>
+    {% endif %}
+    <a href="{% url 'cards:card_list' %}" class="btn btn-ghost btn-sm">Voltar</a>
+  </div>
+{% endblock %}

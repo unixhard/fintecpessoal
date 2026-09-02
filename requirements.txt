@@ -1,0 +1,15 @@
+# Dependências do FINTECPESSOAL
+# Instalar com: pip install -r requirements.txt
+#
+# Django, python-dotenv (carregamento de .env) e psycopg (PostgreSQL/Supabase).
+# O SQLite local continua sendo o banco padrão; o PostgreSQL é usado somente
+# quando DATABASE_URL estiver definida (ex.: no hosting de produção).
+#
+# gunicorn: servidor WSGI usado em produção (Render).
+# whitenoise: serve arquivos estáticos em produção sem servidor extra.
+
+Django==6.1
+python-dotenv==1.2.3
+psycopg[binary]==3.2.6
+gunicorn==23.0.0
+whitenoise==6.8.2

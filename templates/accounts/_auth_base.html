@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% comment %}
+  Base das páginas de autenticação: layout centrado com marca e cartão,
+  mobile-first. Bloco `auth_body` contém o conteúdo do cartão.
+{% endcomment %}
+{% block content %}
+<div class="flex min-h-[100dvh] flex-col bg-white">
+  <header class="container-app flex items-center justify-between py-5">
+    {% include "components/brand.html" with size="md" %}
+    <div class="hidden text-sm text-surface-500 sm:block">
+      {% block top_right %}{% endblock %}
+    </div>
+  </header>
+
+  <main id="auth-content" class="container-app flex flex-1 items-center justify-center py-8">
+    <div class="w-full max-w-md">
+      <div class="panel p-6 sm:p-8">
+        {% block auth_body %}{% endblock %}
+      </div>
+      <p class="mt-6 text-center text-sm text-surface-500">
+        {% block auth_footer %}{% endblock %}
+      </p>
+    </div>
+  </main>
+
+  <footer class="container-app py-6 text-center text-xs text-surface-400">
+    FINTECPESSOAL © 2026 — Controle e inteligência financeira pessoal.
+  </footer>
+</div>
+{% endblock %}

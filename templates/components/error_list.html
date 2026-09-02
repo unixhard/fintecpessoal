@@ -1,0 +1,8 @@
+{% comment %}Erros gerais do formulário (não ligados a um campo).{% endcomment %}
+{% if form.non_field_errors %}
+<ul class="space-y-1" role="alert">
+  {% for error in form.non_field_errors %}
+  <li class="text-sm text-danger-600">{{ error }}</li>
+  {% endfor %}
+</ul>
+{% endif %}

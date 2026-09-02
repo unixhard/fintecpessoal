@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}FINTECPESSOAL — Controle e inteligência financeira pessoal{% endblock %}
+
+{% block content %}
+<div class="min-h-[100dvh] bg-white text-ink-900">
+
+  {# ===================== Header ===================== #}
+  <header class="sticky top-0 z-40 border-b border-surface-200/70 bg-white/90 backdrop-blur">
+    <div class="container-app flex h-16 items-center justify-between">
+      {% include "components/brand.html" with size="md" %}
+      <nav aria-label="Navegação principal" class="hidden items-center gap-7 text-sm font-medium text-surface-600 md:flex">
+        <a href="#recursos" class="hover:text-ink-900">Recursos</a>
+        <a href="#comparativo" class="hover:text-ink-900">Por que nós</a>
+        <a href="#perguntas" class="hover:text-ink-900">Perguntas</a>
+        <a href="{% url 'accounts:login' %}" class="hover:text-ink-900">Entrar</a>
+      </nav>
+      <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-md btn-arrow">Criar conta</a>
+    </div>
+  </header>
+
+  <main id="landing">
+
+    {# ===================== Hero ===================== #}
+    <section class="relative overflow-hidden">
+      <div class="grid items-center gap-10 py-16 sm:py-24 lg:grid-cols-12">
+        <div class="lg:col-span-7">
+          <p class="mb-5 inline-flex items-center gap-2 rounded-full border border-surface-200 px-3 py-1 text-xs font-medium text-surface-500">
+            <span class="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true"></span>
+            Controle e inteligência financeira pessoal
+          </p>
+          <h1 class="heading-display text-4xl sm:text-5xl lg:text-6xl">
+            Organize sua vida financeira
+            <span class="text-brand-600">com clareza e confiança.</span>
+          </h1>
+          <p class="mt-6 max-w-xl text-lg leading-relaxed text-surface-600">
+            Entenda para onde seu dinheiro vai, organize contas, acompanhe
+            compromissos e planeje o futuro — simples e na sua mão.
+          </p>
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-lg btn-arrow">Criar conta gratuita</a>
+            <a href="#recursos" class="link-accent px-1">Conhecer o produto</a>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5">
+          <div class="panel p-6 sm:p-8">
+            <h2 class="heading-display text-2xl">Comece agora</h2>
+            <p class="mt-1.5 text-sm text-surface-500">Leva menos de 1 minuto. Sem cartão de crédito.</p>
+            <form method="get" action="{% url 'accounts:signup' %}" class="mt-6 flex flex-col gap-3">
+              <label class="flex flex-col gap-1.5 text-sm font-medium text-surface-700">
+                Seu melhor e-mail
+                <input type="email" name="email" required placeholder="voce@exemplo.com" autocomplete="email">
+              </label>
+              <button type="submit" class="btn btn-primary btn-lg btn-arrow w-full">Abrir conta grátis</button>
+            </form>
+            <p class="mt-4 text-center text-xs text-surface-400">
+              Já tem conta? <a href="{% url 'accounts:login' %}" class="font-semibold text-pink-500">Entrar</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# ===================== Recursos ===================== #}
+    <section id="recursos" class="bg-[var(--color-canvas)] py-20">
+      <div class="container-app">
+        <div class="mb-12 max-w-2xl">
+          <p class="text-sm font-semibold uppercase tracking-wide text-pink-500">Recursos</p>
+          <h2 class="heading-display mt-3 text-3xl sm:text-4xl">Tudo o que você precisa, sem complicação</h2>
+          <p class="mt-4 text-surface-600">Ferramentas simples e poderosas para você ter o controle real das suas finanças pessoais.</p>
+        </div>
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="rounded-2xl border border-surface-200 bg-white p-7 shadow-soft">
+            <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink text-xl text-white" aria-hidden="true">◫</span>
+            <h3 class="mt-5 text-lg font-semibold">Contas em um só lugar</h3>
+            <p class="mt-2 text-sm text-surface-600">Acompanhe o saldo de todas as suas contas e entenda onde seu dinheiro está.</p>
+            <a href="{% url 'accounts:signup' %}" class="link-accent mt-4 text-sm">Saiba mais</a>
+          </div>
+          <div class="rounded-2xl border border-surface-200 bg-white p-7 shadow-soft">
+            <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink text-xl text-white" aria-hidden="true">▰</span>
+            <h3 class="mt-5 text-lg font-semibold">Cartões e faturas</h3>
+            <p class="mt-2 text-sm text-surface-600">Acompanhe limites, faturas e parcelamentos sem perder o controle.</p>
+            <a href="{% url 'accounts:signup' %}" class="link-accent mt-4 text-sm">Saiba mais</a>
+          </div>
+          <div class="rounded-2xl border border-surface-200 bg-white p-7 shadow-soft">
+            <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink text-xl text-white" aria-hidden="true">◎</span>
+            <h3 class="mt-5 text-lg font-semibold">Orçamentos e metas</h3>
+            <p class="mt-2 text-sm text-surface-600">Defina limites por categoria e objetivos para planejar o futuro.</p>
+            <a href="{% url 'accounts:signup' %}" class="link-accent mt-4 text-sm">Saiba mais</a>
+          </div>
+          <div class="rounded-2xl border border-surface-200 bg-white p-7 shadow-soft">
+            <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink text-xl text-white" aria-hidden="true">⇅</span>
+            <h3 class="mt-5 text-lg font-semibold">Fluxo de caixa</h3>
+            <p class="mt-2 text-sm text-surface-600">Veja receitas e despesas do período com clareza e tome decisões melhores.</p>
+            <a href="{% url 'accounts:signup' %}" class="link-accent mt-4 text-sm">Saiba mais</a>
+          </div>
+          <div class="rounded-2xl border border-surface-200 bg-white p-7 shadow-soft">
+            <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink text-xl text-white" aria-hidden="true">▸</span>
+            <h3 class="mt-5 text-lg font-semibold">Compromissos futuros</h3>
+            <p class="mt-2 text-sm text-surface-600">Acompanhe recorrências e faturamentos nos próximos dias antes que eles aconteçam.</p>
+            <a href="{% url 'accounts:signup' %}" class="link-accent mt-4 text-sm">Saiba mais</a>
+          </div>
+          <div class="rounded-2xl border border-surface-200 bg-white p-7 shadow-soft">
+            <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink text-xl text-white" aria-hidden="true">☰</span>
+            <h3 class="mt-5 text-lg font-semibold">Visão de dívidas</h3>
+            <p class="mt-2 text-sm text-surface-600">Acompanhe o que falta pagar e quanto do seu futuro já está comprometido.</p>
+            <a href="{% url 'accounts:signup' %}" class="link-accent mt-4 text-sm">Saiba mais</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# ===================== Comparativo ===================== #}
+    <section id="comparativo" class="py-20">
+      <div class="container-app">
+        <div class="mb-12 max-w-2xl">
+          <p class="text-sm font-semibold uppercase tracking-wide text-pink-500">Por que nós</p>
+          <h2 class="heading-display mt-3 text-3xl sm:text-4xl">Feito para o seu controle, não para vender</h2>
+          <p class="mt-4 text-surface-600">Sem enrolação, sem empurrar produto. O FINTECPESSOAL foca no que importa: suas finanças.</p>
+        </div>
+        <div class="overflow-x-auto rounded-2xl border border-surface-200">
+          <table class="min-w-full text-left text-sm">
+            <thead>
+              <tr class="border-b border-surface-200 bg-surface-50/60">
+                <th class="px-6 py-4 font-medium text-surface-500">Recurso</th>
+                <th class="px-6 py-4 font-semibold text-ink-900">FINTECPESSOAL</th>
+                <th class="px-6 py-4 font-medium text-surface-400">Planilhas</th>
+                <th class="px-6 py-4 font-medium text-surface-400">Bancos tradicionais</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-surface-100">
+              <tr>
+                <td class="px-6 py-4 text-surface-600">Controle completo de contas</td>
+                <td class="px-6 py-4 font-medium text-ink-900">✓</td>
+                <td class="px-6 py-4 text-surface-400">✗</td>
+                <td class="px-6 py-4 text-surface-400">✗</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-surface-600">Cartões e faturas centralizados</td>
+                <td class="px-6 py-4 font-medium text-ink-900">✓</td>
+                <td class="px-6 py-4 text-surface-400">—</td>
+                <td class="px-6 py-4 text-surface-400">—</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-surface-600">Orçamentos e metas</td>
+                <td class="px-6 py-4 font-medium text-ink-900">✓</td>
+                <td class="px-6 py-4 text-surface-400">Manual</td>
+                <td class="px-6 py-4 text-surface-400">✗</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-surface-600">Visão de dívidas e parcelamentos</td>
+                <td class="px-6 py-4 font-medium text-ink-900">✓</td>
+                <td class="px-6 py-4 text-surface-400">—</td>
+                <td class="px-6 py-4 text-surface-400">✗</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-surface-600">Seus dados, só você acessa</td>
+                <td class="px-6 py-4 font-medium text-ink-900">✓</td>
+                <td class="px-6 py-4 text-surface-400">—</td>
+                <td class="px-6 py-4 text-surface-400">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    {# ===================== Banner CTA escuro ===================== #}
+    <section class="bg-ink py-20 text-white">
+      <div class="container-app flex flex-col items-center text-center">
+        <h2 class="heading-display max-w-2xl text-3xl sm:text-4xl">Comece hoje a entender seu dinheiro</h2>
+        <p class="mt-4 max-w-xl text-surface-300">Crie sua conta gratuita e veja sua vida financeira com clareza.</p>
+        <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-lg btn-arrow mt-8 !bg-white !text-ink hover:!bg-surface-100">Criar conta grátis</a>
+      </div>
+    </section>
+
+    {# ===================== FAQ ===================== #}
+    <section id="perguntas" class="bg-[var(--color-canvas)] py-20">
+      <div class="container-app max-w-3xl">
+        <div class="mb-12 text-center">
+          <p class="text-sm font-semibold uppercase tracking-wide text-pink-500">Perguntas frequentes</p>
+          <h2 class="heading-display mt-3 text-3xl sm:text-4xl">Tire suas dúvidas</h2>
+        </div>
+        <div class="space-y-3">
+          {% with faq=faqs|default:"" %}
+          {% if faq %}
+            {% for item in faq %}
+            <details class="group rounded-2xl border border-surface-200 bg-white p-5">
+              <summary class="flex cursor-pointer items-center justify-between gap-4 font-semibold text-surface-900">
+                {{ item.q }}
+                <span class="text-surface-400 transition-transform group-open:rotate-45" aria-hidden="true">+</span>
+              </summary>
+              <p class="mt-3 text-sm text-surface-600">{{ item.a }}</p>
+            </details>
+            {% endfor %}
+          {% else %}
+          <details class="group rounded-2xl border border-surface-200 bg-white p-5" open>
+            <summary class="flex cursor-pointer items-center justify-between gap-4 font-semibold text-surface-900">
+              Meus dados estão seguros?
+              <span class="text-surface-400 transition-transform group-open:rotate-45" aria-hidden="true">+</span>
+            </summary>
+            <p class="mt-3 text-sm text-surface-600">Sim. Seus dados ficam isolados e protegidos — só você tem acesso à sua conta.</p>
+          </details>
+          <details class="group rounded-2xl border border-surface-200 bg-white p-5">
+            <summary class="flex cursor-pointer items-center justify-between gap-4 font-semibold text-surface-900">
+              Preciso de cartão de crédito para começar?
+              <span class="text-surface-400 transition-transform group-open:rotate-45" aria-hidden="true">+</span>
+            </summary>
+            <p class="mt-3 text-sm text-surface-600">Não. A criação de conta é gratuita e você não precisa de cartão de crédito.</p>
+          </details>
+          <details class="group rounded-2xl border border-surface-200 bg-white p-5">
+            <summary class="flex cursor-pointer items-center justify-between gap-4 font-semibold text-surface-900">
+              Funciona no celular?
+              <span class="text-surface-400 transition-transform group-open:rotate-45" aria-hidden="true">+</span>
+            </summary>
+            <p class="mt-3 text-sm text-surface-600">Sim. A interface é responsiva e funciona perfeitamente no seu navegador mobile.</p>
+          </details>
+          {% endif %}
+          {% endwith %}
+        </div>
+      </div>
+    </section>
+
+    {# ===================== Footer ===================== #}
+    <footer class="bg-white py-16">
+      <div class="container-app">
+        <div class="grid grid-cols-2 gap-8 sm:grid-cols-4">
+          <div>
+            <h3 class="mb-3 text-sm font-semibold text-surface-900">Produto</h3>
+            <ul class="space-y-2 text-sm text-surface-600">
+              <li><a href="#recursos" class="hover:text-ink-900">Recursos</a></li>
+              <li><a href="{% url 'accounts:signup' %}" class="hover:text-ink-900">Criar conta</a></li>
+              <li><a href="{% url 'accounts:login' %}" class="hover:text-ink-900">Entrar</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="mb-3 text-sm font-semibold text-surface-900">Empresa</h3>
+            <ul class="space-y-2 text-sm text-surface-600">
+              <li><a href="#comparativo" class="hover:text-ink-900">Por que nós</a></li>
+              <li><a href="#perguntas" class="hover:text-ink-900">Perguntas frequentes</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="mb-3 text-sm font-semibold text-surface-900">Suporte</h3>
+            <ul class="space-y-2 text-sm text-surface-600">
+              <li><span>Central de ajuda</span></li>
+              <li><span>Contato</span></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="mb-3 text-sm font-semibold text-surface-900">Legal</h3>
+            <ul class="space-y-2 text-sm text-surface-600">
+              <li><span>Termos de uso</span></li>
+              <li><span>Privacidade</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-surface-100 pt-6 sm:flex-row">
+          <p class="text-xs text-surface-400">FINTECPESSOAL © 2026 — Controle e inteligência financeira pessoal.</p>
+          <div class="flex items-center gap-4 text-surface-400">
+            <a href="{% url 'accounts:login' %}" aria-label="Entrar"><span class="text-lg">◉</span></a>
+            <a href="{% url 'accounts:login' %}" aria-label="Rede social"><span class="text-lg">✕</span></a>
+            <a href="{% url 'accounts:login' %}" aria-label="Rede social"><span class="text-lg">▣</span></a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+</div>
+{% endblock %}

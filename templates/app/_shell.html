@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% comment %}
+  Shell da área autenticada — layout estilo TailAdmin (dashboard admin).
+  Desktop: sidebar fixa à esquerda + topbar fixa com usuário.
+  Mobile: botão hambúrguer abre a sidebar; navegação inferior opcional.
+{% endcomment %}
+
+{% block content %}
+<div class="app-shell flex h-screen overflow-hidden">
+
+  {# ===================== Sidebar (sempre fixed à esquerda) ===================== #}
+  <aside id="sidebar"
+         class="fixed inset-y-0 left-0 z-50 flex w-[290px] flex-col border-r border-surface-200 bg-white transition-transform duration-300 -translate-x-full lg:translate-x-0 dark:border-surface-800 dark:bg-surface-900"
+         aria-label="Navegação principal">
+    {# Cabeçalho #}
+    <div class="flex items-center justify-between gap-2 px-5 pb-4 pt-6">
+      {% include "components/brand.html" with size="md" %}
+      <button type="button" data-sidebar-close class="rounded-lg p-1.5 text-surface-400 hover:bg-surface-50 lg:hidden dark:text-surface-400 dark:hover:bg-surface-800" aria-label="Fechar menu">
+        ✕
+      </button>
+    </div>
+
+    <div class="no-scrollbar flex flex-1 flex-col overflow-y-auto px-3 duration-300">
+      <nav aria-label="Menu principal">
+        {% with groups="menu planejamento analise admin" %}
+        {% for group in groups.split %}
+        {% if group == "admin" %}
+        <h3 class="mb-3 mt-6 px-3 text-xs font-medium uppercase tracking-wider text-surface-400 dark:text-surface-500">Administração</h3>
+        {% elif group == "planejamento" %}
+        <h3 class="mb-3 mt-6 px-3 text-xs font-medium uppercase tracking-wider text-surface-400 dark:text-surface-500">Planejamento</h3>
+        {% elif group == "analise" %}
+        <h3 class="mb-3 mt-6 px-3 text-xs font-medium uppercase tracking-wider text-surface-400 dark:text-surface-500">Análise</h3>
+        {% else %}
+        <h3 class="mb-3 mt-2 px-3 text-xs font-medium uppercase tracking-wider text-surface-400 dark:text-surface-500">Menu</h3>
+        {% endif %}
+        <ul class="mb-2 flex flex-col gap-1">
+          {% for item in nav_items %}
+          {% if item.group == group %}
+          <li>
+            <a href="{{ item.url }}"
+               class="group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+                      {% if active_nav == item.key %}bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300{% else %}text-surface-600 hover:bg-surface-50 hover:text-surface-900 dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-white{% endif %}">
+              <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base
+                           {% if active_nav == item.key %}bg-brand-600 text-white{% else %}bg-surface-100 text-surface-500 group-hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-400 dark:group-hover:bg-surface-700{% endif %}"
+                    aria-hidden="true">{{ item.icon }}</span>
+              <span class="flex-1">{{ item.label }}</span>
+              {% if active_nav == item.key %}
+              <span class="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true"></span>
+              {% endif %}
+            </a>
+          </li>
+          {% endif %}
+          {% endfor %}
+        </ul>
+        {% endfor %}
+        {% endwith %}
+      </nav>
+    </div>
+
+    {# Rodapé da sidebar com usuário #}
+    <div class="border-t border-surface-200 p-3 dark:border-surface-800">
+      <div class="flex items-center gap-3 rounded-xl px-2 py-2">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
+          {{ request.user.first_name|default:request.user.username|slice:":1"|upper }}
+        </span>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-medium text-surface-800 dark:text-surface-100">{{ request.user.first_name|default:request.user.username }}</p>
+          <p class="truncate text-xs text-surface-400 dark:text-surface-500">{{ request.user.email }}</p>
+        </div>
+        <form method="post" action="{% url 'accounts:logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="rounded-lg p-2 text-surface-400 hover:bg-surface-50 hover:text-danger-600 dark:text-surface-400 dark:hover:bg-surface-800 dark:hover:text-danger-400" title="Sair" aria-label="Sair">⎋</button>
+        </form>
+      </div>
+    </div>
+  </aside>
+
+  <div id="sidebar-overlay" data-sidebar-overlay class="fixed inset-0 z-40 hidden bg-surface-900/40 lg:hidden dark:bg-black/60" aria-hidden="true"></div>
+
+  {# ===================== Área principal ===================== #}
+  <div class="flex min-w-0 flex-1 flex-col overflow-hidden lg:pl-[290px]">
+    {# Topbar #}
+    <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-surface-200 bg-white px-4 md:px-6 dark:border-surface-800 dark:bg-surface-900/90 dark:backdrop-blur">
+      <div class="flex items-center gap-3">
+        <button type="button" data-sidebar-open class="rounded-lg border border-surface-200 bg-white p-2 text-surface-500 hover:bg-surface-50 lg:hidden dark:border-surface-700 dark:bg-surface-900 dark:text-surface-400 dark:hover:bg-surface-800" aria-label="Abrir menu">
+          <span class="block h-0.5 w-4 bg-current"></span>
+          <span class="mt-1 block h-0.5 w-4 bg-current"></span>
+          <span class="mt-1 block h-0.5 w-3 bg-current"></span>
+        </button>
+        <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100">
+          {% block shell_title %}FINTECPESSOAL{% endblock %}
+        </h2>
+      </div>
+
+      <div class="flex items-center gap-3">
+        {# Ação rápida — criar lançamento/conta/cartão de qualquer lugar (UX) #}
+        <div class="relative" data-quick-add>
+          <button type="button"
+                  data-quick-add-toggle
+                  class="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-brand-700"
+                  aria-haspopup="true" aria-expanded="false" title="Ações rápidas">
+            <span class="text-base leading-none" aria-hidden="true">＋</span>
+            <span class="hidden sm:inline">Rápido</span>
+            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clip-rule="evenodd"/></svg>
+          </button>
+          <div data-quick-add-menu
+               class="absolute right-0 z-50 mt-2 hidden w-60 origin-top-right rounded-xl border border-surface-200 bg-white p-1.5 shadow-float dark:border-surface-700 dark:bg-surface-900">
+            <p class="px-3 py-1.5 text-theme-xs font-medium uppercase tracking-wide text-surface-400 dark:text-surface-500">Novo lançamento</p>
+            <a href="{% url 'finance:transaction_create' %}?kind=expense" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-50 dark:text-surface-200 dark:hover:bg-surface-800">
+              <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-danger-500/15 text-danger-600 dark:text-danger-400" aria-hidden="true">−</span>Despesa
+            </a>
+            <a href="{% url 'finance:transaction_create' %}?kind=income" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-50 dark:text-surface-200 dark:hover:bg-surface-800">
+              <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-success-500/15 text-success-600 dark:text-success-400" aria-hidden="true">＋</span>Receita
+            </a>
+            <a href="{% url 'finance:transfer_create' %}" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-50 dark:text-surface-200 dark:hover:bg-surface-800">
+              <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-info-500/15 text-info-600 dark:text-info-400" aria-hidden="true">⇄</span>Transferência
+            </a>
+            <div class="my-1 border-t border-surface-100 dark:border-surface-800"></div>
+            <a href="{% url 'finance:account_create' %}" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-50 dark:text-surface-200 dark:hover:bg-surface-800">
+              <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500/15 text-brand-600 dark:text-brand-300" aria-hidden="true">◫</span>Nova conta
+            </a>
+            <a href="{% url 'cards:card_create' %}" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-50 dark:text-surface-200 dark:hover:bg-surface-800">
+              <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500/15 text-brand-600 dark:text-brand-300" aria-hidden="true">▰</span>Cartão
+            </a>
+            {% if nav_items|length %}
+            <a href="{% url 'cards:purchase_create' %}" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-50 dark:text-surface-200 dark:hover:bg-surface-800">
+              <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500/15 text-brand-600 dark:text-brand-300" aria-hidden="true">▤</span>Compra no cartão
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        {# Modo privacidade instantânea (desfoca valores) — atalho Shift+P #}
+        <button type="button" id="privacy-toggle" class="relative flex h-9 w-9 items-center justify-center rounded-full border border-surface-200 bg-white text-surface-500 transition-colors hover:bg-surface-50 hover:text-surface-700 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-white" aria-label="Ocultar valores (modo privacidade)" title="Ocultar valores (Shift+P)">
+          <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M3.28 2.22a.75.75 0 0 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-1.16-1.16A9.95 9.95 0 0 0 18.25 10c-1.6-4.45-5.81-7.25-8.25-7.25-.96 0-2.03.29-3.02.84L3.28 2.22Zm3.2 5.32a5.5 5.5 0 0 0 7.98 7.98l-1.1-1.1a3.98 3.98 0 0 1-5.78-5.78l-1.1-1.1ZM10 14.75a4.75 4.75 0 0 0 4.65-5.86L9.11 13.43c.28.21.58.32.89.32Zm-5.5-5.5c0 .66.12 1.29.33 1.87l-1.42-1.42a9.97 9.97 0 0 1 1.9-2.6l1.11 1.11c-.6.55-1.03 1.25-1.24 2.02Z" />
+          </svg>
+        </button>
+
+        {# Alternância de tema (sol/lua) — escolha do cliente, persistida em localStorage #}
+        <button type="button" id="theme-toggle" class="relative flex h-9 w-9 items-center justify-center rounded-full border border-surface-200 bg-white text-surface-500 transition-colors hover:bg-surface-50 hover:text-surface-700 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-white" aria-label="Alternar tema claro/escuro" title="Alternar tema">
+          <svg class="hidden h-5 w-5 dark:block" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M9.99998 3.5a.75.75 0 0 1 .75.75v1.1a.75.75 0 0 1-1.5 0v-1.1a.75.75 0 0 1 .75-.75Zm0 7.583a3.083 3.083 0 1 1 0-6.166 3.083 3.083 0 0 1 0 6.166ZM5.512 10a.75.75 0 0 1-.75.75H3.667a.75.75 0 0 1 0-1.5h1.095a.75.75 0 0 1 .75.75Zm-.288 2.878a.75.75 0 0 1 0 1.06l-.775.776a.75.75 0 0 1-1.06-1.06l.775-.776a.75.75 0 0 1 1.06 0Zm4.776.288a.75.75 0 0 1 .75.75v1.095a.75.75 0 0 1-1.5 0V13.916a.75.75 0 0 1 .75-.75Zm4.486-3.166a.75.75 0 0 1 .75-.75h1.095a.75.75 0 0 1 0 1.5h-1.095a.75.75 0 0 1-.75-.75Zm-.079-4.409a.75.75 0 0 1 1.061 0l.775.775a.75.75 0 0 1-1.06 1.06l-.776-.775a.75.75 0 0 1 0-1.06Zm-4.407-.079a.75.75 0 0 1 .75.75v1.095a.75.75 0 0 1-1.5 0V6.833a.75.75 0 0 1 .75-.75Zm3.68-.707a.75.75 0 0 1 0 1.06l-.775.776a.75.75 0 0 1-1.061-1.06l.776-.776a.75.75 0 0 1 1.06 0Z" />
+          </svg>
+          <svg class="h-5 w-5 dark:hidden" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path fill="currentColor" d="M10.164 3.196a.75.75 0 0 1 .198.81A6.56 6.56 0 0 1 9.313 9.9a6.57 6.57 0 0 1-5.894 3.501.75.75 0 0 1-.67-1.095 5.06 5.06 0 0 0 .438-1.048 5.32 5.32 0 0 1 4.03-3.723 9.05 9.05 0 0 0 2.141-6.376.75.75 0 0 1 .806-.962Zm-4.863 8.53c.441-.036.873.051 1.261.188A8.06 8.06 0 0 0 5.63 4.043a8.35 8.35 0 0 0-.33 7.683Z" />
+          </svg>
+        </button>
+
+        <form method="get" action="{% url 'dashboard:index' %}" class="hidden md:block">
+          <input type="search" name="q" placeholder="Buscar..." class="w-56 rounded-lg border border-surface-200 bg-surface-50 py-2 pl-3 pr-3 text-sm focus:border-brand-500 dark:border-surface-700 dark:bg-surface-900">
+        </form>
+        <div class="flex items-center gap-2 rounded-lg border border-surface-200 bg-white px-2 py-1.5 dark:border-surface-700 dark:bg-surface-900">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">
+            {{ request.user.first_name|default:request.user.username|slice:":1"|upper }}
+          </span>
+          <span class="hidden text-sm font-medium text-surface-700 sm:block dark:text-surface-200">{{ request.user.first_name|default:request.user.username }}</span>
+        </div>
+      </div>
+    </header>
+
+    {# Conteúdo #}
+    <main id="app-content" class="flex-1 overflow-y-auto">
+      <div class="neu-canvas-glow mx-auto max-w-7xl space-y-6 px-4 py-4 pb-20 md:px-6 md:pb-6">
+        {% block app_content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    var sidebar = document.getElementById("sidebar");
+    var overlay = document.getElementById("sidebar-overlay");
+    function openSidebar() { sidebar.classList.remove("-translate-x-full"); overlay.classList.remove("hidden"); }
+    function closeSidebar() { sidebar.classList.add("-translate-x-full"); overlay.classList.add("hidden"); }
+    var openBtn = document.querySelector("[data-sidebar-open]");
+    var closeBtn = document.querySelector("[data-sidebar-close]");
+    if (openBtn) openBtn.addEventListener("click", openSidebar);
+    if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
+    if (overlay) overlay.addEventListener("click", closeSidebar);
+
+    // ----- Alternância de tema (claro/escuro) — escolha do cliente, tudo local -----
+    var STORAGE_KEY = "fintecpessoal-theme";
+    var root = document.documentElement;
+    var toggle = document.getElementById("theme-toggle");
+    function isDark() { return root.classList.contains("dark"); }
+    function applyDark(dark) {
+      root.classList.toggle("dark", dark);
+      try { localStorage.setItem(STORAGE_KEY, dark ? "dark" : "light"); } catch (e) {}
+    }
+    function initTheme() {
+      var saved = null;
+      try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+      if (saved === "dark") { root.classList.add("dark"); return; }
+      if (saved === "light") { root.classList.remove("dark"); return; }
+      // Se nunca escolheu, respeita a preferência do sistema operacional.
+      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        root.classList.add("dark");
+      }
+    }
+    initTheme();
+    if (toggle) toggle.addEventListener("click", function () { applyDark(!isDark()); });
+
+    // ----- Menu "Rápido +" (ações rápidas) — abre/fecha e fecha ao clicar fora -----
+    var qaRoot = document.querySelector("[data-quick-add]");
+    var qaToggle = document.querySelector("[data-quick-add-toggle]");
+    var qaMenu = document.querySelector("[data-quick-add-menu]");
+    if (qaRoot && qaToggle && qaMenu) {
+      function setQa(open) {
+        qaMenu.classList.toggle("hidden", !open);
+        qaToggle.classList.toggle("bg-brand-700", open);
+        qaToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      }
+      qaToggle.addEventListener("click", function (e) {
+        e.stopPropagation();
+        setQa(qaMenu.classList.contains("hidden"));
+      });
+      qaMenu.addEventListener("click", function (e) { e.stopPropagation(); });
+      document.addEventListener("click", function () { setQa(false); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") setQa(false); });
+      // Atalho de teclado: "N" (ou "n") abre as ações rápidas.
+      document.addEventListener("keydown", function (e) {
+        var t = e.target;
+        var typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
+        if (typing) return;
+        if ((e.key === "n" || e.key === "N") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          setQa(!qaMenu.classList.contains("hidden"));
+        }
+      });
+    }
+
+    // ----- Modo privacidade instantânea (desfoca valores numéricos) -----
+    var PRIVACY_KEY = "fintecpessoal-privacy";
+    var privacyToggle = document.getElementById("privacy-toggle");
+    function applyPrivacy(on) {
+      document.documentElement.classList.toggle("privacy", on);
+      if (privacyToggle) {
+        privacyToggle.classList.toggle("bg-brand-600", on);
+        privacyToggle.classList.toggle("text-white", on);
+        privacyToggle.classList.toggle("border-brand-600", on);
+      }
+      try { localStorage.setItem(PRIVACY_KEY, on ? "1" : "0"); } catch (e) {}
+    }
+    function initPrivacy() {
+      var saved = null;
+      try { saved = localStorage.getItem(PRIVACY_KEY); } catch (e) {}
+      applyPrivacy(saved === "1");
+    }
+    initPrivacy();
+    if (privacyToggle) {
+      privacyToggle.addEventListener("click", function () {
+        applyPrivacy(!document.documentElement.classList.contains("privacy"));
+      });
+    }
+    document.addEventListener("keydown", function (e) {
+      var t = e.target;
+      var typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
+      if (typing) return;
+      if ((e.key === "P" || e.key === "p") && e.shiftKey) {
+        e.preventDefault();
+        applyPrivacy(!document.documentElement.classList.contains("privacy"));
+      }
+    });
+  })();
+</script>
+{% endblock %}

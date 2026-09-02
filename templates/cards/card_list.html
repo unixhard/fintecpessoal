@@ -1,0 +1,35 @@
+{% extends "app/_shell.html" %}
+{% load money %}
+
+{% block title %}Cartões · FINTECPESSOAL{% endblock %}
+
+{% block app_content %}
+  {% include "components/page_header.html" with title="Cartões" subtitle="Gerencie seus cartões de crédito e faturas." action_url="cards:card_create" action_label="Novo cartão" action_icon="+" %}
+
+  {% if cards %}
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {% for card in cards %}
+    <div class="panel overflow-hidden">
+      <div class="flex items-start justify-between bg-gradient-to-br from-brand-700 to-brand-900 p-5 text-white">
+        <div>
+          <p class="text-sm font-semibold">{{ card.name }}</p>
+          {% if card.institution %}<p class="text-xs text-brand-100">{{ card.institution }}</p>{% endif %}
+        </div>
+        {% if card.status == 'active' %}{% include "components/status_badge.html" with label="Ativo" tone="positive" dot=True %}
+        {% elif card.status == 'blocked' %}{% include "components/status_badge.html" with label="Bloqueado" tone="attention" %}
+        {% else %}{% include "components/status_badge.html" with label="Encerrado" tone="neutral" %}{% endif %}
+      </div>
+      <div class="flex items-end justify-between p-5">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wide text-surface-500">Limite</p>
+          <p class="mt-1 text-xl font-bold num">{% include "components/money.html" with cents=card.limit %}</p>
+        </div>
+        <a href="{% url 'cards:card_detail' card.pk %}" class="btn btn-ghost btn-sm">Detalhes</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  {% include "components/empty_state.html" with icon="▰" title="Nenhum cartão" message="Adicione um cartão para registrar compras e controlar faturas." action_url="cards:card_create" action_label="Novo cartão" %}
+  {% endif %}
+{% endblock %}

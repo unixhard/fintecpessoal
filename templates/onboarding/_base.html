@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% comment %}
+  Base das etapas de onboarding: marca no topo + indicador de progresso
+  + conteúdo central limitado (mobile-first).
+{% endcomment %}
+{% block content %}
+<div class="flex min-h-[100dvh] flex-col">
+  <header class="container-app flex items-center justify-between py-5">
+    {% include "components/brand.html" with size="md" %}
+    <span class="text-sm font-medium text-surface-500">Etapa {{ step }} de {{ total_steps }}</span>
+  </header>
+
+  <main id="onboarding-content" class="container-app flex-1 py-6">
+    <div class="mx-auto w-full max-w-lg">
+      <div class="mb-6" role="presentation" aria-hidden="true">
+        <div class="flex items-center gap-1.5">
+          {% for i in "1234" %}
+          <div class="h-1.5 flex-1 rounded-full {% if forloop.counter <= step %}bg-brand-600{% else %}bg-surface-200{% endif %}"></div>
+          {% endfor %}
+        </div>
+      </div>
+      {% block onboarding_body %}{% endblock %}
+    </div>
+  </main>
+
+  <footer class="container-app py-6 text-center text-xs text-surface-400">
+    {% block onboarding_footer %}{% endblock %}
+  </footer>
+</div>
+{% endblock %}

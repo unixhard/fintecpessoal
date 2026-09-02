@@ -1,0 +1,27 @@
+{% comment %}
+  Mensagens do Django (flash messages) com papel aria-live acessível.
+  Usa o tag das mensagens como nível visual (success/error/warning/info).
+{% endcomment %}
+{% if messages %}
+<div class="container-app mt-5 space-y-3" aria-live="polite" role="status">
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }}">
+      <span aria-hidden="true">
+        {% if "success" in message.tags %}✓{% elif "error" in message.tags %}✕{% elif "warning" in message.tags %}⚠{% else %}ℹ{% endif %}
+      </span>
+      <p class="flex-1">{{ message }}</p>
+      <button type="button" data-dismiss-message class="ml-2 shrink-0 self-start opacity-60 hover:opacity-100" aria-label="Fechar aviso">✕</button>
+    </div>
+  {% endfor %}
+</div>
+<script>
+  (function () {
+    document.querySelectorAll("[data-dismiss-message]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var el = btn.closest(".alert");
+        if (el) el.style.display = "none";
+      });
+    });
+  })();
+</script>
+{% endif %}

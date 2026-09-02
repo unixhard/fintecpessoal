@@ -1,0 +1,71 @@
+{% extends "app/_shell.html" %}
+{% load money %}
+
+{% block title %}{{ debt.name }} · FINTECPESSOAL{% endblock %}
+
+{% block app_content %}
+  {% include "components/page_header.html" with title=debt.name subtitle=debt.get_type_display|default:"Dívida" %}
+
+  {% if debt.status == 'paid_off' %}
+  <div class="mb-6 rounded-2xl border border-success-200 bg-success-50 p-5 text-success-800">
+    <p class="font-semibold">Dívida quitada</p>
+    <p class="text-sm">Todos os valores desta dívida foram pagos.</p>
+  </div>
+  {% endif %}
+
+  <div class="mb-6 grid gap-4 sm:grid-cols-3">
+    <div class="panel p-5">
+      <p class="text-sm text-surface-500">Valor total</p>
+      <p class="mt-1 text-xl font-bold">{% include "components/money.html" with cents=total_amount %}</p>
+    </div>
+    <div class="panel p-5">
+      <p class="text-sm text-surface-500">Já pago</p>
+      <p class="mt-1 text-xl font-bold text-success-600">{% include "components/money.html" with cents=paid_amount %}</p>
+    </div>
+    <div class="panel p-5">
+      <p class="text-sm text-surface-500">Restante</p>
+      <p class="mt-1 text-xl font-bold text-danger-600">{% include "components/money.html" with cents=remaining_amount %}</p>
+    </div>
+  </div>
+
+  <div class="panel mb-6 p-5">
+    <div class="mb-2 flex items-center justify-between text-sm">
+      <span class="text-surface-500">Progresso de quitação</span>
+      <span class="font-semibold text-surface-700">{{ percent }}%</span>
+    </div>
+    {% include "components/progress.html" with percent=percent tone="healthy" show_label=False %}
+    <div class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+      {% if debt.start_date %}<p class="text-surface-600">Início: <span class="font-medium text-surface-800">{{ debt.start_date|date:"d/m/Y" }}</span></p>{% endif %}
+      {% if debt.end_date %}<p class="text-surface-600">Vencimento: <span class="font-medium text-surface-800">{{ debt.end_date|date:"d/m/Y" }}</span></p>{% endif %}
+      {% if debt.creditor %}<p class="text-surface-600">Credor: <span class="font-medium text-surface-800">{{ debt.creditor }}</span></p>{% endif %}
+      {% if debt.interest_rate is not None %}<p class="text-surface-600">Juros: <span class="font-medium text-surface-800">{{ debt.interest_rate }}% a.m.</span></p>{% endif %}
+    </div>
+  </div>
+
+  {% if remaining_amount > 0 and debt.status != 'paid_off' %}
+  <div class="panel mb-6 p-5">
+    <h2 class="mb-3 font-semibold text-surface-800">Registrar pagamento</h2>
+    <p class="mb-3 text-sm text-surface-500">Restante: {% include "components/money.html" with cents=remaining_amount %}</p>
+    <form method="post" action="{% url 'debts:debt_pay' debt.pk %}" class="grid gap-4 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+      {% csrf_token %}
+      {% if payment_error %}{% include "components/error_list.html" with form=pay_form %}{% endif %}
+      <div>{% include "components/field.html" with field=pay_form.account %}</div>
+      <div>{% include "components/field.html" with field=pay_form.amount %}</div>
+      <div>{% include "components/field.html" with field=pay_form.date %}</div>
+      <button type="submit" class="btn btn-primary btn-sm">Pagar</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <div class="flex flex-wrap items-center gap-3">
+    <a href="{% url 'debts:debt_edit' debt.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+    {% if debt.status == 'active' %}
+      <form method="post" action="{% url 'debts:debt_default' debt.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Marcar inadimplente</button></form>
+      <form method="post" action="{% url 'debts:debt_archive' debt.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Arquivar</button></form>
+    {% elif debt.status == 'defaulted' %}
+      <form method="post" action="{% url 'debts:debt_activate' debt.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Reativar</button></form>
+    {% endif %}
+    <form method="post" action="{% url 'debts:debt_delete' debt.pk %}" onsubmit="return confirm('Excluir esta dívida?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">Excluir</button></form>
+    <a href="{% url 'debts:debt_list' %}" class="btn btn-ghost btn-sm">Voltar</a>
+  </div>
+{% endblock %}

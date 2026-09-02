@@ -1,0 +1,40 @@
+{% extends "app/_shell.html" %}
+{% load money %}
+
+{% block title %}Compras · FINTECPESSOAL{% endblock %}
+
+{% block app_content %}
+  {% include "components/page_header.html" with title="Compras" subtitle="Compras registradas nos seus cartões." action_url="cards:purchase_create" action_label="Nova compra" action_icon="+" %}
+
+  {% if purchases %}
+  <div class="panel table-wrap">
+    <table class="w-full text-left text-sm">
+      <thead class="border-b border-surface-200 bg-surface-50 text-xs uppercase tracking-wide text-surface-500">
+        <tr>
+          <th class="px-4 py-3 font-medium">Descrição</th>
+          <th class="px-4 py-3 font-medium">Cartão</th>
+          <th class="px-4 py-3 font-medium">Parcelas</th>
+          <th class="px-4 py-3 font-medium">1ª parcela</th>
+          <th class="px-4 py-3 font-medium">Valor da parcela</th>
+          <th class="px-4 py-3 text-right font-medium">Valor total</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-surface-100">
+        {% for p in purchases %}
+        <tr class="hover:bg-surface-50">
+          <td class="px-4 py-3 font-medium text-surface-800">{{ p.description }}</td>
+          <td class="px-4 py-3 text-surface-600">{{ p.card.name|default:"—" }}</td>
+          <td class="px-4 py-3 text-surface-600">{{ p.installment_count }}x</td>
+          <td class="px-4 py-3 text-surface-600">{{ p.first_due_date|date:"d/m/Y" }}</td>
+          <td class="px-4 py-3 text-surface-600">{% include "components/money.html" with cents=p.installment_amount %}</td>
+          <td class="px-4 py-3 text-right">{% include "components/money.html" with cents=p.total_amount %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "components/pagination.html" with page=page_obj paginator=paginator %}
+  {% else %}
+  {% include "components/empty_state.html" with icon="▰" title="Nenhuma compra" message="Registre uma compra no cartão para acompanhar as parcelas." action_url="cards:purchase_create" action_label="Nova compra" %}
+  {% endif %}
+{% endblock %}

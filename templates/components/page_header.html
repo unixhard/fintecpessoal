@@ -1,0 +1,22 @@
+{% comment %}
+  Cabeçalho de página de seção com título, subtítulo e ações.
+  Uso: {% include "components/page_header.html" with title=... subtitle=... %}
+       Ações extras via bloco {% block page_actions %} no template pai.
+{% endcomment %}
+<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight text-surface-900 sm:text-3xl">{{ title }}</h1>
+    {% if subtitle %}<p class="mt-1.5 text-sm text-surface-500">{{ subtitle }}</p>{% endif %}
+  </div>
+  {% if action_url %}
+  {% url action_url as action_href %}
+  {% if action_href %}
+  <div class="flex flex-wrap items-center gap-2">
+    <a href="{{ action_href }}" class="btn btn-primary btn-md">
+      {% if action_icon %}<span aria-hidden="true" class="text-sm leading-none">{{ action_icon }}</span>{% endif %}
+      {{ action_label }}
+    </a>
+  </div>
+  {% endif %}
+  {% endif %}
+</div>

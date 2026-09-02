@@ -1,0 +1,16 @@
+{% comment %}
+  Marca FINTECPESSOAL. Uso:
+    {% include "components/brand.html" with size="lg" light=False %}
+{% endcomment %}
+{% with brand_size=size|default:"md" %}
+<a href="{% if user.is_authenticated %}{% url 'dashboard:index' %}{% else %}{% url 'core:home' %}{% endif %}"
+   class="inline-flex items-center gap-2.5"
+   aria-label="FINTECPESSOAL">
+  <span class="flex items-center justify-center rounded-xl bg-ink font-bold text-white {% if brand_size == 'lg' %}h-10 w-10 text-lg{% else %}h-9 w-9{% endif %}">
+    F
+  </span>
+  <span class="font-display font-bold tracking-tight {% if brand_size == 'lg' %}text-xl{% else %}text-lg{% endif %} {% if light %}text-white{% else %}text-ink-900 dark:text-white{% endif %}">
+    FINTEC<span class="text-brand-600">PESSOAL</span>
+  </span>
+</a>
+{% endwith %}

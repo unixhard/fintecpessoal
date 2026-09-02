@@ -1,0 +1,15 @@
+{% comment %}
+  Badge de status. tree: healthy | attention | exceeded | positive | negative | neutral
+  Uso: {% include "components/status_badge.html" with label=... tone=... %}
+{% endcomment %}
+<span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium
+  {% if tone == 'positive' %}bg-success-500/10 text-success-600
+  {% elif tone == 'negative' %}bg-danger-500/10 text-danger-600
+  {% elif tone == 'attention' %}bg-warning-500/10 text-warning-600
+  {% elif tone == 'exceeded' %}bg-danger-500/10 text-danger-600
+  {% elif tone == 'critical' %}bg-danger-500/15 text-danger-700
+  {% elif tone == 'info' %}bg-info-500/10 text-info-600
+  {% else %}bg-surface-100 text-surface-600{% endif %}">
+  {% if dot %}<span class="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true"></span>{% endif %}
+  {{ label }}
+</span>

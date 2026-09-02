@@ -1,0 +1,62 @@
+{% extends "app/_shell.html" %}
+{% load money %}
+
+{% block title %}{{ account.name }} · FINTECPESSOAL{% endblock %}
+
+{% block app_content %}
+  {% include "components/page_header.html" with title=account.name subtitle=account.get_type_display %}
+
+  <div class="mb-6 grid gap-4 sm:grid-cols-2">
+    <div class="panel p-5">
+      <p class="text-sm text-surface-500">Saldo atual</p>
+      <p class="mt-1 text-2xl font-bold">{% include "components/money.html" with cents=account.balance %}</p>
+    </div>
+    <div class="panel p-5">
+      <p class="text-sm text-surface-500">Movimentações</p>
+      <p class="mt-1 text-2xl font-bold text-surface-800">{{ transaction_count }}</p>
+    </div>
+  </div>
+
+  <div class="mb-4 flex items-center justify-between">
+    <h2 class="text-lg font-semibold text-surface-800">Movimentações recentes</h2>
+    <a href="{% url 'finance:expense_create' %}" class="btn btn-ghost btn-sm">Lançar despesa</a>
+  </div>
+
+  {% if recent_transactions %}
+  <div class="panel overflow-hidden">
+    <table class="w-full text-left text-sm">
+      <thead class="border-b border-surface-200 bg-surface-50 text-xs uppercase tracking-wide text-surface-500">
+        <tr>
+          <th class="px-4 py-3 font-medium">Data</th>
+          <th class="px-4 py-3 font-medium">Descrição</th>
+          <th class="px-4 py-3 font-medium">Tipo</th>
+          <th class="px-4 py-3 text-right font-medium">Valor</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-surface-100">
+        {% for t in recent_transactions %}
+        <tr class="hover:bg-surface-50">
+          <td class="px-4 py-3 text-surface-600">{{ t.date|date:"d/m/Y" }}</td>
+          <td class="px-4 py-3">
+            <a href="{% url 'finance:transaction_detail' t.pk %}" class="font-medium text-surface-800 hover:text-brand-700">{{ t.description|default:"—" }}</a>
+            {% if t.category %}<div class="text-xs text-surface-500">{{ t.category.name }}</div>{% endif %}
+          </td>
+          <td class="px-4 py-3 text-surface-600">{{ t.get_type_display }}</td>
+          <td class="px-4 py-3 text-right">
+            {% if t.type == 'income' %}<span class="font-medium text-success-600">+ {{ t.amount|centavos }}</span>
+            {% else %}<span class="font-medium text-danger-600">− {{ t.amount|centavos }}</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  {% include "components/empty_state.html" with icon="⇄" title="Sem movimentações" message="Nenhuma movimentação registrada nesta conta ainda." %}
+  {% endif %}
+
+  <div class="mt-6 flex items-center gap-3">
+    <a href="{% url 'finance:account_edit' account.pk %}" class="btn btn-ghost">Editar conta</a>
+    <a href="{% url 'finance:account_list' %}" class="btn btn-ghost">Voltar</a>
+  </div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "app/_shell.html" %}
+{% load money %}
+
+{% block title %}Lembretes · FINTECPESSOAL{% endblock %}
+
+{% block shell_title %}Lembretes{% endblock %}
+
+{% block app_content %}
+  <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <div>
+      <h1 class="heading-display text-2xl text-surface-900 dark:text-white">Agenda de contas a pagar/receber</h1>
+      <p class="mt-1 text-sm text-surface-500 dark:text-surface-400">Vencimentos de faturas, recorrências e dívidas.</p>
+    </div>
+    <div class="segmented" role="group" aria-label="Horizonte">
+      {% for d in horizon_choices %}
+      <a href="{% url 'reminders:index' %}?days={{ d }}"
+         class="segmented-item {% if days == d %}segmented-item-active{% endif %}">{{ d }} dias</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  {# Resumo #}
+  <div class="mt-6 grid gap-4 sm:grid-cols-3">
+    <div class="rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
+      <span class="text-theme-sm text-surface-500 dark:text-surface-400">Vencidos</span>
+      <div class="mt-2 text-2xl font-bold text-danger-600 dark:text-danger-400">{{ timeline.overdue_count }}</div>
+    </div>
+    <div class="rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
+      <span class="text-theme-sm text-surface-500 dark:text-surface-400">Vencem hoje</span>
+      <div class="mt-2 text-2xl font-bold text-warning-600 dark:text-warning-400">{{ timeline.today_count }}</div>
+    </div>
+    <div class="rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
+      <span class="text-theme-sm text-surface-500 dark:text-surface-400">A pagar no período</span>
+      <div class="mt-2 text-2xl font-bold text-surface-900 dark:text-white">{{ timeline.total_amount|centavos }}</div>
+    </div>
+  </div>
+
+  {# Linha do tempo #}
+  <div class="mt-6 overflow-hidden rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
+    <div class="border-b border-surface-200 px-6 py-4 dark:border-surface-800">
+      <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Próximos vencimentos</h3>
+    </div>
+    {% if timeline.items %}
+    <div class="table-wrap p-6">
+      <table class="w-full min-w-full divide-y divide-surface-100 text-sm dark:divide-surface-800">
+        <thead>
+          <tr class="text-left text-theme-xs uppercase tracking-wide text-surface-400 dark:text-surface-500">
+            <th class="px-2 py-2 font-semibold">Situação</th>
+            <th class="px-2 py-2 font-semibold">Data</th>
+            <th class="px-2 py-2 font-semibold">Descrição</th>
+            <th class="px-2 py-2 text-right font-semibold">Valor</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-surface-100 dark:divide-surface-800">
+          {% for item in timeline.items %}
+          <tr>
+            <td class="px-2 py-2">
+              {% if item.urgency == "overdue" %}
+              <span class="badge-pill bg-danger-50 text-danger-600 dark:bg-danger-500/15 dark:text-danger-400">vencida há {{ item.day_diff|stringformat:"+d"|cut:"-" }} dias</span>
+              {% elif item.urgency == "today" %}
+              <span class="badge-pill bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400">vence hoje</span>
+              {% elif item.urgency == "soon" %}
+              <span class="badge-pill bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400">em {{ item.day_diff }} dias</span>
+              {% else %}
+              <span class="badge-pill bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400">{{ item.day_diff }} dias</span>
+              {% endif %}
+            </td>
+            <td class="px-2 py-2 text-surface-700 dark:text-surface-200">{{ item.date }}</td>
+            <td class="px-2 py-2 font-medium text-surface-800 dark:text-surface-100">{{ item.label }}</td>
+            <td class="px-2 py-2 text-right font-semibold {% if item.kind == 'invoice' or item.kind == 'debt' %}text-danger-600 dark:text-danger-400{% else %}text-surface-700 dark:text-surface-200{% endif %}">{{ item.amount|centavos }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-6">{% include "components/empty_state.html" with title="Nada a vencer no período" message="Sem faturas, recorrências ou dívidas vencendo nos próximos dias." icon="✓" %}</div>
+    {% endif %}
+  </div>
+{% endblock %}

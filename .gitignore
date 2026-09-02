@@ -1,0 +1,44 @@
+# ---- Python / Django ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+build/
+dist/
+wheels/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.env
+db.sqlite3
+db.sqlite3-journal
+
+# Django
+staticfiles/
+media/
+logs/
+*.log
+
+# ---- Ambiente virtual ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- Dependências do frontend ----
+node_modules/
+
+# ---- Editores / SO ----
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ---- Segredos ----
+.env.local
+.server.pid

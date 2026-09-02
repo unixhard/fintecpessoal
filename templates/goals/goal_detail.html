@@ -1,0 +1,84 @@
+{% extends "app/_shell.html" %}
+{% load money %}
+
+{% block title %}{{ goal.name }} · FINTECPESSOAL{% endblock %}
+
+{% block app_content %}
+  {% include "components/page_header.html" with title=goal.name subtitle=goal.get_priority_display %}
+
+  {% if goal.status == 'achieved' %}
+  <div class="mb-6 rounded-2xl border border-success-200 bg-success-50 p-5 text-success-800">
+    <p class="font-semibold">Meta alcançada! 🎉</p>
+    <p class="text-sm">Você atingiu seu objetivo de {% include "components/money.html" with cents=target_amount %}. Parabéns pelo planejamento.</p>
+  </div>
+  {% endif %}
+
+  <div class="mb-6 grid gap-4 sm:grid-cols-3">
+    <div class="panel p-5">
+      <p class="text-sm text-surface-500">Acumulado</p>
+      <p class="mt-1 text-xl font-bold text-brand-700">{% include "components/money.html" with cents=current_amount %}</p>
+    </div>
+    <div class="panel p-5">
+      <p class="text-sm text-surface-500">Objetivo</p>
+      <p class="mt-1 text-xl font-bold">{% include "components/money.html" with cents=target_amount %}</p>
+    </div>
+    <div class="panel p-5">
+      <p class="text-sm text-surface-500">Faltam</p>
+      <p class="mt-1 text-xl font-bold text-danger-600">{% include "components/money.html" with cents=remaining %}</p>
+    </div>
+  </div>
+
+  <div class="panel mb-6 p-5">
+    <div class="mb-2 flex items-center justify-between text-sm">
+      <span class="text-surface-500">Progresso</span>
+      <span class="font-semibold text-surface-700">{{ percent }}%</span>
+    </div>
+    {% include "components/progress.html" with percent=percent tone="healthy" show_label=False %}
+    <div class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+      {% if goal.target_date %}
+      <p class="text-surface-600">Prazo: <span class="font-medium text-surface-800">{{ goal.target_date|date:"d/m/Y" }}</span></p>
+      {% else %}
+      <p class="text-surface-600">Prazo: <span class="font-medium text-surface-800">Sem prazo definido</span></p>
+      {% endif %}
+      {% if required_monthly %}
+      <p class="text-surface-600">Ritmo necessário: <span class="font-medium text-surface-800">{% include "components/money.html" with cents=required_monthly %}/mês</span></p>
+      {% endif %}
+      {% if projected_completion %}
+      <p class="text-surface-600">Projeção (ritmo atual): <span class="font-medium text-surface-800">{{ projected_completion|date:"d/m/Y" }}</span></p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if goal.status != 'achieved' %}
+  <div class="panel mb-6 p-5">
+    <h2 class="mb-3 font-semibold text-surface-800">Registrar aporte</h2>
+    <form method="post" action="{% url 'goals:goal_contribute' goal.pk %}" class="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+      {% csrf_token %}
+      {% if contribution_error %}{% include "components/error_list.html" with form=contribution_form %}{% endif %}
+      <div>
+        {% include "components/field.html" with field=contribution_form.amount %}
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">Adicionar aporte</button>
+    </form>
+    <p class="mt-2 text-xs text-surface-500">Registre o valor acumulado na meta. O aporte não duplica lançamentos da sua contabilidade de contas.</p>
+  </div>
+  {% endif %}
+
+  {% if goal.notes %}
+  <div class="panel mb-6 p-5">
+    <h2 class="mb-2 font-semibold text-surface-800">Observações</h2>
+    <p class="text-sm text-surface-600 whitespace-pre-line">{{ goal.notes }}</p>
+  </div>
+  {% endif %}
+
+  <div class="flex flex-wrap items-center gap-3">
+    <a href="{% url 'goals:goal_edit' goal.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+    {% if goal.status == 'active' %}
+    <form method="post" action="{% url 'goals:goal_pause' goal.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Pausar</button></form>
+    {% elif goal.status == 'paused' %}
+    <form method="post" action="{% url 'goals:goal_activate' goal.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Reativar</button></form>
+    {% endif %}
+    <form method="post" action="{% url 'goals:goal_delete' goal.pk %}" onsubmit="return confirm('Excluir esta meta?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">Excluir</button></form>
+    <a href="{% url 'goals:goal_list' %}" class="btn btn-ghost btn-sm">Voltar</a>
+  </div>
+{% endblock %}

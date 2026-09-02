@@ -1,0 +1,27 @@
+{% comment %}
+  Campo de formulário reutilizável com acessibilidade.
+  Uso:
+    {% include "components/field.html" with field=form.email %}
+{% endcomment %}
+<div class="space-y-1.5">
+  {% if field.label %}
+  <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-surface-700">
+    {{ field.label }}
+    {% if field.field.required %}<span class="text-danger-500" aria-hidden="true"> *</span>{% endif %}
+  </label>
+  {% endif %}
+
+  {{ field }}
+
+  {% if field.help_text %}
+  <p class="text-xs text-surface-500">{{ field.help_text }}</p>
+  {% endif %}
+
+  {% if field.errors %}
+  <ul class="space-y-1" aria-label="Erros em {{ field.label }}">
+    {% for error in field.errors %}
+    <li class="text-sm text-danger-600">{{ error }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>

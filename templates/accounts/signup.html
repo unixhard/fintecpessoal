@@ -1,0 +1,29 @@
+{% extends "accounts/_auth_base.html" %}
+
+{% block title %}Criar conta — FINTECPESSOAL{% endblock %}
+
+{% block auth_body %}
+<div class="mb-6">
+  <h1 class="heading-display text-3xl text-surface-900 sm:text-4xl">Criar sua conta</h1>
+  <p class="mt-1.5 text-sm text-surface-500">
+    Leva menos de um minuto. Gerencie suas finanças com clareza e segurança.
+  </p>
+</div>
+
+<form method="post" action="{% url 'accounts:signup' %}" class="space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/field.html" with field=form.name %}
+  {% include "components/field.html" with field=form.email %}
+  {% include "components/field.html" with field=form.password %}
+  <div class="rounded-lg bg-surface-50 p-3 text-xs text-surface-500">
+    A senha deve ter ao menos 8 caracteres e não pode ser comum ou parecida com seus dados.
+  </div>
+  {% include "components/field.html" with field=form.password_confirmation %}
+
+  {% include "components/button.html" with label="Criar conta" type="submit" style="primary" extra="w-full btn-arrow" %}
+</form>
+{% endblock %}
+
+{% block auth_footer %}
+Já tem conta? <a href="{% url 'accounts:login' %}" class="font-semibold text-pink-500">Entrar</a>
+{% endblock %}

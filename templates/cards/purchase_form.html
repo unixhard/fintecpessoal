@@ -1,0 +1,25 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}{{ title }} · FINTECPESSOAL{% endblock %}
+
+{% block app_content %}
+<div class="mx-auto w-full max-w-xl">
+  {% include "components/page_header.html" with title=title subtitle="Compras no cartão são obrigações; a saída do dinheiro ocorre no pagamento da fatura." %}
+
+  <form method="post" class="panel p-6">
+    {% csrf_token %}
+    {% include "components/error_list.html" %}
+    <div class="space-y-5">
+      {% include "components/field.html" with field=form.card %}
+      {% include "components/field.html" with field=form.description %}
+      {% include "components/field.html" with field=form.total_amount %}
+      {% include "components/field.html" with field=form.installment_count %}
+      {% include "components/field.html" with field=form.first_due_date %}
+    </div>
+    <div class="mt-6 flex items-center gap-3">
+      <button type="submit" class="btn btn-primary">Salvar</button>
+      <a href="{% url 'cards:purchase_list' %}" class="btn btn-ghost">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

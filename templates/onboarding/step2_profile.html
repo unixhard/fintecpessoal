@@ -1,0 +1,23 @@
+{% extends "onboarding/_base.html" %}
+
+{% block title %}Seu perfil — FINTECPESSOAL{% endblock %}
+
+{% block onboarding_body %}
+<div class="panel p-6 sm:p-8">
+  <h1 class="text-2xl font-bold text-surface-900">Vamos personalizar</h1>
+  <p class="mt-2 text-sm text-surface-600">
+    Apenas o essencial. Você pode ajustar tudo depois.
+  </p>
+
+  <form method="post" class="mt-6 space-y-4" novalidate>
+    {% csrf_token %}
+    {% include "components/field.html" with field=form.display_name %}
+    {% include "components/field.html" with field=form.preferred_currency %}
+
+    <div class="flex items-center justify-between gap-3 pt-2">
+      <a href="{% url 'accounts:onboarding_step' 1 %}" class="btn btn-ghost">Voltar</a>
+      {% include "components/button.html" with label="Continuar" type="submit" style="primary" %}
+    </div>
+  </form>
+</div>
+{% endblock %}
