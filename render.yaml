@@ -1,7 +1,5 @@
 # Blueprint do Render para o FINTECPESSOAL.
-# Ao criar em https://dashboard.render.com/blueprints, informe este arquivo.
-# O banco de dados é o PostgreSQL do Supabase (definido em DATABASE_URL).
-
+# Banco de dados: PostgreSQL do Supabase (variável DATABASE_URL).
 services:
   - type: web
     name: fintecpessoal
@@ -9,8 +7,6 @@ services:
     plan: free
     buildCommand: "./build.sh"
     startCommand: "gunicorn config.wsgi:application --workers 1 --threads 4 --timeout 120"
-    releaseCommand: "./release.sh"
-    healthCheckPath: /app/login/
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7
@@ -20,12 +16,8 @@ services:
         value: "false"
       - key: SECRET_KEY
         generateValue: true
-      # Aceita o domínio padrão *.onrender.com; adicione domínios customizados
-      # separados por vírgula caso configure um endereço próprio.
       - key: ALLOWED_HOSTS
         value: ".onrender.com"
-      # Credenciais que você deve preencher manualmente no painel do Render
-      # (Settings -> Environment). NÃO deixe valores reais neste arquivo.
       - key: DATABASE_URL
         sync: false
       - key: GEMINI_API_KEY
