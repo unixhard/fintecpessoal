@@ -42,3 +42,7 @@ Thumbs.db
 # ---- Segredos ----
 .env.local
 .server.pid
+
+# ---- Ferramentas locais (opencode/agentes) ----
+.agents/
+skills-lock.json
