@@ -26,34 +26,34 @@
  </div>
 
  {% if recent_transactions %}
- <div class="panel overflow-hidden">
- <table class="w-full text-left text-sm">
- <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
- <tr>
- <th class="px-4 py-3 font-medium">Data</th>
- <th class="px-4 py-3 font-medium">Descrição</th>
- <th class="px-4 py-3 font-medium">Tipo</th>
- <th class="px-4 py-3 text-right font-medium">Valor</th>
- </tr>
- </thead>
- <tbody class="divide-y divide-muted">
- {% for t in recent_transactions %}
- <tr class="hover:bg-muted">
- <td class="px-4 py-3 text-muted-foreground">{{ t.date|date:"d/m/Y" }}</td>
- <td class="px-4 py-3">
- <a href="{% url 'finance:transaction_detail' t.pk %}" class="font-medium text-foreground hover:text-brand-700">{{ t.description|default:"—" }}</a>
- {% if t.category %}<div class="text-xs text-muted-foreground">{{ t.category.name }}</div>{% endif %}
- </td>
- <td class="px-4 py-3 text-muted-foreground">{{ t.get_type_display }}</td>
- <td class="px-4 py-3 text-right">
- {% if t.type == 'income' %}<span class="font-medium text-success-600">+ {{ t.amount|centavos }}</span>
- {% else %}<span class="font-medium text-danger-600">− {{ t.amount|centavos }}</span>{% endif %}
- </td>
- </tr>
- {% endfor %}
- </tbody>
- </table>
- </div>
+<div class="panel overflow-hidden table-wrap table-cards">
+  <table class="w-full text-left text-sm">
+  <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+  <tr>
+  <th class="px-4 py-3 font-medium">Data</th>
+  <th class="px-4 py-3 font-medium">Descrição</th>
+  <th class="px-4 py-3 font-medium">Tipo</th>
+  <th class="px-4 py-3 text-right font-medium">Valor</th>
+  </tr>
+  </thead>
+  <tbody class="divide-y divide-muted">
+  {% for t in recent_transactions %}
+  <tr class="hover:bg-muted">
+  <td class="px-4 py-3 text-muted-foreground" data-label="Data">{{ t.date|date:"d/m/Y" }}</td>
+  <td class="px-4 py-3" data-label="Descrição">
+  <a href="{% url 'finance:transaction_detail' t.pk %}" class="font-medium text-foreground hover:text-brand-700">{{ t.description|default:"—" }}</a>
+  {% if t.category %}<div class="text-xs text-muted-foreground">{{ t.category.name }}</div>{% endif %}
+  </td>
+  <td class="px-4 py-3 text-muted-foreground" data-label="Tipo">{{ t.get_type_display }}</td>
+  <td class="px-4 py-3 text-right" data-label="Valor">
+  {% if t.type == 'income' %}<span class="font-medium text-success-600">+ {{ t.amount|centavos }}</span>
+  {% else %}<span class="font-medium text-danger-600">− {{ t.amount|centavos }}</span>{% endif %}
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+  </div>
  {% else %}
  {% include "components/empty_state.html" with icon="list" title="Sem movimentações" message="Nenhuma movimentação registrada nesta conta ainda." %}
  {% endif %}

@@ -47,36 +47,36 @@
  <h3 class="text-lg font-semibold text-foreground ">Despesas por categoria — {{ period.label }}</h3>
  </div>
  {% if by_category %}
- <div class="table-wrap p-6">
- <table class="w-full min-w-full divide-y divide-muted text-sm">
- <thead>
- <tr class="text-left text-theme-xs uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
- <th class="px-2 py-2 font-semibold">Categoria</th>
- <th class="px-2 py-2 text-right font-semibold">Valor</th>
- <th class="px-2 py-2 text-right font-semibold">%</th>
- <th class="px-2 py-2 text-right font-semibold">Variação vs. período anterior</th>
- </tr>
- </thead>
- <tbody class="divide-y divide-muted">
- {% for row in by_category %}
- <tr>
- <td class="px-2 py-2 font-medium text-foreground">{{ row.name }}</td>
- <td class="px-2 py-2 text-right text-foreground">{{ row.amount|centavos }}</td>
- <td class="px-2 py-2 text-right text-muted-foreground">{{ row.share_percent }}%</td>
- <td class="px-2 py-2 text-right">
- {% if row.delta_percent is not None %}
- <span class="{% if row.delta_percent >= 0 %}text-danger-600 dark:text-danger-400{% else %}text-success-600 dark:text-success-400{% endif %}">
- {{ row.delta_percent|stringformat:"+d" }}%
- </span>
- {% else %}
- <span class="text-muted-foreground dark:text-muted-foreground">—</span>
- {% endif %}
- </td>
- </tr>
- {% endfor %}
- </tbody>
- </table>
- </div>
+<div class="table-wrap table-cards p-6">
+  <table class="w-full min-w-full divide-y divide-muted text-sm">
+  <thead>
+  <tr class="text-left text-theme-xs uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
+  <th class="px-2 py-2 font-semibold">Categoria</th>
+  <th class="px-2 py-2 text-right font-semibold">Valor</th>
+  <th class="px-2 py-2 text-right font-semibold">%</th>
+  <th class="px-2 py-2 text-right font-semibold">Variação vs. período anterior</th>
+  </tr>
+  </thead>
+  <tbody class="divide-y divide-muted">
+  {% for row in by_category %}
+  <tr>
+  <td class="px-2 py-2 font-medium text-foreground" data-label="Categoria">{{ row.name }}</td>
+  <td class="px-2 py-2 text-right text-foreground" data-label="Valor">{{ row.amount|centavos }}</td>
+  <td class="px-2 py-2 text-right text-muted-foreground" data-label="%">{{ row.share_percent }}%</td>
+  <td class="px-2 py-2 text-right" data-label="Variação">
+  {% if row.delta_percent is not None %}
+  <span class="{% if row.delta_percent >= 0 %}text-danger-600 dark:text-danger-400{% else %}text-success-600 dark:text-success-400{% endif %}">
+  {{ row.delta_percent|stringformat:"+d" }}%
+  </span>
+  {% else %}
+  <span class="text-muted-foreground dark:text-muted-foreground">—</span>
+  {% endif %}
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+  </div>
  {% else %}
  <div class="p-6">{% include "components/empty_state.html" with title="Sem despesas no período" message="Classifique suas despesas para ver a distribuição por categoria." icon="card" %}</div>
  {% endif %}
@@ -87,26 +87,26 @@
  <div class="border-b border-border px-6 py-4">
  <h3 class="text-lg font-semibold text-foreground ">Evolução mensal</h3>
  </div>
- <div class="table-wrap p-6">
- {% if evolution %}
- <table class="w-full min-w-full divide-y divide-muted text-sm">
- <thead>
- <tr class="text-left text-theme-xs uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
- <th class="px-2 py-2 font-semibold">Mês</th>
- <th class="px-2 py-2 text-right font-semibold">Receitas</th>
- <th class="px-2 py-2 text-right font-semibold">Despesas</th>
- <th class="px-2 py-2 text-right font-semibold">Saldo</th>
- </tr>
- </thead>
- <tbody class="divide-y divide-muted">
- {% for b in evolution %}
- <tr>
- <td class="px-2 py-2 text-foreground">{{ b.label }}</td>
- <td class="px-2 py-2 text-right text-success-700 dark:text-success-400">{{ b.receitas|centavos }}</td>
- <td class="px-2 py-2 text-right text-danger-600 dark:text-danger-400">{{ b.despesas|centavos }}</td>
- <td class="px-2 py-2 text-right font-semibold text-foreground ">{{ b.saldo|centavos }}</td>
- </tr>
- {% endfor %}
+<div class="table-wrap table-cards p-6">
+  {% if evolution %}
+  <table class="w-full min-w-full divide-y divide-muted text-sm">
+  <thead>
+  <tr class="text-left text-theme-xs uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
+  <th class="px-2 py-2 font-semibold">Mês</th>
+  <th class="px-2 py-2 text-right font-semibold">Receitas</th>
+  <th class="px-2 py-2 text-right font-semibold">Despesas</th>
+  <th class="px-2 py-2 text-right font-semibold">Saldo</th>
+  </tr>
+  </thead>
+  <tbody class="divide-y divide-muted">
+  {% for b in evolution %}
+  <tr>
+  <td class="px-2 py-2 text-foreground" data-label="Mês">{{ b.label }}</td>
+  <td class="px-2 py-2 text-right text-success-700 dark:text-success-400" data-label="Receitas">{{ b.receitas|centavos }}</td>
+  <td class="px-2 py-2 text-right text-danger-600 dark:text-danger-400" data-label="Despesas">{{ b.despesas|centavos }}</td>
+  <td class="px-2 py-2 text-right font-semibold text-foreground " data-label="Saldo">{{ b.saldo|centavos }}</td>
+  </tr>
+  {% endfor %}
  </tbody>
  </table>
  {% else %}

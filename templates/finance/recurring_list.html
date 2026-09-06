@@ -10,34 +10,34 @@
  {% include "components/page_header.html" with title="Recorrências" subtitle="Regras de movimentações que se repetem." action_url="finance:recurring_create" action_label="Nova recorrência" action_icon="+" %}
 
  {% if rules %}
- <div class="panel table-wrap">
- <table class="w-full text-left text-sm">
- <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
- <tr>
- <th class="px-4 py-3 font-medium">Título</th>
- <th class="px-4 py-3 font-medium">Tipo</th>
- <th class="px-4 py-3 font-medium">Frequência</th>
- <th class="px-4 py-3 font-medium">Status</th>
- <th class="px-4 py-3 text-right font-medium">Valor</th>
- <th class="px-4 py-3 text-right font-medium">Ações</th>
- </tr>
- </thead>
- <tbody class="divide-y divide-muted">
- {% for rule in rules %}
- <tr class="hover:bg-muted">
- <td class="px-4 py-3">
- <p class="font-medium text-foreground">{{ rule.title }}</p>
- {% if rule.account %}<div class="text-xs text-muted-foreground">{{ rule.account.name }}</div>{% endif %}
- </td>
- <td class="px-4 py-3 text-muted-foreground">{{ rule.get_kind_display }}</td>
- <td class="px-4 py-3 text-muted-foreground">{{ rule.get_frequency_display }}</td>
- <td class="px-4 py-3">
- {% if rule.status == 'active' %}{% include "components/status_badge.html" with label="Ativa" tone="positive" dot=True %}
- {% elif rule.status == 'paused' %}{% include "components/status_badge.html" with label="Pausada" tone="attention" %}
- {% else %}{% include "components/status_badge.html" with label="Encerrada" tone="neutral" %}{% endif %}
- </td>
- <td class="px-4 py-3 text-right">{% include "components/money.html" with cents=rule.amount %}</td>
- <td class="whitespace-nowrap px-4 py-3 text-right">
+<div class="panel table-wrap table-cards">
+  <table class="w-full text-left text-sm">
+  <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+  <tr>
+  <th class="px-4 py-3 font-medium">Título</th>
+  <th class="px-4 py-3 font-medium">Tipo</th>
+  <th class="px-4 py-3 font-medium">Frequência</th>
+  <th class="px-4 py-3 font-medium">Status</th>
+  <th class="px-4 py-3 text-right font-medium">Valor</th>
+  <th class="px-4 py-3 text-right font-medium">Ações</th>
+  </tr>
+  </thead>
+  <tbody class="divide-y divide-muted">
+  {% for rule in rules %}
+  <tr class="hover:bg-muted">
+  <td class="px-4 py-3" data-label="Título">
+  <p class="font-medium text-foreground">{{ rule.title }}</p>
+  {% if rule.account %}<div class="text-xs text-muted-foreground">{{ rule.account.name }}</div>{% endif %}
+  </td>
+  <td class="px-4 py-3 text-muted-foreground" data-label="Tipo">{{ rule.get_kind_display }}</td>
+  <td class="px-4 py-3 text-muted-foreground" data-label="Frequência">{{ rule.get_frequency_display }}</td>
+  <td class="px-4 py-3" data-label="Status">
+  {% if rule.status == 'active' %}{% include "components/status_badge.html" with label="Ativa" tone="positive" dot=True %}
+  {% elif rule.status == 'paused' %}{% include "components/status_badge.html" with label="Pausada" tone="attention" %}
+  {% else %}{% include "components/status_badge.html" with label="Encerrada" tone="neutral" %}{% endif %}
+  </td>
+  <td class="px-4 py-3 text-right" data-label="Valor">{% include "components/money.html" with cents=rule.amount %}</td>
+  <td class="whitespace-nowrap px-4 py-3 text-right t-actions" data-label="Ações">
  <div class="inline-flex items-center gap-1">
  <a href="{% url 'finance:recurring_edit' rule.pk %}" class="btn btn-ghost btn-sm">Editar</a>
  {% if rule.status == 'active' %}

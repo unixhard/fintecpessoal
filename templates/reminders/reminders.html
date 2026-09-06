@@ -41,38 +41,38 @@
  <h3 class="text-lg font-semibold text-foreground ">Próximos vencimentos</h3>
  </div>
  {% if timeline.items %}
- <div class="table-wrap p-6">
- <table class="w-full min-w-full divide-y divide-muted text-sm">
- <thead>
- <tr class="text-left text-theme-xs uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
- <th class="px-2 py-2 font-semibold">Situação</th>
- <th class="px-2 py-2 font-semibold">Data</th>
- <th class="px-2 py-2 font-semibold">Descrição</th>
- <th class="px-2 py-2 text-right font-semibold">Valor</th>
- </tr>
- </thead>
- <tbody class="divide-y divide-muted">
- {% for item in timeline.items %}
- <tr>
- <td class="px-2 py-2">
- {% if item.urgency == "overdue" %}
- <span class="badge-pill bg-danger-50 text-danger-600 dark:bg-danger-500/15 dark:text-danger-400">vencida há {{ item.day_diff|stringformat:"+d"|cut:"-" }} dias</span>
- {% elif item.urgency == "today" %}
- <span class="badge-pill bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400">vence hoje</span>
- {% elif item.urgency == "soon" %}
- <span class="badge-pill bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400">em {{ item.day_diff }} dias</span>
- {% else %}
- <span class="badge-pill bg-muted text-muted-foreground">{{ item.day_diff }} dias</span>
- {% endif %}
- </td>
- <td class="px-2 py-2 text-foreground">{{ item.date }}</td>
- <td class="px-2 py-2 font-medium text-foreground">{{ item.label }}</td>
- <td class="px-2 py-2 text-right font-semibold {% if item.kind == 'invoice' or item.kind == 'debt' %}text-danger-600 dark:text-danger-400{% else %}text-foreground{% endif %}">{{ item.amount|centavos }}</td>
- </tr>
- {% endfor %}
- </tbody>
- </table>
- </div>
+<div class="table-wrap table-cards p-6">
+  <table class="w-full min-w-full divide-y divide-muted text-sm">
+  <thead>
+  <tr class="text-left text-theme-xs uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
+  <th class="px-2 py-2 font-semibold">Situação</th>
+  <th class="px-2 py-2 font-semibold">Data</th>
+  <th class="px-2 py-2 font-semibold">Descrição</th>
+  <th class="px-2 py-2 text-right font-semibold">Valor</th>
+  </tr>
+  </thead>
+  <tbody class="divide-y divide-muted">
+  {% for item in timeline.items %}
+  <tr>
+  <td class="px-2 py-2" data-label="Situação">
+  {% if item.urgency == "overdue" %}
+  <span class="badge-pill bg-danger-50 text-danger-600 dark:bg-danger-500/15 dark:text-danger-400">vencida há {{ item.day_diff|stringformat:"+d"|cut:"-" }} dias</span>
+  {% elif item.urgency == "today" %}
+  <span class="badge-pill bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400">vence hoje</span>
+  {% elif item.urgency == "soon" %}
+  <span class="badge-pill bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400">em {{ item.day_diff }} dias</span>
+  {% else %}
+  <span class="badge-pill bg-muted text-muted-foreground">{{ item.day_diff }} dias</span>
+  {% endif %}
+  </td>
+  <td class="px-2 py-2 text-foreground" data-label="Data">{{ item.date }}</td>
+  <td class="px-2 py-2 font-medium text-foreground" data-label="Descrição">{{ item.label }}</td>
+  <td class="px-2 py-2 text-right font-semibold {% if item.kind == 'invoice' or item.kind == 'debt' %}text-danger-600 dark:text-danger-400{% else %}text-foreground{% endif %}" data-label="Valor">{{ item.amount|centavos }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+  </div>
  {% else %}
  <div class="p-6">{% include "components/empty_state.html" with title="Nada a vencer no período" message="Sem faturas, recorrências ou dívidas vencendo nos próximos dias." icon="clock" %}</div>
  {% endif %}

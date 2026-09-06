@@ -57,62 +57,62 @@
  </div>
 
  {% if rows %}
- <div class="table-wrap overflow-x-auto">
- <table class="w-full text-left text-sm">
- <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
- <tr>
- <th class="px-3 py-3 w-10 text-center">Incluir</th>
- <th class="px-3 py-3">Data</th>
- <th class="px-3 py-3">Descrição</th>
- <th class="px-3 py-3">Valor</th>
- <th class="px-3 py-3">Dir.</th>
- <th class="px-3 py-3">Categoria</th>
- <th class="px-3 py-3">Status</th>
- </tr>
- </thead>
- <tbody class="divide-y divide-muted">
- {% for r in rows %}
- <tr class="{% if r.confidence == 'duplicate' %}bg-danger-500/5{% elif r.confidence == 'review' %}bg-warning-500/5{% endif %}">
- <td class="px-3 py-2 text-center">
- {% if r.confidence == 'duplicate' %}
- <input type="checkbox" name="excl_{{ r.pk }}" checked title="Marcada como possivel duplicidade">
- {% else %}
- <input type="checkbox" name="incl_{{ r.pk }}" checked>
- {% endif %}
- </td>
- <td class="px-3 py-2 whitespace-nowrap text-foreground">{{ r.date|date:"d/m/Y" }}</td>
- <td class="px-3 py-2 max-w-xs text-foreground">
- <span class="block truncate" title="{{ r.description }}">{{ r.description|default:"—" }}</span>
- {% if r.original_description and r.original_description != r.description %}
- <span class="block text-xs text-muted-foreground" title="Descrição original">{{ r.original_description }}</span>
- {% endif %}
- </td>
- <td class="px-3 py-2 whitespace-nowrap font-semibold {% if r.direction == 'expense' %}text-danger-600{% else %}text-success-600{% endif %}">
- {{ r.display_value }}
- </td>
- <td class="px-3 py-2 whitespace-nowrap text-muted-foreground">{{ r.get_direction_display }}</td>
- <td class="px-3 py-2">
- <select name="cat_{{ r.pk }}" class="w-40 rounded-lg border border-border px-2 py-1.5 text-xs">
- <option value="">—</option>
- {% for c in categories %}
- <option value="{{ c.pk }}" {% if r.category_id == c.pk %}selected{% endif %}>{{ c.name }}</option>
- {% endfor %}
- </select>
- </td>
- <td class="px-3 py-2 whitespace-nowrap text-xs">
- {% if r.confidence == 'duplicate' %}
- <span class="text-danger-600">{{ r.skip_reason|default:"Possível duplicidade" }}</span>
- {% elif r.confidence == 'review' %}
- <span class="text-warning-600">Revisar</span>
- {% else %}
- <span class="text-success-600">Pronta</span>
- {% endif %}
- </td>
- </tr>
- {% endfor %}
- </tbody>
- </table>
- </div>
+<div class="table-wrap table-cards overflow-x-auto">
+  <table class="w-full text-left text-sm">
+  <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+  <tr>
+  <th class="px-3 py-3 w-10 text-center">Incluir</th>
+  <th class="px-3 py-3">Data</th>
+  <th class="px-3 py-3">Descrição</th>
+  <th class="px-3 py-3">Valor</th>
+  <th class="px-3 py-3">Dir.</th>
+  <th class="px-3 py-3">Categoria</th>
+  <th class="px-3 py-3">Status</th>
+  </tr>
+  </thead>
+  <tbody class="divide-y divide-muted">
+  {% for r in rows %}
+  <tr class="{% if r.confidence == 'duplicate' %}bg-danger-500/5{% elif r.confidence == 'review' %}bg-warning-500/5{% endif %}">
+  <td class="px-3 py-2 text-center" data-label="Incluir">
+  {% if r.confidence == 'duplicate' %}
+  <input type="checkbox" name="excl_{{ r.pk }}" checked title="Marcada como possivel duplicidade">
+  {% else %}
+  <input type="checkbox" name="incl_{{ r.pk }}" checked>
+  {% endif %}
+  </td>
+  <td class="px-3 py-2 whitespace-nowrap text-foreground" data-label="Data">{{ r.date|date:"d/m/Y" }}</td>
+  <td class="px-3 py-2 max-w-xs text-foreground" data-label="Descrição">
+  <span class="block truncate" title="{{ r.description }}">{{ r.description|default:"—" }}</span>
+  {% if r.original_description and r.original_description != r.description %}
+  <span class="block text-xs text-muted-foreground" title="Descrição original">{{ r.original_description }}</span>
+  {% endif %}
+  </td>
+  <td class="px-3 py-2 whitespace-nowrap font-semibold text-right {% if r.direction == 'expense' %}text-danger-600{% else %}text-success-600{% endif %}" data-label="Valor">
+  {{ r.display_value }}
+  </td>
+  <td class="px-3 py-2 whitespace-nowrap text-muted-foreground" data-label="Dir.">{{ r.get_direction_display }}</td>
+  <td class="px-3 py-2" data-label="Categoria">
+  <select name="cat_{{ r.pk }}" class="w-40 rounded-lg border border-border px-2 py-1.5 text-xs">
+  <option value="">—</option>
+  {% for c in categories %}
+  <option value="{{ c.pk }}" {% if r.category_id == c.pk %}selected{% endif %}>{{ c.name }}</option>
+  {% endfor %}
+  </select>
+  </td>
+  <td class="px-3 py-2 whitespace-nowrap text-xs" data-label="Status">
+  {% if r.confidence == 'duplicate' %}
+  <span class="text-danger-600">{{ r.skip_reason|default:"Possível duplicidade" }}</span>
+  {% elif r.confidence == 'review' %}
+  <span class="text-warning-600">Revisar</span>
+  {% else %}
+  <span class="text-success-600">Pronta</span>
+  {% endif %}
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+  </div>
  {% else %}
  <p class="py-8 text-center text-muted-foreground">Nenhuma movimentação para revisar neste lote.</p>
  {% endif %}
