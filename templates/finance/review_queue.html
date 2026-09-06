@@ -49,7 +49,7 @@
  {% if pending_rows %}
  <form method="post" action="{% url 'finance:review_bulk' %}">
  {% csrf_token %}
-<div class="panel overflow-hidden table-wrap table-cards">
+<div class="panel overflow-hidden table-wrap">
   <table class="w-full text-left text-sm">
   <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
   <tr>

@@ -483,80 +483,27 @@ html.light {
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
   /* ------------------------------------------------------------------ *
-   *  Tabela → cards empilhados no mobile (elegante, sem rolagem lateral)
-   *  Ativa abaixo de 768px (breakpoint md). Cada célula vira uma linha
-   *  com rótulo (data-label) em cima e valor embaixo, com respiro das
-   *  bordas. Nenhuma coluna some: todas as informações aparecem.
+   *  MOBILE — tabelas compactas + respiro nos panels/cards
+   *  Abaixo de 640px (sm): padding reduzido nas células, texto quebra
+   *  naturalmente e overflow-x garante rolagem horizontal suave.
    * ------------------------------------------------------------------ */
-  .table-cards table,
-  .table-cards thead,
-  .table-cards tbody,
-  .table-cards tr,
-  .table-cards td { display: block; }
+  @media (max-width: 40rem) {
+    /* Panels sem padding explícito ganham respiro mínimo */
+    .app-shell .panel:not([class*="p-"]),
+    .app-shell .panel[class*="p-0"] {
+      padding: 0.85rem 1rem;
+    }
+    .app-shell .panel[class*="p-4"] { padding: 0.65rem 0.75rem; }
+    .app-shell .panel[class*="p-5"] { padding: 0.75rem 0.85rem; }
+    .app-shell .panel[class*="p-6"] { padding: 0.85rem 1rem; }
 
-  .app-shell .table-cards { overflow: visible; -webkit-overflow-scrolling: auto; }
+    /* Tabelas: células compactas, texto quebra, overflow natural */
+    .app-shell table { font-size: 0.82rem; }
+    .app-shell td, .app-shell th { padding: 0.45rem 0.65rem; white-space: normal; word-break: break-word; }
+    .app-shell .table-wrap { -webkit-overflow-scrolling: touch; overflow-x: auto; }
 
-  .app-shell .table-cards thead { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
-  .app-shell .table-cards tr {
-    margin-bottom: 0.85rem;
-    border: 1px solid var(--color-surface-300) !important;
-    border-radius: var(--radius-xl);
-    background-color: var(--color-card);
-    box-shadow:
-      var(--shadow-soft),
-      0 1px 0 0 rgb(255 255 255 / 0.03) inset,
-      0 -1px 0 0 rgb(255 255 255 / 0.02) inset;
-    padding: 0.6rem 0.85rem;
-  }
-  .app-shell .table-cards tbody tr { border-top: 1px solid var(--color-surface-300) !important; }
-  .app-shell .table-cards tr:last-child { margin-bottom: 0; }
-
-  .app-shell .table-cards td {
-    display: block;
-    width: 100%;
-    padding: 0.4rem 0;
-    border: 0;
-    white-space: normal;
-    text-align: left;
-    overflow-wrap: break-word;
-  }
-  .app-shell .table-cards td::before {
-    content: attr(data-label);
-    display: block;
-    margin-bottom: 0.05rem;
-    font-size: 0.7rem;
-    font-weight: 700;
-    line-height: 1.35;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--color-muted-foreground);
-  }
-  .app-shell .table-cards td[data-label=""]::before,
-  .app-shell .table-cards td:not([data-label])::before { display: none; }
-
-  /* Célula de ação — botões na mesma linha, alinhados à direita */
-  .app-shell .table-cards td.t-actions { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
-  .app-shell .table-cards td.t-actions::before { margin: 0; }
-  .app-shell .table-cards td.t-actions .inline-flex { margin-left: auto; }
-
-  /* Valores numéricos continuam com fonte monoespaçada e destaque */
-  .app-shell .table-cards td .num { font-weight: 600; }
-
-  @media (min-width: 48rem) {
-    .table-cards table,
-    .table-cards thead,
-    .table-cards tbody,
-    .table-cards tr,
-    .table-cards td { display: revert; }
-    .app-shell .table-cards thead { position: static; width: auto; height: auto; margin: 0; padding: 0; overflow: visible; clip: auto; white-space: normal; }
-    .app-shell .table-cards tr { margin-bottom: 0; border: 0; border-radius: 0; background-color: transparent; box-shadow: none; padding: 0; }
-    .app-shell .table-cards tbody tr { border-top: 0; }
-    .app-shell .table-cards td { width: auto; padding: 0.75rem 1rem; white-space: normal; text-align: inherit; }
-    .app-shell .table-cards td::before { display: none; }
-    .app-shell .table-cards td.t-actions { display: table-cell; }
-    .app-shell .table-cards td.t-actions .inline-flex { margin-left: 0; }
-    .app-shell .table-cards { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* Wrappers de tabela com overflow-hidden ficam visíveis para rolagem */
+    .app-shell .panel.overflow-hidden:not([class*="p-"]):has(table) { overflow: visible; padding: 0; }
   }
 
   /* ---- Badges / chips de status (verde/vermelho/âmbar/azul) ---- */
