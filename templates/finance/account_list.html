@@ -24,8 +24,8 @@
   <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
   <tr>
   <th class="px-4 py-3 font-medium">Conta</th>
-  <th class="px-4 py-3 font-medium">Tipo</th>
-  <th class="px-4 py-3 font-medium">Status</th>
+  <th class="hidden px-4 py-3 font-medium md:table-cell">Tipo</th>
+  <th class="hidden px-4 py-3 font-medium sm:table-cell">Status</th>
   <th class="px-4 py-3 text-right font-medium">Saldo</th>
   <th class="px-4 py-3 text-right font-medium">Ações</th>
   </tr>
@@ -37,8 +37,8 @@
   <a href="{% url 'finance:account_detail' account.pk %}" class="font-medium text-foreground hover:text-brand-700">{{ account.name }}</a>
   {% if account.institution %}<div class="text-xs text-muted-foreground">{{ account.institution }}</div>{% endif %}
   </td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Tipo">{{ account.get_type_display }}</td>
-  <td class="px-4 py-3" data-label="Status">
+  <td class="hidden px-4 py-3 text-muted-foreground md:table-cell" data-label="Tipo">{{ account.get_type_display }}</td>
+  <td class="hidden px-4 py-3 sm:table-cell" data-label="Status">
   {% include "components/status_badge.html" with label="Ativa" tone="positive" dot=True %}
   </td>
   <td class="px-4 py-3 text-right" data-label="Saldo">{% include "components/money.html" with cents=account.balance %}</td>
@@ -75,8 +75,8 @@
   <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
   <tr>
   <th class="px-4 py-3 font-medium">Conta</th>
-  <th class="px-4 py-3 font-medium">Tipo</th>
-  <th class="px-4 py-3 font-medium">Status</th>
+  <th class="hidden px-4 py-3 font-medium md:table-cell">Tipo</th>
+  <th class="hidden px-4 py-3 font-medium sm:table-cell">Status</th>
   <th class="px-4 py-3 text-right font-medium">Saldo</th>
   <th class="px-4 py-3 text-right font-medium">Ações</th>
   </tr>
@@ -88,8 +88,8 @@
   <a href="{% url 'finance:account_detail' account.pk %}" class="font-medium text-foreground hover:text-brand-700">{{ account.name }}</a>
   {% if account.institution %}<div class="text-xs text-muted-foreground">{{ account.institution }}</div>{% endif %}
   </td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Tipo">{{ account.get_type_display }}</td>
-  <td class="px-4 py-3" data-label="Status">
+  <td class="hidden px-4 py-3 text-muted-foreground md:table-cell" data-label="Tipo">{{ account.get_type_display }}</td>
+  <td class="hidden px-4 py-3 sm:table-cell" data-label="Status">
   {% include "components/status_badge.html" with label="Arquivada" tone="neutral" %}
   </td>
   <td class="px-4 py-3 text-right" data-label="Saldo">{% include "components/money.html" with cents=account.balance %}</td>

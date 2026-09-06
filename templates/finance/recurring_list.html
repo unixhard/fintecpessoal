@@ -15,8 +15,8 @@
   <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
   <tr>
   <th class="px-4 py-3 font-medium">Título</th>
-  <th class="px-4 py-3 font-medium">Tipo</th>
-  <th class="px-4 py-3 font-medium">Frequência</th>
+  <th class="hidden px-4 py-3 font-medium md:table-cell">Tipo</th>
+  <th class="hidden px-4 py-3 font-medium md:table-cell">Frequência</th>
   <th class="px-4 py-3 font-medium">Status</th>
   <th class="px-4 py-3 text-right font-medium">Valor</th>
   <th class="px-4 py-3 text-right font-medium">Ações</th>
@@ -29,8 +29,8 @@
   <p class="font-medium text-foreground">{{ rule.title }}</p>
   {% if rule.account %}<div class="text-xs text-muted-foreground">{{ rule.account.name }}</div>{% endif %}
   </td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Tipo">{{ rule.get_kind_display }}</td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Frequência">{{ rule.get_frequency_display }}</td>
+  <td class="hidden px-4 py-3 text-muted-foreground md:table-cell" data-label="Tipo">{{ rule.get_kind_display }}</td>
+  <td class="hidden px-4 py-3 text-muted-foreground md:table-cell" data-label="Frequência">{{ rule.get_frequency_display }}</td>
   <td class="px-4 py-3" data-label="Status">
   {% if rule.status == 'active' %}{% include "components/status_badge.html" with label="Ativa" tone="positive" dot=True %}
   {% elif rule.status == 'paused' %}{% include "components/status_badge.html" with label="Pausada" tone="attention" %}

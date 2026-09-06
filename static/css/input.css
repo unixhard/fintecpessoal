@@ -483,27 +483,23 @@ html.light {
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
   /* ------------------------------------------------------------------ *
-   *  MOBILE — tabelas compactas + respiro nos panels/cards
-   *  Abaixo de 640px (sm): padding reduzido nas células, texto quebra
-   *  naturalmente e overflow-x garante rolagem horizontal suave.
+   *  MOBILE — respiro nos panels/cards + tabelas compactas
+   *  Abaixo de 640px (sm): panels sem padding explícito ganham respiro
+   *  mínimo (os com p-* mantêm o próprio), rolagem horizontal suave
+   *  quando a tabela for mais larga que a tela.
    * ------------------------------------------------------------------ */
   @media (max-width: 40rem) {
-    /* Panels sem padding explícito ganham respiro mínimo */
-    .app-shell .panel:not([class*="p-"]),
+    /* Panels sem padding explícito ganham respiro (respeita quem já tem p-*) */
+    .app-shell .panel:not([class*="p-"]):not(:has(> .table-wrap.p-6)),
     .app-shell .panel[class*="p-0"] {
-      padding: 0.85rem 1rem;
+      padding: 0.75rem 0.85rem;
     }
-    .app-shell .panel[class*="p-4"] { padding: 0.65rem 0.75rem; }
-    .app-shell .panel[class*="p-5"] { padding: 0.75rem 0.85rem; }
-    .app-shell .panel[class*="p-6"] { padding: 0.85rem 1rem; }
 
-    /* Tabelas: células compactas, texto quebra, overflow natural */
-    .app-shell table { font-size: 0.82rem; }
-    .app-shell td, .app-shell th { padding: 0.45rem 0.65rem; white-space: normal; word-break: break-word; }
+    /* Tabelas: rolagem horizontal suave quando necessário */
     .app-shell .table-wrap { -webkit-overflow-scrolling: touch; overflow-x: auto; }
 
-    /* Wrappers de tabela com overflow-hidden ficam visíveis para rolagem */
-    .app-shell .panel.overflow-hidden:not([class*="p-"]):has(table) { overflow: visible; padding: 0; }
+    /* Nada vaza para os lados fora das tabelas */
+    .app-shell main, .app-shell #app-content { max-width: 100%; overflow-x: hidden; }
   }
 
   /* ---- Badges / chips de status (verde/vermelho/âmbar/azul) ---- */

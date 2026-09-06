@@ -15,9 +15,9 @@
   <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
   <tr>
   <th class="px-4 py-3 font-medium">Descrição</th>
-  <th class="px-4 py-3 font-medium">Cartão</th>
+  <th class="hidden px-4 py-3 font-medium md:table-cell">Cartão</th>
   <th class="px-4 py-3 font-medium">Parcelas</th>
-  <th class="px-4 py-3 font-medium">1ª parcela</th>
+  <th class="hidden px-4 py-3 font-medium md:table-cell">1ª parcela</th>
   <th class="px-4 py-3 font-medium">Valor da parcela</th>
   <th class="px-4 py-3 text-right font-medium">Valor total</th>
   </tr>
@@ -26,9 +26,9 @@
   {% for p in purchases %}
   <tr class="hover:bg-muted">
   <td class="px-4 py-3 font-medium text-foreground" data-label="Descrição">{{ p.description }}</td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Cartão">{{ p.card.name|default:"—" }}</td>
+  <td class="hidden px-4 py-3 text-muted-foreground md:table-cell" data-label="Cartão">{{ p.card.name|default:"—" }}</td>
   <td class="px-4 py-3 text-muted-foreground" data-label="Parcelas">{{ p.installment_count }}x</td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="1ª parcela">{{ p.first_due_date|date:"d/m/Y" }}</td>
+  <td class="hidden px-4 py-3 text-muted-foreground md:table-cell" data-label="1ª parcela">{{ p.first_due_date|date:"d/m/Y" }}</td>
   <td class="px-4 py-3 text-muted-foreground" data-label="Valor da parcela">{% include "components/money.html" with cents=p.installment_amount %}</td>
   <td class="px-4 py-3 text-right" data-label="Valor total">{% include "components/money.html" with cents=p.total_amount %}</td>
   </tr>

@@ -310,7 +310,7 @@
   <tr class="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
   <th class="py-2.5 pr-4 font-medium">Data</th>
   <th class="py-2.5 pr-4 font-medium">Descrição</th>
-  <th class="py-2.5 pr-4 font-medium">Categoria</th>
+  <th class="hidden py-2.5 pr-4 font-medium sm:table-cell">Categoria</th>
   <th class="py-2.5 pr-4 font-medium">Conta</th>
   <th class="py-2.5 text-right font-medium">Valor</th>
   </tr>
@@ -319,8 +319,8 @@
   {% for tx in recent_transactions %}
   <tr class="text-sm transition-colors hover:bg-muted/50">
   <td class="whitespace-nowrap py-3 pr-4 text-muted-foreground" data-label="Data">{{ tx.date|date:"d/m/Y" }}</td>
- <td class="max-w-[18rem] py-3 pr-4 break-words font-medium text-foreground" data-label="Descrição">{{ tx.description }}</td>
- <td class="py-3 pr-4 text-muted-foreground" data-label="Categoria">{{ tx.category|default:"—" }}</td>
+ <td class="max-w-[18rem] truncate py-3 pr-4 font-medium text-foreground" data-label="Descrição" title="{{ tx.description }}">{{ tx.description }}</td>
+ <td class="hidden py-3 pr-4 text-muted-foreground sm:table-cell" data-label="Categoria">{{ tx.category|default:"—" }}</td>
  <td class="max-w-[10rem] truncate py-3 pr-4 text-muted-foreground" data-label="Conta">{{ tx.account }}</td>
   <td class="py-3 text-right" data-label="Valor">
   <span class="num font-semibold {% if tx.type == 'expense' or tx.amount < 0 %}text-danger-400{% else %}text-success-400{% endif %}">

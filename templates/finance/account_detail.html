@@ -32,7 +32,7 @@
   <tr>
   <th class="px-4 py-3 font-medium">Data</th>
   <th class="px-4 py-3 font-medium">Descrição</th>
-  <th class="px-4 py-3 font-medium">Tipo</th>
+  <th class="hidden px-4 py-3 font-medium md:table-cell">Tipo</th>
   <th class="px-4 py-3 text-right font-medium">Valor</th>
   </tr>
   </thead>
@@ -44,7 +44,7 @@
   <a href="{% url 'finance:transaction_detail' t.pk %}" class="font-medium text-foreground hover:text-brand-700">{{ t.description|default:"—" }}</a>
   {% if t.category %}<div class="text-xs text-muted-foreground">{{ t.category.name }}</div>{% endif %}
   </td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Tipo">{{ t.get_type_display }}</td>
+  <td class="hidden px-4 py-3 text-muted-foreground md:table-cell" data-label="Tipo">{{ t.get_type_display }}</td>
   <td class="px-4 py-3 text-right" data-label="Valor">
   {% if t.type == 'income' %}<span class="font-medium text-success-600">+ {{ t.amount|centavos }}</span>
   {% else %}<span class="font-medium text-danger-600">− {{ t.amount|centavos }}</span>{% endif %}

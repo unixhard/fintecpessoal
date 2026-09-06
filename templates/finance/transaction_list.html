@@ -67,9 +67,9 @@
   <tr>
   <th class="px-4 py-3 font-medium"><a href="?{% if query %}{{ query }}&{% endif %}sort={% if current_sort == 'date' %}-date{% else %}date{% endif %}" class="hover:text-foreground">Data</a></th>
   <th class="px-4 py-3 font-medium">Descrição</th>
-  <th class="px-4 py-3 font-medium">Conta</th>
-  <th class="px-4 py-3 font-medium">Categoria</th>
-  <th class="px-4 py-3 font-medium">Tipo</th>
+  <th class="hidden px-4 py-3 font-medium md:table-cell">Conta</th>
+  <th class="hidden px-4 py-3 font-medium md:table-cell">Categoria</th>
+  <th class="hidden px-4 py-3 font-medium lg:table-cell">Tipo</th>
   <th class="px-4 py-3 text-right font-medium"><a href="?{% if query %}{{ query }}&{% endif %}sort={% if current_sort == 'amount' %}-amount{% else %}amount{% endif %}" class="hover:text-foreground">Valor</a></th>
   <th class="px-4 py-3 text-right font-medium">Ações</th>
   </tr>
@@ -78,13 +78,13 @@
   {% for t in transactions %}
   <tr class="hover:bg-muted">
   <td class="whitespace-nowrap px-4 py-3 text-muted-foreground" data-label="Data">{{ t.date|date:"d/m/Y" }}</td>
-  <td class="max-w-[20rem] px-4 py-3 break-words" data-label="Descrição">
-  <a href="{% url 'finance:transaction_detail' t.pk %}" class="font-medium text-foreground hover:text-brand-700">{{ t.description|default:"—" }}</a>
+  <td class="max-w-[20rem] px-4 py-3 truncate" data-label="Descrição">
+  <a href="{% url 'finance:transaction_detail' t.pk %}" class="font-medium text-foreground hover:text-brand-700" title="{{ t.description|default:'' }}">{{ t.description|default:"—" }}</a>
   {% if t.notes %}<div class="truncate text-xs text-muted-foreground max-w-[16rem]">{{ t.notes }}</div>{% endif %}
   </td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Conta">{{ t.account.name|default:"—" }}</td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Categoria">{{ t.category.name|default:"—" }}</td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Tipo">{{ t.get_type_display }}</td>
+  <td class="hidden px-4 py-3 text-muted-foreground md:table-cell" data-label="Conta">{{ t.account.name|default:"—" }}</td>
+  <td class="hidden px-4 py-3 text-muted-foreground md:table-cell" data-label="Categoria">{{ t.category.name|default:"—" }}</td>
+  <td class="hidden px-4 py-3 text-muted-foreground lg:table-cell" data-label="Tipo">{{ t.get_type_display }}</td>
   <td class="whitespace-nowrap px-4 py-3 text-right" data-label="Valor">
  {% if t.type == 'income' %}<span class="font-medium text-success-600">+ {{ t.amount|centavos }}</span>
  {% elif t.type == 'transfer' %}<span class="font-medium text-info-600">{{ t.amount|centavos }}</span>

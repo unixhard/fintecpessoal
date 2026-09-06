@@ -23,10 +23,10 @@
   <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
   <tr>
   <th class="px-4 py-3 font-medium">Regra</th>
-  <th class="px-4 py-3 font-medium">Condição</th>
+  <th class="hidden px-4 py-3 font-medium lg:table-cell">Condição</th>
   <th class="px-4 py-3 font-medium">Classifica em</th>
-  <th class="px-4 py-3 font-medium">Tipo</th>
-  <th class="px-4 py-3 text-center font-medium">Prioridade</th>
+  <th class="hidden px-4 py-3 font-medium md:table-cell">Tipo</th>
+  <th class="hidden px-4 py-3 text-center font-medium md:table-cell">Prioridade</th>
   <th class="px-4 py-3 text-right font-medium">Ações</th>
   </tr>
   </thead>
@@ -37,12 +37,12 @@
   <span class="font-medium text-foreground">{{ rule.name }}</span>
   {% if not rule.is_active %}<span class="ml-2 text-xs text-muted-foreground">(pausada)</span>{% endif %}
   </td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Condição">
+  <td class="hidden px-4 py-3 text-muted-foreground lg:table-cell" data-label="Condição">
   {% if rule.condition_type == "merchant" %}{{ rule.merchant.name|default:"Estabelecimento" }}{% else %}"{{ rule.pattern }}" na descrição{% endif %}
   </td>
   <td class="px-4 py-3 text-muted-foreground" data-label="Classifica em">{{ rule.category.name|default:rule.category_name|default:"—" }}</td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Tipo">{{ rule.get_kind_display }}</td>
-  <td class="px-4 py-3 text-center text-muted-foreground" data-label="Prioridade">{{ rule.priority }}</td>
+  <td class="hidden px-4 py-3 text-muted-foreground md:table-cell" data-label="Tipo">{{ rule.get_kind_display }}</td>
+  <td class="hidden px-4 py-3 text-center text-muted-foreground md:table-cell" data-label="Prioridade">{{ rule.priority }}</td>
   <td class="px-4 py-3 text-right t-actions" data-label="Ações">
  <div class="inline-flex items-center gap-2">
  <a href="{% url 'finance:rule_edit' rule.pk %}" class="btn btn-ghost btn-sm">Editar</a>
@@ -78,20 +78,20 @@
   <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
   <tr>
   <th class="px-4 py-3 font-medium">Regra</th>
-  <th class="px-4 py-3 font-medium">Condição</th>
+  <th class="hidden px-4 py-3 font-medium lg:table-cell">Condição</th>
   <th class="px-4 py-3 font-medium">Classifica em</th>
-  <th class="px-4 py-3 font-medium">Tipo</th>
-  <th class="px-4 py-3 text-center font-medium">Prioridade</th>
+  <th class="hidden px-4 py-3 font-medium md:table-cell">Tipo</th>
+  <th class="hidden px-4 py-3 text-center font-medium md:table-cell">Prioridade</th>
   </tr>
   </thead>
   <tbody class="divide-y divide-muted">
   {% for rule in global_rules %}
   <tr class="hover:bg-muted">
   <td class="px-4 py-3 font-medium text-foreground" data-label="Regra">{{ rule.name }}</td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Condição">{% if rule.condition_type == "merchant" %}{{ rule.merchant.name|default:"Estabelecimento" }}{% else %}"{{ rule.pattern }}" na descrição{% endif %}</td>
+  <td class="hidden px-4 py-3 text-muted-foreground lg:table-cell" data-label="Condição">{% if rule.condition_type == "merchant" %}{{ rule.merchant.name|default:"Estabelecimento" }}{% else %}"{{ rule.pattern }}" na descrição{% endif %}</td>
   <td class="px-4 py-3 text-muted-foreground" data-label="Classifica em">{{ rule.category_name|default:"—" }}</td>
-  <td class="px-4 py-3 text-muted-foreground" data-label="Tipo">{{ rule.get_kind_display }}</td>
-  <td class="px-4 py-3 text-center text-muted-foreground" data-label="Prioridade">{{ rule.priority }}</td>
+  <td class="hidden px-4 py-3 text-muted-foreground md:table-cell" data-label="Tipo">{{ rule.get_kind_display }}</td>
+  <td class="hidden px-4 py-3 text-center text-muted-foreground md:table-cell" data-label="Prioridade">{{ rule.priority }}</td>
   </tr>
   {% endfor %}
  </tbody>

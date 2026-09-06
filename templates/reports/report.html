@@ -54,7 +54,7 @@
   <th class="px-2 py-2 font-semibold">Categoria</th>
   <th class="px-2 py-2 text-right font-semibold">Valor</th>
   <th class="px-2 py-2 text-right font-semibold">%</th>
-  <th class="px-2 py-2 text-right font-semibold">Variação vs. período anterior</th>
+  <th class="hidden px-2 py-2 text-right font-semibold lg:table-cell">Variação vs. período anterior</th>
   </tr>
   </thead>
   <tbody class="divide-y divide-muted">
@@ -63,7 +63,7 @@
   <td class="px-2 py-2 font-medium text-foreground" data-label="Categoria">{{ row.name }}</td>
   <td class="px-2 py-2 text-right text-foreground" data-label="Valor">{{ row.amount|centavos }}</td>
   <td class="px-2 py-2 text-right text-muted-foreground" data-label="%">{{ row.share_percent }}%</td>
-  <td class="px-2 py-2 text-right" data-label="Variação">
+  <td class="hidden px-2 py-2 text-right lg:table-cell" data-label="Variação">
   {% if row.delta_percent is not None %}
   <span class="{% if row.delta_percent >= 0 %}text-danger-600 dark:text-danger-400{% else %}text-success-600 dark:text-success-400{% endif %}">
   {{ row.delta_percent|stringformat:"+d" }}%
