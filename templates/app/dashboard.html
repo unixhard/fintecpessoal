@@ -466,7 +466,7 @@
  var areaEl = document.getElementById("flux-area");
  if (areaEl) {
  var buckets = [
- {% for b in evolution %}{ label: "{{ b.label|escapejs }}", receitas: {{ b.receitas }}, despesas: {{ b.despesas }} },{% endfor %}
+ {% for b in evolution %}{ label: "{{ b.label|escapejs }}", receitas: {{ b.receitas }}, despesas: {{ b.despesas }}, saldo: {{ b.saldo }} },{% endfor %}
  ];
  if (buckets.length) {
  new window.ApexCharts(areaEl, {

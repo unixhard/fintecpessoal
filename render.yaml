@@ -22,3 +22,7 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: DEMO_USERNAME
+        value: "demo"
+      - key: DEMO_PASSWORD
+        generateValue: true

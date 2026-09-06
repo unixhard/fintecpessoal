@@ -11,8 +11,14 @@ pip install -r requirements.txt
 python manage.py collectstatic --noinput
 
 if [ -n "$DATABASE_URL" ]; then
-  echo "DATABASE_URL encontrada — aplicando migrações..."
+  echo "DATABASE_URL encontrada — aplicando migrações e seeds..."
   python manage.py migrate --noinput
+  # Taxonomia (categorias padrão para todos os usuários) + catálogo global de
+  # estabelecimentos. Idempotentes: seguros a cada build.
+  python manage.py seed_categories
+  python manage.py seed_merchants
+  # Conta demo (cria apenas se ainda não existirem dados; senha em DEMO_PASSWORD).
+  python manage.py seed_demo
 else
   echo "AVISO: DATABASE_URL não definida. Pulando migrações (first deploy)."
 fi
