@@ -1,8 +1,11 @@
 {% comment %}Erros gerais do formulário (não ligados a um campo).{% endcomment %}
 {% if form.non_field_errors %}
 <ul class="space-y-1" role="alert">
-  {% for error in form.non_field_errors %}
-  <li class="text-sm text-danger-600">{{ error }}</li>
-  {% endfor %}
+ {% for error in form.non_field_errors %}
+ <li class="flex items-start gap-2 text-sm text-danger-700 dark:text-danger-300">
+ <svg class="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg>
+ <span>{{ error }}</span>
+ </li>
+ {% endfor %}
 </ul>
 {% endif %}

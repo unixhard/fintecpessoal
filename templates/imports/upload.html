@@ -1,0 +1,78 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}Importar dados · FINTECPESSOAL{% endblock %}
+
+{% block shell_title %}Importar{% endblock %}
+
+
+{% block app_content %}
+<div class="mx-auto w-full max-w-xl">
+ {% include "components/page_header.html" with title="Importar dados" subtitle="Traga seus dados e revise antes de confirmar. Nada é criado automaticamente." %}
+
+ <form method="post" enctype="multipart/form-data" class="panel p-6">
+ {% csrf_token %}
+ {% include "components/error_list.html" %}
+ <div class="space-y-5">
+ {% include "components/field.html" with field=form.file %}
+
+ <fieldset>
+ <legend class="mb-2 block text-sm font-semibold text-foreground">Tipo de importação</legend>
+ <div class="grid grid-cols-2 gap-3">
+ {% for radio in form.import_type %}
+ <label class="tile cursor-pointer !p-4 text-sm {% if forloop.first %}import-type-account{% else %}import-type-card{% endif %}">
+ <input type="radio" name="{{ form.import_type.name }}" value="{{ radio.data.value }}"
+ {% if radio.data.selected %}checked{% endif %}
+ onchange="toggleImportType(this.value)" class="mr-2">
+ {{ radio.choice_label }}
+ </label>
+ {% endfor %}
+ </div>
+ </fieldset>
+
+ <div id="field-account">
+ {% include "components/field.html" with field=form.account %}
+ </div>
+ <div id="field-card" class="hidden">
+ {% include "components/field.html" with field=form.card %}
+ </div>
+ </div>
+
+ <div class="mt-2 rounded-xl border border-border bg-muted p-4 text-sm text-muted-foreground">
+ <p class="mb-1 font-semibold text-foreground">Formatos aceitos</p>
+ <ul class="list-disc space-y-0.5 pl-4 text-xs">
+ <li><strong>CSV</strong> — detecta delimitador e cabeçalho; valores brasileiros/internacionais.</li>
+ <li><strong>OFX/QFX</strong> — extrato estruturado (portador/NF e fatura de cartão).</li>
+ <li><strong>XLSX</strong> — planilha com cabeçalho (mapeamento na revisão).</li>
+ </ul>
+ <p class="mt-2 text-xs text-muted-foreground">Tamanho máximo: 5 MB. O arquivo é processado e descartado — não armazenamos o conteúdo.</p>
+ </div>
+
+ <div class="mt-6 flex items-center gap-3">
+ <button type="submit" class="btn btn-primary">Importar e revisar</button>
+ <a href="{% url 'dashboard:index' %}" class="btn btn-ghost">Cancelar</a>
+ </div>
+ </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+ function toggleImportType(type) {
+ var accountEl = document.getElementById("field-account");
+ var cardEl = document.getElementById("field-card");
+ if (!accountEl || !cardEl) return;
+ if (type === "card") {
+ accountEl.classList.add("hidden");
+ cardEl.classList.remove("hidden");
+ } else {
+ accountEl.classList.remove("hidden");
+ cardEl.classList.add("hidden");
+ }
+ }
+ (function () {
+ var checked = document.querySelector('input[name="import_type"]:checked');
+ if (checked) toggleImportType(checked.value);
+ })();
+</script>
+{% endblock %}

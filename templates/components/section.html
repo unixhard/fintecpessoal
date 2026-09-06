@@ -1,8 +1,8 @@
 {% comment %}
-  Cabeçalho de uma seção do dashboard.
-  Uso: {% include "components/section.html" with title=... subtitle=... %}
+ Cabeçalho de uma seção do dashboard.
+ Uso: {% include "components/section.html" with title=... subtitle=... %}
 {% endcomment %}
 <div class="mb-4">
-  <h2 class="text-base font-semibold tracking-tight text-surface-900">{{ title }}</h2>
-  {% if subtitle %}<p class="mt-0.5 text-sm text-surface-500">{{ subtitle }}</p>{% endif %}
+ <h2 class="display-2 text-xl text-foreground">{{ title }}</h2>
+ {% if subtitle %}<p class="mt-0.5 text-sm text-muted-foreground">{{ subtitle }}</p>{% endif %}
 </div>

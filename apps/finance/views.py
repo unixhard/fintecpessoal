@@ -7,9 +7,12 @@ tratados pelos serviços (regra 16). Toda consulta usada é isolada por usuário
 (via ``for_user``) e toda escrita passa pelos serviços, que validam ownership.
 """
 
+import json
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import View
@@ -20,7 +23,10 @@ from apps.finance.services import (
     accounts as accounts_svc,
     balances as balances_svc,
     categories as categories_svc,
+    chat as chat_svc,
     recurrences as recurrences_svc,
+    review as review_svc,
+    rules as rules_svc,
     transactions as transactions_svc,
     transfers as transfers_svc,
 )
@@ -29,13 +35,15 @@ from .forms import (
     AccountCreateForm,
     AccountEditForm,
     CategoryForm,
+    ClassificationRuleForm,
     ExpenseForm,
     IncomeForm,
     RecurringForm,
+    ReviewCorrectionForm,
     TransactionEditForm,
     TransferForm,
 )
-from .models import Account, Category, RecurringRule, Transaction
+from .models import Account, Category, ClassificationRule, Merchant, RecurringRule, Transaction
 
 
 def _fmt_brl(cents):
@@ -754,3 +762,297 @@ class RecurringStatusView(LoginRequiredMixin, View):
         label = {"pause": "Pausada", "activate": "Reativada", "end": "Encerrada"}
         messages.success(request, f"Recorrência {label.get(self.new_status, 'atualizada')}.")
         return redirect(reverse("finance:recurring_list"))
+
+
+# --------------------------------------------------------------------------- #
+# Regras de classificação (Ordem 18 — FASE 6/12)
+# --------------------------------------------------------------------------- #
+
+
+class RuleListView(LoginRequiredMixin, TemplateView):
+    template_name = "finance/rule_list.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["rules"] = rules_svc.list_rules(self.request.user)
+        ctx["global_rules"] = rules_svc.list_global_rules()
+        return ctx
+
+
+class RuleCreateView(LoginRequiredMixin, FormView):
+    template_name = "finance/rule_form.html"
+    form_class = ClassificationRuleForm
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["title"] = "Nova regra de classificação"
+        return ctx
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+        rules_svc.create_rule(
+            user=self.request.user,
+            name=form.cleaned_data["name"],
+            condition_type=form.cleaned_data["condition_type"],
+            pattern=form.cleaned_data.get("pattern") or "",
+            merchant=form.cleaned_data.get("merchant"),
+            category=form.cleaned_data.get("category"),
+            category_name=form.cleaned_data.get("category_name") or "",
+            kind=form.cleaned_data["kind"],
+            priority=form.cleaned_data["priority"],
+        )
+        messages.success(self.request, "Regra criada. Ela passa a valer automaticamente na classificação.")
+        return redirect(reverse("finance:rule_list"))
+
+
+class RuleEditView(LoginRequiredMixin, FormView):
+    template_name = "finance/rule_form.html"
+    form_class = ClassificationRuleForm
+
+    def _get_rule(self):
+        return get_object_or_404(
+            ClassificationRule.objects.filter(owner=self.request.user),
+            pk=self.kwargs.get("pk"),
+        )
+
+    def get_context_data(self, **kwargs):
+        rule = self._get_rule()
+        ctx = super().get_context_data(**kwargs)
+        ctx["title"] = "Editar regra"
+        ctx["rule"] = rule
+        return ctx
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_initial(self):
+        rule = self._get_rule()
+        return {
+            "name": rule.name,
+            "condition_type": rule.condition_type,
+            "pattern": rule.pattern,
+            "merchant": rule.merchant_id,
+            "category": rule.category_id,
+            "category_name": rule.category_name,
+            "kind": rule.kind,
+            "priority": rule.priority,
+        }
+
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+        rule = self._get_rule()
+        rules_svc.update_rule(
+            self.request.user, rule,
+            name=form.cleaned_data["name"],
+            condition_type=form.cleaned_data["condition_type"],
+            pattern=form.cleaned_data.get("pattern") or "",
+            merchant=form.cleaned_data.get("merchant"),
+            category=form.cleaned_data.get("category"),
+            category_name=form.cleaned_data.get("category_name") or "",
+            kind=form.cleaned_data["kind"],
+            priority=form.cleaned_data["priority"],
+        )
+        messages.success(self.request, "Regra atualizada.")
+        return redirect(reverse("finance:rule_list"))
+
+
+class RuleToggleView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        rule = get_object_or_404(
+            ClassificationRule.objects.filter(owner=request.user),
+            pk=kwargs.get("pk"),
+        )
+        rules_svc.set_active(request.user, rule, not rule.is_active)
+        state = "ativada" if rule.is_active else "pausada"
+        messages.success(request, f"Regra {state}.")
+        return redirect(reverse("finance:rule_list"))
+
+
+class RuleDeleteView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        rule = get_object_or_404(
+            ClassificationRule.objects.filter(owner=request.user),
+            pk=kwargs.get("pk"),
+        )
+        rules_svc.delete_rule(request.user, rule)
+        messages.success(request, "Regra excluída.")
+        return redirect(reverse("finance:rule_list"))
+
+
+# --------------------------------------------------------------------------- #
+# Fila de revisão (Ordem 18 — FASE 9/12)
+# --------------------------------------------------------------------------- #
+
+
+class ReviewQueueView(LoginRequiredMixin, TemplateView):
+    template_name = "finance/review_queue.html"
+    PAGE_SIZE = 25
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        pending_list = review_svc.pending(self.request.user)
+        # Normaliza para Transaction uniforme (a fila mistura Analysis e
+        # Transaction); preserva a origem/confiança atuais para exibição.
+        rows = []
+        for item in pending_list:
+            if isinstance(item, Transaction):
+                tx = item
+                analysis = None
+                try:
+                    analysis = tx.analysis
+                except Exception:
+                    analysis = None
+            else:
+                tx = item.transaction
+                analysis = item
+            rows.append({
+                "tx": tx,
+                "form": ReviewCorrectionForm(
+                    user=self.request.user, initial={"transaction_id": tx.id}
+                ),
+                "source_label": (analysis.classification_source if analysis else "") or "—",
+                "confidence": analysis.confidence if analysis else None,
+            })
+        ctx["stats"] = review_svc.stats(self.request.user)
+        ctx["pending_rows"] = rows
+        return ctx
+
+
+class ReviewBulkView(LoginRequiredMixin, View):
+    """Corrige em lote as transações selecionadas da fila de revisão."""
+
+    def post(self, request, *args, **kwargs):
+        corrections = []
+        tids = request.POST.getlist("transaction_ids")
+        for tid in tids:
+            cat_id = request.POST.get(f"category_{tid}")
+            if not cat_id:
+                continue
+            corrections.append({"transaction_id": int(tid), "category_id": int(cat_id)})
+        if not corrections:
+            messages.warning(request, "Nenhuma correção selecionada.")
+            return redirect(reverse("finance:review_queue"))
+        result = review_svc.bulk_correct(user=request.user, corrections=corrections)
+        messages.success(
+            request,
+            f"{result['applied']} lançamento(s) corrigido(s)."
+            + (f" Avisos: {' '.join(result['errors'])}" if result["errors"] else ""),
+        )
+        return redirect(reverse("finance:review_queue"))
+
+
+class ReviewIndividualView(LoginRequiredMixin, View):
+    """Corrige um único lançamento da fila de revisão."""
+
+    def post(self, request, *args, **kwargs):
+        transaction = get_object_or_404(
+            Transaction.objects.for_user(request.user), pk=kwargs.get("pk")
+        )
+        category = get_object_or_404(
+            Category.objects.for_user(request.user), pk=request.POST.get("category")
+        )
+        from apps.finance.services.classifier import apply_user_correction
+
+        apply_user_correction(user=request.user, transaction=transaction, category=category)
+        messages.success(request, "Lançamento corrigido e aprendido para o futuro.")
+        return redirect(reverse("finance:review_queue"))
+
+
+# --------------------------------------------------------------------------- #
+# Backfill / reprocessamento (Ordem 18 — FASE 7/12)
+# --------------------------------------------------------------------------- #
+
+
+class BackfillView(LoginRequiredMixin, View):
+    """Reprocessa transações sem análise de classificação.
+
+    POST aciona o motor determinístico sobre todas as transações que ainda não
+    têm TransactionAnalysis. Não toca em correções do usuário nem em accounting.
+    """
+
+    def post(self, request, *args, **kwargs):
+        from apps.finance.services.backfill import backfill_missing
+
+        count = backfill_missing(request.user)
+        messages.success(request, f"{count} lançamento(s) reprocessado(s).")
+        return redirect(reverse("finance:review_queue"))
+
+
+# --------------------------------------------------------------------------- #
+# Assistente Fintec (MÓDULO CHAT) — lançamento por linguagem natural
+# --------------------------------------------------------------------------- #
+
+
+class _ChatJsonMixin:
+    """Lê um corpo JSON e devolve (dict, erro) — a view decide o status."""
+
+    http_method_names = ["post"]
+
+    def _load_json(self, request):
+        try:
+            payload = json.loads(request.body or b"{}")
+        except (TypeError, ValueError):
+            return None, JsonResponse(
+                {"success": False, "message": "Requisição JSON inválida."},
+                status=400,
+            )
+        if not isinstance(payload, dict):
+            return None, JsonResponse(
+                {"success": False, "message": "Requisição JSON inválida."},
+                status=400,
+            )
+        return payload, None
+
+
+class ChatParseView(LoginRequiredMixin, _ChatJsonMixin, View):
+    """Endpoint 1/2: interpreta a mensagem e devolve o RASCUNHO (sem gravar)."""
+
+    def post(self, request, *args, **kwargs):
+        payload, error = self._load_json(request)
+        if error is not None:
+            return error
+        text = (payload.get("message") or "").strip()
+        if not text:
+            return JsonResponse(
+                {"success": False, "message": "Digite uma mensagem para eu interpretar."},
+                status=400,
+            )
+        return JsonResponse(chat_svc.interpret(user=request.user, text=text))
+
+
+class ChatConfirmView(LoginRequiredMixin, _ChatJsonMixin, View):
+    """Endpoint 2/2: valida no servidor e persiste via os services financeiros."""
+
+    def post(self, request, *args, **kwargs):
+        payload, error = self._load_json(request)
+        if error is not None:
+            return error
+        message = (payload.get("message") or "").strip()
+        if not message:
+            return JsonResponse(
+                {"success": False, "message": "Mensagem em branco não pode ser confirmada."},
+                status=400,
+            )
+        response = chat_svc.confirm(
+            user=request.user,
+            message=message,
+            kind=payload.get("kind"),
+            account_id=payload.get("account_id"),
+            card_id=payload.get("card_id"),
+            category_id=payload.get("category_id"),
+            date=payload.get("date"),
+            amount=payload.get("amount"),
+            description=payload.get("description"),
+        )
+        return JsonResponse(response)

@@ -194,6 +194,10 @@ def record_debt_payment(
             source=source,
             notes=notes,
         )
+        # FASE 8: marca como movimentação neutra (não vira consumo comum),
+        # sem alterar a contabilização.
+        from apps.finance.services.classifier import record_movement_analysis
+        record_movement_analysis(user=user, transaction=transaction)
         debt.paid_amount = debt.paid_amount + amount
         if debt.paid_amount >= debt.total_amount:
             debt.paid_amount = debt.total_amount

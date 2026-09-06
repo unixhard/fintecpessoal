@@ -2,51 +2,54 @@
 
 {% block title %}Categorias · FINTECPESSOAL{% endblock %}
 
-{% block app_content %}
-  {% include "components/page_header.html" with title="Categorias" subtitle="Organize suas receitas e despesas." action_url="finance:category_create" action_label="Nova categoria" action_icon="+" %}
+{% block shell_title %}Categorias{% endblock %}
 
-  {% if categories %}
-  <div class="space-y-6">
-    <section>
-      <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-surface-500">Receitas</h2>
-      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {% for c in categories %}
-          {% if c.kind == 'income' %}
-          <div class="panel flex items-center justify-between px-4 py-3">
-            <div>
-              <p class="font-medium text-surface-800">{{ c.name }}</p>
-              {% if c.parent %}<p class="text-xs text-surface-500">Sub de {{ c.parent.name }}</p>{% endif %}
-            </div>
-            <div class="inline-flex items-center gap-1">
-              {% if c.status != 'active' %}{% include "components/status_badge.html" with label="Inativa" tone="neutral" %}{% endif %}
-              <a href="{% url 'finance:category_edit' c.pk %}" class="btn btn-ghost btn-sm">Editar</a>
-            </div>
-          </div>
-          {% endif %}
-        {% endfor %}
-      </div>
-    </section>
-    <section>
-      <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-surface-500">Despesas</h2>
-      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {% for c in categories %}
-          {% if c.kind == 'expense' %}
-          <div class="panel flex items-center justify-between px-4 py-3">
-            <div>
-              <p class="font-medium text-surface-800">{{ c.name }}</p>
-              {% if c.parent %}<p class="text-xs text-surface-500">Sub de {{ c.parent.name }}</p>{% endif %}
-            </div>
-            <div class="inline-flex items-center gap-1">
-              {% if c.status != 'active' %}{% include "components/status_badge.html" with label="Inativa" tone="neutral" %}{% endif %}
-              <a href="{% url 'finance:category_edit' c.pk %}" class="btn btn-ghost btn-sm">Editar</a>
-            </div>
-          </div>
-          {% endif %}
-        {% endfor %}
-      </div>
-    </section>
-  </div>
-  {% else %}
-  {% include "components/empty_state.html" with icon="▤" title="Nenhuma categoria" message="Crie categorias para organizar suas receitas e despesas." action_url="finance:category_create" action_label="Nova categoria" %}
-  {% endif %}
+
+{% block app_content %}
+ {% include "components/page_header.html" with title="Categorias" subtitle="Organize suas receitas e despesas." action_url="finance:category_create" action_label="Nova categoria" action_icon="+" %}
+
+ {% if categories %}
+ <div class="space-y-6">
+ <section>
+ <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Receitas</h2>
+ <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+ {% for c in categories %}
+ {% if c.kind == 'income' %}
+ <div class="panel flex items-center justify-between px-4 py-3">
+ <div>
+ <p class="font-medium text-foreground">{{ c.name }}</p>
+ {% if c.parent %}<p class="text-xs text-muted-foreground">Sub de {{ c.parent.name }}</p>{% endif %}
+ </div>
+ <div class="inline-flex items-center gap-1">
+ {% if c.status != 'active' %}{% include "components/status_badge.html" with label="Inativa" tone="neutral" %}{% endif %}
+ <a href="{% url 'finance:category_edit' c.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+ </div>
+ </div>
+ {% endif %}
+ {% endfor %}
+ </div>
+ </section>
+ <section>
+ <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Despesas</h2>
+ <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+ {% for c in categories %}
+ {% if c.kind == 'expense' %}
+ <div class="panel flex items-center justify-between px-4 py-3">
+ <div>
+ <p class="font-medium text-foreground">{{ c.name }}</p>
+ {% if c.parent %}<p class="text-xs text-muted-foreground">Sub de {{ c.parent.name }}</p>{% endif %}
+ </div>
+ <div class="inline-flex items-center gap-1">
+ {% if c.status != 'active' %}{% include "components/status_badge.html" with label="Inativa" tone="neutral" %}{% endif %}
+ <a href="{% url 'finance:category_edit' c.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+ </div>
+ </div>
+ {% endif %}
+ {% endfor %}
+ </div>
+ </section>
+ </div>
+ {% else %}
+ {% include "components/empty_state.html" with icon="list" title="Nenhuma categoria" message="Crie categorias para organizar suas receitas e despesas." action_url="finance:category_create" action_label="Nova categoria" %}
+ {% endif %}
 {% endblock %}

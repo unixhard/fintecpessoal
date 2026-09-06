@@ -3,36 +3,39 @@
 
 {% block title %}Metas · FINTECPESSOAL{% endblock %}
 
-{% block app_content %}
-  {% include "components/page_header.html" with title="Metas" subtitle="Defina objetivos e acompanhe seu progresso." action_url="goals:goal_create" action_label="Nova meta" action_icon="+" %}
+{% block shell_title %}Metas{% endblock %}
 
-  {% if goals %}
-  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    {% for row in rows %}
-    {% with g=row.goal %}
-    <div class="panel p-5">
-      <div class="flex items-start justify-between">
-        <a href="{% url 'goals:goal_detail' g.pk %}" class="font-semibold text-surface-800 hover:text-brand-700">{{ g.name }}</a>
-        {% if g.status == 'achieved' %}{% include "components/status_badge.html" with label="Alcançada" tone="positive" dot=True %}
-        {% elif g.status == 'paused' %}{% include "components/status_badge.html" with label="Pausada" tone="attention" dot=True %}
-        {% else %}{% include "components/status_badge.html" with label="Ativa" tone="info" dot=True %}{% endif %}
-      </div>
-      <p class="mt-3 text-sm text-surface-500">
-        {% include "components/money.html" with cents=g.current_amount %} de {% include "components/money.html" with cents=g.target_amount %}
-      </p>
-      <div class="mt-3">
-        {% include "components/progress.html" with percent=row.percent show_label=True %}
-      </div>
-      {% if g.target_date %}
-      <p class="mt-3 text-xs text-surface-500">Prazo: {{ g.target_date|date:"d/m/Y" }}
-        {% if row.required_monthly %} · <span class="font-medium text-surface-700">{% include "components/money.html" with cents=row.required_monthly %}/mês</span>{% endif %}
-      </p>
-      {% endif %}
-    </div>
-    {% endwith %}
-    {% endfor %}
-  </div>
-  {% else %}
-  {% include "components/empty_state.html" with icon="◎" title="Nenhuma meta" message="Crie uma meta financeira para organizar seus objetivos e acompanhar o progresso." action_url="goals:goal_create" action_label="Nova meta" %}
-  {% endif %}
+
+{% block app_content %}
+ {% include "components/page_header.html" with title="Metas" subtitle="Defina objetivos e acompanhe seu progresso." action_url="goals:goal_create" action_label="Nova meta" action_icon="+" %}
+
+ {% if goals %}
+ <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+ {% for row in rows %}
+ {% with g=row.goal %}
+ <div class="panel p-5">
+ <div class="flex items-start justify-between">
+ <a href="{% url 'goals:goal_detail' g.pk %}" class="font-semibold text-foreground hover:text-brand-700">{{ g.name }}</a>
+ {% if g.status == 'achieved' %}{% include "components/status_badge.html" with label="Alcançada" tone="positive" dot=True %}
+ {% elif g.status == 'paused' %}{% include "components/status_badge.html" with label="Pausada" tone="attention" dot=True %}
+ {% else %}{% include "components/status_badge.html" with label="Ativa" tone="info" dot=True %}{% endif %}
+ </div>
+ <p class="mt-3 text-sm text-muted-foreground">
+ {% include "components/money.html" with cents=g.current_amount %} de {% include "components/money.html" with cents=g.target_amount %}
+ </p>
+ <div class="mt-3">
+ {% include "components/progress.html" with percent=row.percent show_label=True %}
+ </div>
+ {% if g.target_date %}
+ <p class="mt-3 text-xs text-muted-foreground">Prazo: {{ g.target_date|date:"d/m/Y" }}
+ {% if row.required_monthly %} · <span class="font-medium text-foreground">{% include "components/money.html" with cents=row.required_monthly %}/mês</span>{% endif %}
+ </p>
+ {% endif %}
+ </div>
+ {% endwith %}
+ {% endfor %}
+ </div>
+ {% else %}
+ {% include "components/empty_state.html" with icon="target" title="Nenhuma meta" message="Crie uma meta financeira para organizar seus objetivos e acompanhar o progresso." action_url="goals:goal_create" action_label="Nova meta" %}
+ {% endif %}
 {% endblock %}

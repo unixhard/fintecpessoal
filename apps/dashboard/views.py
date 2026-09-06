@@ -81,6 +81,7 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
         period = self.request.GET.get("period", "30d")
         account_id = self.request.GET.get("account") or None
         card_id = self.request.GET.get("card") or None
+        month = self.request.GET.get("month") or None
 
         if period not in ("7d", "30d", "3m", "6m", "12m"):
             period = "30d"
@@ -91,6 +92,7 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
                 period=period,
                 account_id=account_id,
                 card_id=card_id,
+                month=month,
             )
         )
         ctx["first_steps"] = _first_steps(user)

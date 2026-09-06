@@ -2,31 +2,34 @@
 
 {% block title %}{{ title }} · FINTECPESSOAL{% endblock %}
 
+{% block shell_title %}Recorrência{% endblock %}
+
+
 {% block app_content %}
 <div class="mx-auto w-full max-w-xl">
-  {% include "components/page_header.html" with title=title subtitle="A recorrência projeta ocorrências sob demanda; não gera saldo em massa." %}
+ {% include "components/page_header.html" with title=title subtitle="A recorrência projeta ocorrências sob demanda; não gera saldo em massa." %}
 
-  <form method="post" class="panel p-6">
-    {% csrf_token %}
-    {% include "components/error_list.html" %}
-    <div class="space-y-5">
-      {% include "components/field.html" with field=form.kind %}
-      {% include "components/field.html" with field=form.title %}
-      {% include "components/field.html" with field=form.amount %}
-      {% include "components/field.html" with field=form.frequency %}
-      {% include "components/field.html" with field=form.interval %}
-      {% include "components/field.html" with field=form.account %}
-      {% include "components/field.html" with field=form.category %}
-      {% include "components/field.html" with field=form.card %}
-      {% include "components/field.html" with field=form.start_date %}
-      {% include "components/field.html" with field=form.end_date %}
-      {% include "components/field.html" with field=form.day_of_month %}
-      {% include "components/field.html" with field=form.weekday %}
-    </div>
-    <div class="mt-6 flex items-center gap-3">
-      <button type="submit" class="btn btn-primary">Salvar</button>
-      <a href="{% url 'finance:recurring_list' %}" class="btn btn-ghost">Cancelar</a>
-    </div>
-  </form>
+ <form method="post" class="panel p-6">
+ {% csrf_token %}
+ {% include "components/error_list.html" %}
+ <div class="space-y-5">
+ {% include "components/field.html" with field=form.kind %}
+ {% include "components/field.html" with field=form.title %}
+ {% include "components/field.html" with field=form.amount %}
+ {% include "components/field.html" with field=form.frequency %}
+ {% include "components/field.html" with field=form.interval %}
+ {% include "components/field.html" with field=form.account %}
+ {% include "components/field.html" with field=form.category %}
+ {% include "components/field.html" with field=form.card %}
+ {% include "components/field.html" with field=form.start_date %}
+ {% include "components/field.html" with field=form.end_date %}
+ {% include "components/field.html" with field=form.day_of_month %}
+ {% include "components/field.html" with field=form.weekday %}
+ </div>
+ <div class="mt-6 flex items-center gap-3">
+ <button type="submit" class="btn btn-primary">Salvar</button>
+ <a href="{% url 'finance:recurring_list' %}" class="btn btn-ghost">Cancelar</a>
+ </div>
+ </form>
 </div>
 {% endblock %}

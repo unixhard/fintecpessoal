@@ -1,30 +1,45 @@
 {% extends "base.html" %}
 {% comment %}
-  Base das etapas de onboarding: marca no topo + indicador de progresso
-  + conteúdo central limitado (mobile-first).
+ Base das etapas de onboarding — Flux Dark: marca no topo, indicador de
+ progresso numerado e cartão central limitado.
 {% endcomment %}
 {% block content %}
-<div class="flex min-h-[100dvh] flex-col">
-  <header class="container-app flex items-center justify-between py-5">
-    {% include "components/brand.html" with size="md" %}
-    <span class="text-sm font-medium text-surface-500">Etapa {{ step }} de {{ total_steps }}</span>
-  </header>
+<div class="flex min-h-[100dvh] flex-col bg-background">
+ <header class="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-5 sm:px-8">
+ {% include "components/brand.html" with size="md" light=False %}
+ <span class="text-sm font-semibold text-muted-foreground">Etapa {{ step|default:1 }} de {{ total_steps|default:4 }}</span>
+ </header>
 
-  <main id="onboarding-content" class="container-app flex-1 py-6">
-    <div class="mx-auto w-full max-w-lg">
-      <div class="mb-6" role="presentation" aria-hidden="true">
-        <div class="flex items-center gap-1.5">
-          {% for i in "1234" %}
-          <div class="h-1.5 flex-1 rounded-full {% if forloop.counter <= step %}bg-brand-600{% else %}bg-surface-200{% endif %}"></div>
-          {% endfor %}
-        </div>
-      </div>
-      {% block onboarding_body %}{% endblock %}
-    </div>
-  </main>
+ <main id="onboarding-content" class="mx-auto w-full max-w-3xl flex-1 px-5 py-6 sm:px-8">
+ <div class="mx-auto w-full max-w-lg">
+ {# Progresso numerado #}
+ <div class="mb-8" role="presentation" aria-hidden="true">
+ <div class="flex items-center gap-2">
+ {% with steps=total_steps|default:4 current_step=step|default:1 %}
+ {% for i in ""|ljust:steps|make_list %}
+ {% if forloop.counter <= current_step %}
+ <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent text-[11px] font-bold text-white shadow-soft">{{ forloop.counter }}</span>
+ {% else %}
+ <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-border text-[11px] font-semibold text-muted-foreground">{{ forloop.counter }}</span>
+ {% endif %}
+ {% if not forloop.last %}<div class="h-1 flex-1 rounded-full {% if forloop.counter < current_step %}bg-gradient-to-r from-brand-500 to-accent{% else %}bg-muted{% endif %}"></div>{% endif %}
+ {% endfor %}
+ {% endwith %}
+ </div>
+ </div>
 
-  <footer class="container-app py-6 text-center text-xs text-surface-400">
-    {% block onboarding_footer %}{% endblock %}
-  </footer>
+ <div class="glass-card !rounded-2xl p-6 sm:p-8">
+ {% block onboarding_body %}{% endblock %}
+ </div>
+
+ <p class="mt-6 text-center text-sm text-muted-foreground">
+ {% block onboarding_hint %}{% endblock %}
+ </p>
+ </div>
+ </main>
+
+ <footer class="px-5 py-6 text-center text-xs text-muted-foreground">
+ FINTECPESSOAL © 2026 — Controle e inteligência financeira pessoal.
+ </footer>
 </div>
 {% endblock %}

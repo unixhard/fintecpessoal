@@ -1,9 +1,9 @@
 {% comment %}
-  Exibe um valor monetário em centavos, formatado como moeda BRL.
-  Uso: {% include "components/money.html" with cents=123456 tone="positive" %}
-  tone (opcional): positive | negative | neutral.
+ Exibe um valor monetário em centavos, formatado como moeda BRL.
+ Uso: {% include "components/money.html" with cents=123456 tone="positive" %}
+ tone (opcional): positive | negative | neutral.
 {% endcomment %}
 {% load money %}
-<span class="num {% if tone == 'positive' %}text-success-600{% elif tone == 'negative' %}text-danger-600{% else %}text-surface-700{% endif %} font-semibold">
-  {{ cents|centavos }}
+<span class="num {% if tone == 'positive' %}text-success-700{% elif tone == 'negative' %}text-danger-700{% else %}text-foreground{% endif %} font-semibold">
+ {{ cents|centavos }}
 </span>

@@ -3,98 +3,101 @@
 
 {% block title %}Fatura · FINTECPESSOAL{% endblock %}
 
+{% block shell_title %}Fatura{% endblock %}
+
+
 {% block app_content %}
-  {% include "components/page_header.html" with title="Fatura" subtitle=invoice.card.name|default:"Cartão" %}
+ {% include "components/page_header.html" with title="Fatura" subtitle=invoice.card.name|default:"Cartão" %}
 
-  <div class="mb-6 grid gap-4 sm:grid-cols-2">
-    <div class="panel p-5">
-      <p class="text-sm text-surface-500">Total</p>
-      <p class="mt-1 text-2xl font-bold">{% include "components/money.html" with cents=invoice.amount %}</p>
-    </div>
-    <div class="panel p-5">
-      <p class="text-sm text-surface-500">Status</p>
-      <div class="mt-1">
-        {% if invoice.status == 'paid' %}{% include "components/status_badge.html" with label="Paga" tone="positive" dot=True %}
-        {% elif invoice.status == 'overdue' %}{% include "components/status_badge.html" with label="Atrasada" tone="negative" %}
-        {% elif invoice.status == 'closed' %}{% include "components/status_badge.html" with label="Fechada" tone="neutral" %}
-        {% else %}{% include "components/status_badge.html" with label="Aberta" tone="attention" %}{% endif %}
-      </div>
-    </div>
-  </div>
+ <div class="mb-6 grid gap-4 sm:grid-cols-2">
+ <div class="panel p-5">
+ <p class="text-sm text-muted-foreground">Total</p>
+ <p class="mt-1 text-2xl font-bold">{% include "components/money.html" with cents=invoice.amount %}</p>
+ </div>
+ <div class="panel p-5">
+ <p class="text-sm text-muted-foreground">Status</p>
+ <div class="mt-1">
+ {% if invoice.status == 'paid' %}{% include "components/status_badge.html" with label="Paga" tone="positive" dot=True %}
+ {% elif invoice.status == 'overdue' %}{% include "components/status_badge.html" with label="Atrasada" tone="negative" %}
+ {% elif invoice.status == 'closed' %}{% include "components/status_badge.html" with label="Fechada" tone="neutral" %}
+ {% else %}{% include "components/status_badge.html" with label="Aberta" tone="attention" %}{% endif %}
+ </div>
+ </div>
+ </div>
 
-  <div class="panel mb-6 p-5">
-    <dl class="grid gap-4 sm:grid-cols-3">
-      <div>
-        <dt class="text-xs font-medium uppercase text-surface-500">Período</dt>
-        <dd class="mt-1 text-surface-800">{{ invoice.period_start|date:"d/m/Y" }} a {{ invoice.period_end|date:"d/m/Y" }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs font-medium uppercase text-surface-500">Fechamento</dt>
-        <dd class="mt-1 text-surface-800">{{ invoice.closing_date|date:"d/m/Y" }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs font-medium uppercase text-surface-500">Vencimento</dt>
-        <dd class="mt-1 text-surface-800">{{ invoice.due_date|date:"d/m/Y" }}</dd>
-      </div>
-      {% if invoice.payment_account %}
-      <div>
-        <dt class="text-xs font-medium uppercase text-surface-500">Conta de pagamento</dt>
-        <dd class="mt-1 text-surface-800">{{ invoice.payment_account.name }}</dd>
-      </div>
-      <div class="sm:col-span-2">
-        <dt class="text-xs font-medium uppercase text-surface-500">Data do pagamento</dt>
-        <dd class="mt-1 text-surface-800">{{ invoice.payment_transaction.date|date:"d/m/Y"|default:"—" }}</dd>
-      </div>
-      {% endif %}
-    </dl>
-  </div>
+ <div class="panel mb-6 p-5">
+ <dl class="grid gap-4 sm:grid-cols-3">
+ <div>
+ <dt class="text-xs font-medium uppercase text-muted-foreground">Período</dt>
+ <dd class="mt-1 text-foreground">{{ invoice.period_start|date:"d/m/Y" }} a {{ invoice.period_end|date:"d/m/Y" }}</dd>
+ </div>
+ <div>
+ <dt class="text-xs font-medium uppercase text-muted-foreground">Fechamento</dt>
+ <dd class="mt-1 text-foreground">{{ invoice.closing_date|date:"d/m/Y" }}</dd>
+ </div>
+ <div>
+ <dt class="text-xs font-medium uppercase text-muted-foreground">Vencimento</dt>
+ <dd class="mt-1 text-foreground">{{ invoice.due_date|date:"d/m/Y" }}</dd>
+ </div>
+ {% if invoice.payment_account %}
+ <div>
+ <dt class="text-xs font-medium uppercase text-muted-foreground">Conta de pagamento</dt>
+ <dd class="mt-1 text-foreground">{{ invoice.payment_account.name }}</dd>
+ </div>
+ <div class="sm:col-span-2">
+ <dt class="text-xs font-medium uppercase text-muted-foreground">Data do pagamento</dt>
+ <dd class="mt-1 text-foreground">{{ invoice.payment_transaction.date|date:"d/m/Y"|default:"—" }}</dd>
+ </div>
+ {% endif %}
+ </dl>
+ </div>
 
-  <div class="panel mb-6 p-5">
-    <div class="mb-3 flex items-center justify-between">
-      <h2 class="font-semibold text-surface-800">Parcelas / compras</h2>
-    </div>
-    {% if installments %}
-    <ul class="divide-y divide-surface-100">
-      {% for inst in installments %}
-      <li class="flex items-center justify-between py-2.5">
-        <div>
-          <p class="text-sm font-medium text-surface-800">{{ inst.purchase.description|default:"Compra" }} · parcela {{ inst.number }}</p>
-          <p class="text-xs text-surface-500">Vence {{ inst.due_date|date:"d/m/Y" }}</p>
-        </div>
-        <div class="text-right">
-          <span class="text-sm font-medium">{% include "components/money.html" with cents=inst.amount %}</span>
-        </div>
-      </li>
-      {% endfor %}
-    </ul>
-    {% else %}
-    <p class="text-sm text-surface-500">Nenhuma parcela vinculada a esta fatura.</p>
-    {% endif %}
-  </div>
+ <div class="panel mb-6 p-5">
+ <div class="mb-3 flex items-center justify-between">
+ <h2 class="font-semibold text-foreground">Parcelas / compras</h2>
+ </div>
+ {% if installments %}
+ <ul class="divide-y divide-muted">
+ {% for inst in installments %}
+ <li class="flex items-center justify-between py-2.5">
+ <div>
+ <p class="text-sm font-medium text-foreground">{{ inst.purchase.description|default:"Compra" }} · parcela {{ inst.number }}</p>
+ <p class="text-xs text-muted-foreground">Vence {{ inst.due_date|date:"d/m/Y" }}</p>
+ </div>
+ <div class="text-right">
+ <span class="text-sm font-medium">{% include "components/money.html" with cents=inst.amount %}</span>
+ </div>
+ </li>
+ {% endfor %}
+ </ul>
+ {% else %}
+ <p class="text-sm text-muted-foreground">Nenhuma parcela vinculada a esta fatura.</p>
+ {% endif %}
+ </div>
 
-  {% if invoice.status != 'paid' %}
-  <div class="panel p-5">
-    <h2 class="mb-3 font-semibold text-surface-800">Pagar fatura</h2>
-    <form method="post" action="{% url 'cards:invoice_pay' invoice.pk %}">
-      {% csrf_token %}
-      {% include "components/error_list.html" %}
-      <div class="grid gap-4 sm:grid-cols-2">
-        {% include "components/field.html" with field=pay_form.account %}
-        {% include "components/field.html" with field=pay_form.date %}
-      </div>
-      <div class="mt-4">
-        <button type="submit" class="btn btn-primary">Pagar fatura</button>
-      </div>
-    </form>
-  </div>
-  {% else %}
-  <div class="rounded-2xl border border-success-200 bg-success-50 p-5 text-center">
-    <p class="font-semibold text-success-700">Fatura paga ✓</p>
-    <p class="mt-1 text-sm text-success-600">Não é possível pagar novamente uma fatura já paga.</p>
-  </div>
-  {% endif %}
+ {% if invoice.status != 'paid' %}
+ <div class="panel p-5">
+ <h2 class="mb-3 font-semibold text-foreground">Pagar fatura</h2>
+ <form method="post" action="{% url 'cards:invoice_pay' invoice.pk %}">
+ {% csrf_token %}
+ {% include "components/error_list.html" %}
+ <div class="grid gap-4 sm:grid-cols-2">
+ {% include "components/field.html" with field=pay_form.account %}
+ {% include "components/field.html" with field=pay_form.date %}
+ </div>
+ <div class="mt-4">
+ <button type="submit" class="btn btn-primary">Pagar fatura</button>
+ </div>
+ </form>
+ </div>
+ {% else %}
+ <div class="rounded-2xl border border-success-200 bg-success-50 p-5 text-center">
+ <p class="flex items-center gap-1.5 font-semibold text-success-700"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Fatura paga</p>
+ <p class="mt-1 text-sm text-success-600">Não é possível pagar novamente uma fatura já paga.</p>
+ </div>
+ {% endif %}
 
-  <div class="mt-6">
-    <a href="{% url 'cards:invoice_list' %}" class="btn btn-ghost">Voltar</a>
-  </div>
+ <div class="mt-6">
+ <a href="{% url 'cards:invoice_list' %}" class="btn btn-ghost">Voltar</a>
+ </div>
 {% endblock %}

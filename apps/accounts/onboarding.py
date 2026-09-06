@@ -26,6 +26,7 @@ from django.views.generic import TemplateView
 
 from apps.finance.models import Account
 from apps.finance.services.accounts import create_account
+from apps.finance.services.categories import seed_default_categories
 
 TOTAL_STEPS = 4
 
@@ -174,6 +175,9 @@ class OnboardingStep3View(OnboardingBaseMixin, View):
                 initial_balance=form.cleaned_data["initial_balance"],
                 currency="BRL",
             )
+            # Taxonomia padrão (Ordem 18/FASE 3): semeia as categorias base
+            # quando o usuário realmente começa a usar a plataforma.
+            seed_default_categories(user=request.user)
             profile = request.user.profile
             profile.onboarding_completed = True
             profile.save(update_fields=["onboarding_completed"])

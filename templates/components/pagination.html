@@ -1,24 +1,24 @@
 {% comment %}
-  Paginação reutilizável para listagens (usa a paginação do ListView).
-  Uso: {% include "components/pagination.html" with page=page_obj %}
+ Paginação reutilizável para listagens.
+ Uso: {% include "components/pagination.html" with page=page_obj %}
 {% endcomment %}
 {% if paginator and paginator.num_pages > 1 %}
-<nav class="mt-6 flex items-center justify-between" aria-label="Paginação">
-  <p class="text-sm text-surface-500">
-    Mostrando {{ page.start_index }}–{{ page.end_index }} de {{ paginator.count }}
-  </p>
-  <div class="flex items-center gap-2">
-    {% if page.has_previous %}
-    <a class="btn btn-ghost btn-sm" href="?{% if query %}{{ query }}&{% endif %}page={{ page.previous_page_number }}">Anterior</a>
-    {% else %}
-    <span class="btn btn-ghost btn-sm opacity-40" aria-disabled="true">Anterior</span>
-    {% endif %}
-    <span class="text-sm text-surface-600">Página {{ page.number }} de {{ paginator.num_pages }}</span>
-    {% if page.has_next %}
-    <a class="btn btn-ghost btn-sm" href="?{% if query %}{{ query }}&{% endif %}page={{ page.next_page_number }}">Próxima</a>
-    {% else %}
-    <span class="btn btn-ghost btn-sm opacity-40" aria-disabled="true">Próxima</span>
-    {% endif %}
-  </div>
+<nav class="mt-6 flex items-center justify-between gap-4" aria-label="Paginação">
+ <p class="text-sm text-muted-foreground">
+ Mostrando {{ page.start_index }}–{{ page.end_index }} de {{ paginator.count }}
+ </p>
+ <div class="flex items-center gap-2">
+ {% if page.has_previous %}
+ <a class="btn btn-ghost btn-sm" href="?{% if query %}{{ query }}&{% endif %}page={{ page.previous_page_number }}">Anterior</a>
+ {% else %}
+ <span class="btn btn-ghost btn-sm opacity-40" aria-disabled="true">Anterior</span>
+ {% endif %}
+ <span class="text-sm text-muted-foreground">Página {{ page.number }} de {{ paginator.num_pages }}</span>
+ {% if page.has_next %}
+ <a class="btn btn-ghost btn-sm" href="?{% if query %}{{ query }}&{% endif %}page={{ page.next_page_number }}">Próxima</a>
+ {% else %}
+ <span class="btn btn-ghost btn-sm opacity-40" aria-disabled="true">Próxima</span>
+ {% endif %}
+ </div>
 </nav>
 {% endif %}

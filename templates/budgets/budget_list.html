@@ -3,66 +3,69 @@
 
 {% block title %}Orçamentos · FINTECPESSOAL{% endblock %}
 
+{% block shell_title %}Orçamentos{% endblock %}
+
+
 {% block app_content %}
-  {% include "components/page_header.html" with title="Orçamentos" subtitle="Controle seus limites de gasto por categoria ou global." action_url="budgets:budget_create" action_label="Novo orçamento" action_icon="+" %}
+ {% include "components/page_header.html" with title="Orçamentos" subtitle="Controle seus limites de gasto por categoria ou global." action_url="budgets:budget_create" action_label="Novo orçamento" action_icon="+" %}
 
-  {% if summary.total_planned > 0 %}
-  <div class="mb-6 grid gap-4 sm:grid-cols-3">
-    <div class="panel p-5">
-      <p class="text-sm text-surface-500">Planejado</p>
-      <p class="mt-1 text-xl font-bold">{% include "components/money.html" with cents=summary.total_planned %}</p>
-    </div>
-    <div class="panel p-5">
-      <p class="text-sm text-surface-500">Realizado</p>
-      <p class="mt-1 text-xl font-bold text-danger-600">{% include "components/money.html" with cents=summary.total_realized %}</p>
-    </div>
-    <div class="panel p-5">
-      <p class="text-sm text-surface-500">Restante</p>
-      <p class="mt-1 text-xl font-bold text-success-600">{% include "components/money.html" with cents=summary.total_remaining %}</p>
-    </div>
-  </div>
-  {% endif %}
+ {% if summary.total_planned > 0 %}
+ <div class="mb-6 grid gap-4 sm:grid-cols-3">
+ <div class="panel p-5">
+ <p class="text-sm text-muted-foreground">Planejado</p>
+ <p class="mt-1 text-xl font-bold">{% include "components/money.html" with cents=summary.total_planned %}</p>
+ </div>
+ <div class="panel p-5">
+ <p class="text-sm text-muted-foreground">Realizado</p>
+ <p class="mt-1 text-xl font-bold text-danger-600">{% include "components/money.html" with cents=summary.total_realized %}</p>
+ </div>
+ <div class="panel p-5">
+ <p class="text-sm text-muted-foreground">Restante</p>
+ <p class="mt-1 text-xl font-bold text-success-600">{% include "components/money.html" with cents=summary.total_remaining %}</p>
+ </div>
+ </div>
+ {% endif %}
 
-  {% if budgets %}
-  <div class="panel overflow-hidden">
-    <ul class="divide-y divide-surface-100">
-      {% for row in rows %}
-      {% with b=row.budget %}
-      <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div class="min-w-0">
-          <a href="{% url 'budgets:budget_detail' b.pk %}" class="font-semibold text-surface-800 hover:text-brand-700">
-            {% if b.kind == 'category' %}{{ b.category.name }}{% else %}Geral{% endif %}
-          </a>
-          <p class="text-xs text-surface-500">{{ b.get_period_display|default:"" }}
-            {% if b.start_date %} · {{ b.start_date|date:"d/m/Y" }}{% endif %}
-            {% if b.end_date %} a {{ b.end_date|date:"d/m/Y" }}{% endif %}</p>
-        </div>
-        <div class="flex flex-col items-start gap-2 sm:w-72 sm:items-end">
-          <div class="flex w-full items-center justify-between text-sm">
-            <span class="text-surface-500">{% include "components/money.html" with cents=row.realized %} de {% include "components/money.html" with cents=row.planned %}</span>
-            <span class="font-semibold text-surface-700">{{ row.percent }}%</span>
-          </div>
-          {% include "components/progress.html" with percent=row.percent tone=row.status show_label=False %}
-          {% if row.status == 'exceeded' %}{% include "components/status_badge.html" with label="Excedido" tone="exceeded" dot=True %}
-          {% elif row.status == 'attention' %}{% include "components/status_badge.html" with label="Próximo do limite" tone="attention" dot=True %}
-          {% else %}{% include "components/status_badge.html" with label="Dentro" tone="positive" dot=True %}{% endif %}
-        </div>
-        <form method="post" action="{% url 'budgets:budget_toggle' b.pk %}" class="flex items-center">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-ghost btn-sm">{{ b.is_active|yesno:"Inativar,Ativar" }}</button>
-        </form>
-      </li>
-      {% endwith %}
-      {% endfor %}
-    </ul>
-  </div>
-  {% else %}
-  {% include "components/empty_state.html" with icon="▤" title="Nenhum orçamento" message="Defina um limite mensal para cada categoria e acompanhe seus gastos em tempo real." action_url="budgets:budget_create" action_label="Novo orçamento" %}
-  {% endif %}
+ {% if budgets %}
+ <div class="panel overflow-hidden">
+ <ul class="divide-y divide-muted">
+ {% for row in rows %}
+ {% with b=row.budget %}
+ <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+ <div class="min-w-0">
+ <a href="{% url 'budgets:budget_detail' b.pk %}" class="font-semibold text-foreground hover:text-brand-700">
+ {% if b.kind == 'category' %}{{ b.category.name }}{% else %}Geral{% endif %}
+ </a>
+ <p class="text-xs text-muted-foreground">{{ b.get_period_display|default:"" }}
+ {% if b.start_date %} · {{ b.start_date|date:"d/m/Y" }}{% endif %}
+ {% if b.end_date %} a {{ b.end_date|date:"d/m/Y" }}{% endif %}</p>
+ </div>
+ <div class="flex flex-col items-start gap-2 sm:w-72 sm:items-end">
+ <div class="flex w-full items-center justify-between text-sm">
+ <span class="text-muted-foreground">{% include "components/money.html" with cents=row.realized %} de {% include "components/money.html" with cents=row.planned %}</span>
+ <span class="font-semibold text-foreground">{{ row.percent }}%</span>
+ </div>
+ {% include "components/progress.html" with percent=row.percent tone=row.status show_label=False %}
+ {% if row.status == 'exceeded' %}{% include "components/status_badge.html" with label="Excedido" tone="exceeded" dot=True %}
+ {% elif row.status == 'attention' %}{% include "components/status_badge.html" with label="Próximo do limite" tone="attention" dot=True %}
+ {% else %}{% include "components/status_badge.html" with label="Dentro" tone="positive" dot=True %}{% endif %}
+ </div>
+ <form method="post" action="{% url 'budgets:budget_toggle' b.pk %}" class="flex items-center">
+ {% csrf_token %}
+ <button type="submit" class="btn btn-ghost btn-sm">{{ b.is_active|yesno:"Inativar,Ativar" }}</button>
+ </form>
+ </li>
+ {% endwith %}
+ {% endfor %}
+ </ul>
+ </div>
+ {% else %}
+ {% include "components/empty_state.html" with icon="target" title="Nenhum orçamento" message="Defina um limite mensal para cada categoria e acompanhe seus gastos em tempo real." action_url="budgets:budget_create" action_label="Novo orçamento" %}
+ {% endif %}
 
-  <div class="mt-6">
-    <a href="{% url 'budgets:budget_list' %}{% if show_all %}?all=0{% else %}?all=1{% endif %}" class="text-sm text-brand-700 hover:underline">
-      {{ show_all|yesno:"Mostrar apenas ativos,Mostrar todos" }}
-    </a>
-  </div>
+ <div class="mt-6">
+ <a href="{% url 'budgets:budget_list' %}{% if show_all %}?all=0{% else %}?all=1{% endif %}" class="text-sm text-brand-700 hover:underline">
+ {{ show_all|yesno:"Mostrar apenas ativos,Mostrar todos" }}
+ </a>
+ </div>
 {% endblock %}

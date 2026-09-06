@@ -1,0 +1,121 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}Revisar importação · FINTECPESSOAL{% endblock %}
+
+{% block shell_title %}Revisar importação{% endblock %}
+
+
+{% block app_content %}
+<div class="mx-auto w-full max-w-5xl">
+ {% include "components/page_header.html" with title="Revisar importação" subtitle="Confirme apenas o que faz sentido. Nada foi criado ainda." %}
+
+ {# Resumo #}
+ <div class="panel mb-6 p-5">
+ <div class="flex flex-wrap items-center justify-between gap-4">
+ <div>
+ <p class="text-sm text-muted-foreground">Arquivo: <strong class="text-foreground">{{ batch.file_name }}</strong>
+ <span class="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs uppercase text-muted-foreground">{{ batch.file_type }}</span>
+ </p>
+ <p class="mt-1 text-2xl font-bold text-foreground">{{ batch.detected_count }} movimentações detectadas</p>
+ </div>
+ <div class="grid grid-cols-3 gap-3 text-center">
+ <div class="rounded-xl bg-success-500/10 px-4 py-2">
+ <p class="text-2xl font-bold text-success-600">{{ n_high }}</p>
+ <p class="text-xs text-muted-foreground">prontas para importar</p>
+ </div>
+ <div class="rounded-xl bg-warning-500/10 px-4 py-2">
+ <p class="text-2xl font-bold text-warning-600">{{ n_review }}</p>
+ <p class="text-xs text-muted-foreground">precisam de revisão</p>
+ </div>
+ <div class="rounded-xl bg-danger-500/10 px-4 py-2">
+ <p class="text-2xl font-bold text-danger-600">{{ n_dup }}</p>
+ <p class="text-xs text-muted-foreground">possíveis duplicidades</p>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <form method="post" class="panel p-5">
+ {% csrf_token %}
+ <input type="hidden" name="action" value="confirm">
+
+ <div class="mb-4 flex flex-wrap items-end gap-4">
+ <div class="w-full sm:w-64">
+ <label for="account" class="mb-1 block text-xs font-medium text-muted-foreground">Conta padrão</label>
+ <select id="account" name="account" class="w-full rounded-lg border border-border px-3 py-2 text-sm">
+ <option value="">— selecione —</option>
+ {% for a in accounts %}
+ <option value="{{ a.pk }}" {% if default_account == a.pk|stringformat:"s" %}selected{% endif %}>{{ a.name }}</option>
+ {% endfor %}
+ </select>
+ <p class="mt-1 text-xs text-muted-foreground">Aplicada às linhas sem conta definida na revisão.</p>
+ </div>
+ <div class="flex items-center gap-2">
+ <button type="submit" class="btn btn-primary">Importar selecionadas</button>
+ <button type="submit" name="action" value="discard" class="btn btn-ghost">Descartar</button>
+ </div>
+ </div>
+
+ {% if rows %}
+ <div class="table-wrap overflow-x-auto">
+ <table class="w-full text-left text-sm">
+ <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+ <tr>
+ <th class="px-3 py-3 w-10 text-center">Incluir</th>
+ <th class="px-3 py-3">Data</th>
+ <th class="px-3 py-3">Descrição</th>
+ <th class="px-3 py-3">Valor</th>
+ <th class="px-3 py-3">Dir.</th>
+ <th class="px-3 py-3">Categoria</th>
+ <th class="px-3 py-3">Status</th>
+ </tr>
+ </thead>
+ <tbody class="divide-y divide-muted">
+ {% for r in rows %}
+ <tr class="{% if r.confidence == 'duplicate' %}bg-danger-500/5{% elif r.confidence == 'review' %}bg-warning-500/5{% endif %}">
+ <td class="px-3 py-2 text-center">
+ {% if r.confidence == 'duplicate' %}
+ <input type="checkbox" name="excl_{{ r.pk }}" checked title="Marcada como possivel duplicidade">
+ {% else %}
+ <input type="checkbox" name="incl_{{ r.pk }}" checked>
+ {% endif %}
+ </td>
+ <td class="px-3 py-2 whitespace-nowrap text-foreground">{{ r.date|date:"d/m/Y" }}</td>
+ <td class="px-3 py-2 max-w-xs text-foreground">
+ <span class="block truncate" title="{{ r.description }}">{{ r.description|default:"—" }}</span>
+ {% if r.original_description and r.original_description != r.description %}
+ <span class="block text-xs text-muted-foreground" title="Descrição original">{{ r.original_description }}</span>
+ {% endif %}
+ </td>
+ <td class="px-3 py-2 whitespace-nowrap font-semibold {% if r.direction == 'expense' %}text-danger-600{% else %}text-success-600{% endif %}">
+ {{ r.display_value }}
+ </td>
+ <td class="px-3 py-2 whitespace-nowrap text-muted-foreground">{{ r.get_direction_display }}</td>
+ <td class="px-3 py-2">
+ <select name="cat_{{ r.pk }}" class="w-40 rounded-lg border border-border px-2 py-1.5 text-xs">
+ <option value="">—</option>
+ {% for c in categories %}
+ <option value="{{ c.pk }}" {% if r.category_id == c.pk %}selected{% endif %}>{{ c.name }}</option>
+ {% endfor %}
+ </select>
+ </td>
+ <td class="px-3 py-2 whitespace-nowrap text-xs">
+ {% if r.confidence == 'duplicate' %}
+ <span class="text-danger-600">{{ r.skip_reason|default:"Possível duplicidade" }}</span>
+ {% elif r.confidence == 'review' %}
+ <span class="text-warning-600">Revisar</span>
+ {% else %}
+ <span class="text-success-600">Pronta</span>
+ {% endif %}
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ <p class="py-8 text-center text-muted-foreground">Nenhuma movimentação para revisar neste lote.</p>
+ {% endif %}
+ </form>
+</div>
+{% endblock %}

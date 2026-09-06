@@ -1,0 +1,50 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}Resultado da importação · FINTECPESSOAL{% endblock %}
+
+{% block shell_title %}Importação{% endblock %}
+
+
+{% block app_content %}
+<div class="mx-auto w-full max-w-3xl">
+ {% include "components/page_header.html" with title="Importação concluída" subtitle="Registros criados nos seus lançamentos." %}
+
+ <div class="panel p-6">
+ <p class="text-sm text-muted-foreground">Lote <strong class="text-foreground">{{ batch.batch_id }}</strong>
+ <span class="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs uppercase text-muted-foreground">{{ batch.file_type }}</span>
+ </p>
+
+ <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+ <div class="rounded-xl bg-success-500/10 px-4 py-3 text-center">
+ <p class="text-2xl font-bold text-success-600">{{ batch.imported_count }}</p>
+ <p class="text-xs text-muted-foreground">importadas</p>
+ </div>
+ <div class="rounded-xl bg-warning-500/10 px-4 py-3 text-center">
+ <p class="text-2xl font-bold text-warning-600">{{ batch.pending_count }}</p>
+ <p class="text-xs text-muted-foreground">pendentes</p>
+ </div>
+ <div class="rounded-xl bg-muted px-4 py-3 text-center">
+ <p class="text-2xl font-bold text-muted-foreground">{{ batch.ignored_count }}</p>
+ <p class="text-xs text-muted-foreground">ignoradas</p>
+ </div>
+ <div class="rounded-xl bg-danger-500/10 px-4 py-3 text-center">
+ <p class="text-2xl font-bold text-danger-600">{{ batch.error_count }}</p>
+ <p class="text-xs text-muted-foreground">com erro</p>
+ </div>
+ </div>
+
+ {% if batch.error_count > 0 and batch.error_detail %}
+ <div class="mt-4 rounded-xl border border-danger-200 bg-danger-50 p-4 text-sm text-danger-700 dark:border-danger-700 dark:bg-danger-500/10 dark:text-danger-300">
+ <p class="font-semibold">Alguns registros não puderam ser criados.</p>
+ <p class="mt-1">{{ batch.error_detail }}</p>
+ </div>
+ {% endif %}
+
+ <div class="mt-6 flex flex-wrap items-center gap-2">
+ <a href="{% url 'cards:card_list' %}" class="btn btn-primary">Ver cartões e faturas</a>
+ <a href="{% url 'imports:import_upload' %}" class="btn btn-ghost">Importar outro arquivo</a>
+ <a href="{% url 'dashboard:index' %}" class="btn btn-ghost">Ir para o painel</a>
+ </div>
+ </div>
+</div>
+{% endblock %}

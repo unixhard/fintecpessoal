@@ -1,27 +1,29 @@
 {% comment %}
-  Campo de formulário reutilizável com acessibilidade.
-  Uso:
-    {% include "components/field.html" with field=form.email %}
+ Campo de formulário reutilizável com acessibilidade.
+ Uso: {% include "components/field.html" with field=form.email %}
 {% endcomment %}
 <div class="space-y-1.5">
-  {% if field.label %}
-  <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-surface-700">
-    {{ field.label }}
-    {% if field.field.required %}<span class="text-danger-500" aria-hidden="true"> *</span>{% endif %}
-  </label>
-  {% endif %}
+ {% if field.label %}
+ <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-foreground dark:text-foreground">
+ {{ field.label }}
+ {% if field.field.required %}<span class="text-danger-600 dark:text-danger-300" aria-hidden="true"> *</span>{% endif %}
+ </label>
+ {% endif %}
 
-  {{ field }}
+ {{ field }}
 
-  {% if field.help_text %}
-  <p class="text-xs text-surface-500">{{ field.help_text }}</p>
-  {% endif %}
+ {% if field.help_text %}
+ <p class="text-xs text-muted-foreground">{{ field.help_text }}</p>
+ {% endif %}
 
-  {% if field.errors %}
-  <ul class="space-y-1" aria-label="Erros em {{ field.label }}">
-    {% for error in field.errors %}
-    <li class="text-sm text-danger-600">{{ error }}</li>
-    {% endfor %}
-  </ul>
-  {% endif %}
+ {% if field.errors %}
+ <ul class="space-y-1" aria-label="Erros em {{ field.label }}">
+ {% for error in field.errors %}
+ <li class="flex items-start gap-1.5 text-sm text-danger-700 dark:text-danger-300">
+ <svg class="mt-0.5 h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg>
+ <span>{{ error }}</span>
+ </li>
+ {% endfor %}
+ </ul>
+ {% endif %}
 </div>

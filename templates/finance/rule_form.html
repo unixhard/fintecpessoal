@@ -1,0 +1,31 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}{{ title }} · FINTECPESSOAL{% endblock %}
+
+{% block shell_title %}Regra{% endblock %}
+
+
+{% block app_content %}
+<div class="mx-auto w-full max-w-xl">
+ {% include "components/page_header.html" with title=title subtitle="A regra é aplicada na ordem de prioridade antes do histórico e do contexto." %}
+
+ <form method="post" class="panel p-6">
+ {% csrf_token %}
+ {% include "components/error_list.html" %}
+ <div class="space-y-5">
+ {% include "components/field.html" with field=form.name %}
+ {% include "components/field.html" with field=form.condition_type %}
+ {% include "components/field.html" with field=form.pattern %}
+ {% include "components/field.html" with field=form.merchant %}
+ {% include "components/field.html" with field=form.category %}
+ {% include "components/field.html" with field=form.category_name %}
+ {% include "components/field.html" with field=form.kind %}
+ {% include "components/field.html" with field=form.priority %}
+ </div>
+ <div class="mt-6 flex items-center gap-3">
+ <button type="submit" class="btn btn-primary">{{ title }}</button>
+ <a href="{% url 'finance:rule_list' %}" class="btn btn-ghost">Cancelar</a>
+ </div>
+ </form>
+</div>
+{% endblock %}

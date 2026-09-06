@@ -2,115 +2,119 @@
 
 {% block title %}{% if is_edit %}Editar{% else %}Novo{% endif %} comprovante · FINTECPESSOAL{% endblock %}
 
+{% block shell_title %}Comprovante{% endblock %}
+
+
 {% block app_content %}
 <div class="mx-auto w-full max-w-xl">
-  {% include "components/page_header.html" with title=title|default:"Comprovante" %}
+ {% include "components/page_header.html" with title=title|default:"Comprovante" %}
 
-  <form method="post" enctype="multipart/form-data" class="panel p-6">
-    {% csrf_token %}
-    {% include "components/error_list.html" %}
-    <div class="space-y-5">
-      {% include "components/field.html" with field=form.title %}
-      {% include "components/field.html" with field=form.kind %}
-      {% include "components/field.html" with field=form.file %}
-      {% if not is_edit %}
-        <div class="flex items-center gap-2 rounded-lg bg-slate-100 p-3 dark:bg-slate-800">
-          <span class="text-xs text-slate-600 dark:text-slate-300">✨</span>
-          <p id="ai-hint" class="flex-1 text-xs text-slate-600 dark:text-slate-300">
-            <strong>Preencher com IA:</strong> leia o comprovante e preencha
-            título/tipo automaticamente (opcional).
-          </p>
-          <button type="button" id="btn-ai-parse" class="btn btn-primary btn-sm whitespace-nowrap">
-            Preencher com IA
-          </button>
-        </div>
-        <p id="ai-status" class="hidden text-xs text-slate-500 dark:text-slate-400"></p>
-      {% endif %}
-      {% include "components/field.html" with field=form.warranty_expiry %}
-      {% include "components/field.html" with field=form.notes %}
-    </div>
-    <div class="mt-6 flex items-center gap-3">
-      <button type="submit" class="btn btn-primary">{% if is_edit %}Salvar alterações{% else %}Adicionar{% endif %}</button>
-      <a href="{% url 'comprovantes:list' %}" class="btn btn-ghost">Cancelar</a>
-    </div>
-  </form>
+ <form method="post" enctype="multipart/form-data" class="panel p-6">
+ {% csrf_token %}
+ {% include "components/error_list.html" %}
+ <div class="space-y-5">
+ {% include "components/field.html" with field=form.title %}
+ {% include "components/field.html" with field=form.kind %}
+ {% include "components/field.html" with field=form.file %}
+ {% if not is_edit %}
+ <div class="flex items-center gap-2 rounded-lg bg-muted p-3">
+ <svg class="h-4 w-4 shrink-0 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l1.8 4.6L18.5 9.5l-4.7 1.9L12 16l-1.8-4.6-4.7-1.9 4.7-1.9Z"/><path d="M18.5 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"/></svg>
+ <p id="ai-hint" class="flex-1 text-xs text-muted-foreground">
+ <strong>Preencher com IA:</strong> leia o comprovante e preencha
+ título/tipo automaticamente (opcional).
+ </p>
+ <button type="button" id="btn-ai-parse" class="btn btn-primary btn-sm whitespace-nowrap">
+ Preencher com IA
+ </button>
+ </div>
+ <p id="ai-status" class="hidden text-xs text-muted-foreground"></p>
+ {% endif %}
+ {% include "components/field.html" with field=form.warranty_expiry %}
+ {% include "components/field.html" with field=form.notes %}
+ </div>
+ <div class="mt-6 flex items-center gap-3">
+ <button type="submit" class="btn btn-primary">{% if is_edit %}Salvar alterações{% else %}Adicionar{% endif %}</button>
+ <a href="{% url 'comprovantes:list' %}" class="btn btn-ghost">Cancelar</a>
+ </div>
+ </form>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
 {% if not is_edit %}
 <script>
 (function () {
-  var btn = document.getElementById("btn-ai-parse");
-  var status = document.getElementById("ai-status");
-  var fileInput = document.querySelector('input[type="file"][name="file"]');
-  if (!btn || !fileInput) return;
+ var btn = document.getElementById("btn-ai-parse");
+ var status = document.getElementById("ai-status");
+ var fileInput = document.querySelector('input[type="file"][name="file"]');
+ if (!btn || !fileInput) return;
 
-  function flash(msg, ok) {
-    status.textContent = msg;
-    status.classList.remove("hidden");
-    status.classList.remove("text-red-500", "text-green-600");
-    status.classList.add(ok ? "text-green-600" : "text-red-500");
-  }
+ function flash(msg, ok) {
+ status.textContent = msg;
+ status.classList.remove("hidden");
+ status.classList.remove("text-red-500", "text-green-600");
+ status.classList.add(ok ? "text-green-600" : "text-red-500");
+ }
 
-  btn.addEventListener("click", function () {
-    var file = fileInput.files && fileInput.files[0];
-    if (!file) {
-      flash("Escolha um arquivo primeiro.", false);
-      return;
-    }
-    btn.disabled = true;
-    btn.textContent = "Analisando…";
-    flash("Lendo comprovante…", true);
+ btn.addEventListener("click", function () {
+ var file = fileInput.files && fileInput.files[0];
+ if (!file) {
+ flash("Escolha um arquivo primeiro.", false);
+ return;
+ }
+ btn.disabled = true;
+ btn.textContent = "Analisando…";
+ flash("Lendo comprovante…", true);
 
-    var token = document.querySelector('[name="csrfmiddlewaretoken"]');
-    var fd = new FormData();
-    fd.append("file", file);
-    fd.append("csrfmiddlewaretoken", token ? token.value : "");
+ var token = document.querySelector('[name="csrfmiddlewaretoken"]');
+ var fd = new FormData();
+ fd.append("file", file);
+ fd.append("csrfmiddlewaretoken", token ? token.value : "");
 
-    fetch("{% url 'comprovantes:parse_ai' %}", {
-      method: "POST",
-      body: fd,
-      headers: { "X-Requested-With": "XMLHttpRequest" },
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        if (!d.ok) {
-          flash(d.message || "Não foi possível ler o comprovante.", false);
-          return;
-        }
-        var title = document.querySelector('[name="title"]');
-        var kind = document.querySelector('[name="kind"]');
-        var notes = document.querySelector('[name="notes"]');
-        if (title && d.estabelecimento) title.value = d.estabelecimento;
-        if (kind && d.categoria_sugerida) {
-          var low = d.categoria_sugerida.toLowerCase();
-          if (["receipt", "invoice", "warranty", "health", "other"].indexOf(low) !== -1) {
-            kind.value = low;
-          } else {
-            kind.value = "receipt";
-          }
-        }
-        if (notes) {
-          var extra = [];
-          if (d.categoria_sugerida) extra.push("Categoria sugerida: " + d.categoria_sugerida);
-          if (d.data && d.data !== "null") extra.push("Data: " + d.data);
-          if (d.valor_centavos != null) {
-            var reais = (d.valor_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-            extra.push("Valor: " + reais);
-          }
-          if (extra.length && !notes.value) notes.value = extra.join(" · ");
-        }
-        flash("Pronto — confira e salve.", true);
-      })
-      .catch(function () {
-        flash("Erro de conexão. Preencha manualmente.", false);
-      })
-      .finally(function () {
-        btn.disabled = false;
-        btn.textContent = "Preencher com IA";
-      });
-  });
+ fetch("{% url 'comprovantes:parse_ai' %}", {
+ method: "POST",
+ body: fd,
+ headers: { "X-Requested-With": "XMLHttpRequest" },
+ })
+ .then(function (r) { return r.json(); })
+ .then(function (d) {
+ if (!d.ok) {
+ flash(d.message || "Não foi possível ler o comprovante.", false);
+ return;
+ }
+ var title = document.querySelector('[name="title"]');
+ var kind = document.querySelector('[name="kind"]');
+ var notes = document.querySelector('[name="notes"]');
+ if (title && d.estabelecimento) title.value = d.estabelecimento;
+ if (kind && d.categoria_sugerida) {
+ var low = d.categoria_sugerida.toLowerCase();
+ if (["receipt", "invoice", "warranty", "health", "other"].indexOf(low) !== -1) {
+ kind.value = low;
+ } else {
+ kind.value = "receipt";
+ }
+ }
+ if (notes) {
+ var extra = [];
+ if (d.categoria_sugerida) extra.push("Categoria sugerida: " + d.categoria_sugerida);
+ if (d.data && d.data !== "null") extra.push("Data: " + d.data);
+ if (d.valor_centavos != null) {
+ var reais = (d.valor_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+ extra.push("Valor: " + reais);
+ }
+ if (extra.length && !notes.value) notes.value = extra.join(" · ");
+ }
+ flash("Pronto — confira e salve.", true);
+ })
+ .catch(function () {
+ flash("Erro de conexão. Preencha manualmente.", false);
+ })
+ .finally(function () {
+ btn.disabled = false;
+ btn.textContent = "Preencher com IA";
+ });
+ });
 })();
 </script>
 {% endif %}

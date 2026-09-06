@@ -1,15 +1,33 @@
 {% comment %}
-  Estado vazio profissional (obrigatório para cada bloco do dashboard).
-  Uso: {% include "components/empty_state.html" with title=... message=... icon=... %}
+ Estado vazio editorial (Warm Financial Paper). Uso:
+ {% include "components/empty_state.html" with title=... message=... icon=... %}
+ `icon` é um nome de ícone SVG dentre: money, card, target, list, inbox, clock, search.
 {% endcomment %}
-<div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-surface-300 bg-white/60 px-6 py-10 text-center dark:border-surface-700 dark:bg-surface-800/40">
-  <span class="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-100 text-lg text-surface-400 dark:bg-surface-800 dark:text-surface-400" aria-hidden="true">{{ icon|default:"⟨⟩" }}</span>
-  <h3 class="font-semibold text-surface-800 dark:text-surface-100">{{ title|default:"Sem dados por aqui" }}</h3>
-  <p class="mx-auto mt-1.5 max-w-sm text-sm text-surface-500 dark:text-surface-400">{{ message|default:"Quando houver informações, elas aparecerão neste espaço." }}</p>
-  {% if action_url %}
-  {% url action_url as action_href %}
-  {% if action_href %}
-  <a href="{{ action_href }}" class="btn btn-primary btn-sm mt-4">{{ action_label|default:"Começar" }}</a>
-  {% endif %}
-  {% endif %}
+<div class="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-muted/60 px-6 py-12 text-center">
+ <span class="pointer-events-none absolute inset-0 opacity-60 [background:radial-gradient(60%_50%_at_50%_0%,var(--color-brand-500)/0.08,transparent_70%)]" aria-hidden="true"></span>
+ <span class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500/10 text-brand-600 ring-1 ring-inset ring-brand-500/20 shadow-[0_0_24px_-8px_var(--color-brand-500)/0.5] dark:bg-brand-500/15 dark:text-brand-300" aria-hidden="true">
+ {% if icon == 'card' %}
+ <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 9.5h19"/><path d="M6 14.5h4"/></svg>
+ {% elif icon == 'target' %}
+ <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+ {% elif icon == 'list' %}
+ <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8.5 6h12M8.5 12h12M8.5 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+ {% elif icon == 'inbox' %}
+ <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg>
+ {% elif icon == 'clock' %}
+ <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+ {% elif icon == 'search' %}
+ <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+ {% else %}
+ <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="2.5" width="16" height="19" rx="2"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>
+ {% endif %}
+ </span>
+ <h3 class="display-2 text-lg text-foreground">{{ title|default:"Sem dados por aqui" }}</h3>
+ <p class="mx-auto mt-1.5 max-w-sm text-sm text-muted-foreground">{{ message|default:"Quando houver informações, elas aparecerão neste espaço." }}</p>
+ {% if action_url %}
+ {% url action_url as action_href %}
+ {% if action_href %}
+ <a href="{{ action_href }}" class="btn btn-primary btn-sm mt-5">{{ action_label|default:"Começar" }}</a>
+ {% endif %}
+ {% endif %}
 </div>

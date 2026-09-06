@@ -3,111 +3,113 @@
 
 {% block title %}Contas · FINTECPESSOAL{% endblock %}
 
+{% block shell_title %}Contas{% endblock %}
+
 {% block app_content %}
-  {% include "components/page_header.html" with title="Contas" subtitle="Gerencie suas contas, saldos e carteiras." action_url="finance:account_create" action_label="Nova conta" action_icon="+" %}
+ {% include "components/page_header.html" with title="Contas" subtitle="Gerencie suas contas, saldos e carteiras." action_url="finance:account_create" action_label="Nova conta" action_icon="+" %}
 
-  {% if accounts %}
-    {# ===================== Contas ativas ===================== #}
-    <section aria-labelledby="active-accounts-title" class="mb-8">
-      <div class="mb-3 flex items-center justify-between">
-        <div>
-          <h2 id="active-accounts-title" class="text-sm font-semibold text-surface-700">Ativas</h2>
-          <p class="text-xs text-surface-500">{{ active_accounts|length }} conta{{ active_accounts|length|pluralize }} em uso</p>
-        </div>
-      </div>
+ {% if accounts %}
+ {# ===================== Contas ativas ===================== #}
+ <section aria-labelledby="active-accounts-title" class="mb-8">
+ <div class="mb-3 flex items-center justify-between">
+ <div>
+ <h2 id="active-accounts-title" class="text-sm font-semibold text-foreground">Ativas</h2>
+ <p class="text-xs text-muted-foreground">{{ active_accounts|length }} conta{{ active_accounts|length|pluralize }} em uso</p>
+ </div>
+ </div>
 
-      {% if active_accounts %}
-      <div class="panel overflow-hidden">
-        <table class="w-full text-left text-sm">
-          <thead class="border-b border-surface-200 bg-surface-50 text-xs uppercase tracking-wide text-surface-500">
-            <tr>
-              <th class="px-4 py-3 font-medium">Conta</th>
-              <th class="px-4 py-3 font-medium">Tipo</th>
-              <th class="px-4 py-3 font-medium">Status</th>
-              <th class="px-4 py-3 text-right font-medium">Saldo</th>
-              <th class="px-4 py-3 text-right font-medium">Ações</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-surface-100">
-            {% for account in active_accounts %}
-            <tr class="hover:bg-surface-50">
-              <td class="px-4 py-3">
-                <a href="{% url 'finance:account_detail' account.pk %}" class="font-medium text-surface-800 hover:text-brand-700">{{ account.name }}</a>
-                {% if account.institution %}<div class="text-xs text-surface-500">{{ account.institution }}</div>{% endif %}
-              </td>
-              <td class="px-4 py-3 text-surface-600">{{ account.get_type_display }}</td>
-              <td class="px-4 py-3">
-                {% include "components/status_badge.html" with label="Ativa" tone="positive" dot=True %}
-              </td>
-              <td class="px-4 py-3 text-right">{% include "components/money.html" with cents=account.balance %}</td>
-              <td class="px-4 py-3 text-right">
-                <div class="inline-flex items-center gap-2">
-                  <a href="{% url 'finance:account_edit' account.pk %}" class="btn btn-ghost btn-sm">Editar</a>
-                  <form method="post" action="{% url 'finance:account_archive' account.pk %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-ghost btn-sm">Arquivar</button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% else %}
-        {% include "components/empty_state.html" with icon="◫" title="Nenhuma conta ativa" message="Crie uma conta ou reative uma arquivada para começar a registrar suas movimentações." action_url="finance:account_create" action_label="Nova conta" %}
-      {% endif %}
-    </section>
+ {% if active_accounts %}
+ <div class="panel table-wrap">
+ <table class="w-full text-left text-sm">
+ <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+ <tr>
+ <th class="px-4 py-3 font-medium">Conta</th>
+ <th class="hidden px-4 py-3 font-medium md:table-cell">Tipo</th>
+ <th class="hidden px-4 py-3 font-medium sm:table-cell">Status</th>
+ <th class="px-4 py-3 text-right font-medium">Saldo</th>
+ <th class="px-4 py-3 text-right font-medium">Ações</th>
+ </tr>
+ </thead>
+ <tbody class="divide-y divide-muted">
+ {% for account in active_accounts %}
+ <tr class="hover:bg-muted">
+ <td class="px-4 py-3">
+ <a href="{% url 'finance:account_detail' account.pk %}" class="font-medium text-foreground hover:text-brand-700">{{ account.name }}</a>
+ {% if account.institution %}<div class="text-xs text-muted-foreground">{{ account.institution }}</div>{% endif %}
+ </td>
+ <td class="hidden px-4 py-3 text-muted-foreground md:table-cell">{{ account.get_type_display }}</td>
+ <td class="hidden px-4 py-3 sm:table-cell">
+ {% include "components/status_badge.html" with label="Ativa" tone="positive" dot=True %}
+ </td>
+ <td class="px-4 py-3 text-right">{% include "components/money.html" with cents=account.balance %}</td>
+ <td class="px-4 py-3 text-right">
+ <div class="inline-flex items-center gap-2">
+ <a href="{% url 'finance:account_edit' account.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+ <form method="post" action="{% url 'finance:account_archive' account.pk %}" onsubmit="return confirm('Arquivar a conta {{ account.name }}? Você pode reativá-la depois.');">
+ {% csrf_token %}
+ <button type="submit" class="btn btn-ghost btn-sm">Arquivar</button>
+ </form>
+ </div>
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ {% include "components/empty_state.html" with icon="list" title="Nenhuma conta ativa" message="Crie uma conta ou reative uma arquivada para começar a registrar suas movimentações." action_url="finance:account_create" action_label="Nova conta" %}
+ {% endif %}
+ </section>
 
-    {% if archived_accounts %}
-    {# ===================== Contas arquivadas ===================== #}
-    <section aria-labelledby="archived-accounts-title">
-      <div class="mb-3 flex items-center justify-between">
-        <div>
-          <h2 id="archived-accounts-title" class="text-sm font-semibold text-surface-700">Arquivadas</h2>
-          <p class="text-xs text-surface-500">{{ archived_accounts|length }} conta{{ archived_accounts|length|pluralize }} fora de uso</p>
-        </div>
-      </div>
-      <div class="panel overflow-hidden">
-        <table class="w-full text-left text-sm">
-          <thead class="border-b border-surface-200 bg-surface-50 text-xs uppercase tracking-wide text-surface-500">
-            <tr>
-              <th class="px-4 py-3 font-medium">Conta</th>
-              <th class="px-4 py-3 font-medium">Tipo</th>
-              <th class="px-4 py-3 font-medium">Status</th>
-              <th class="px-4 py-3 text-right font-medium">Saldo</th>
-              <th class="px-4 py-3 text-right font-medium">Ações</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-surface-100">
-            {% for account in archived_accounts %}
-            <tr class="hover:bg-surface-50">
-              <td class="px-4 py-3">
-                <a href="{% url 'finance:account_detail' account.pk %}" class="font-medium text-surface-800 hover:text-brand-700">{{ account.name }}</a>
-                {% if account.institution %}<div class="text-xs text-surface-500">{{ account.institution }}</div>{% endif %}
-              </td>
-              <td class="px-4 py-3 text-surface-600">{{ account.get_type_display }}</td>
-              <td class="px-4 py-3">
-                {% include "components/status_badge.html" with label="Arquivada" tone="neutral" %}
-              </td>
-              <td class="px-4 py-3 text-right">{% include "components/money.html" with cents=account.balance %}</td>
-              <td class="px-4 py-3 text-right">
-                <div class="inline-flex items-center gap-2">
-                  <a href="{% url 'finance:account_edit' account.pk %}" class="btn btn-ghost btn-sm">Editar</a>
-                  <form method="post" action="{% url 'finance:account_reactivate' account.pk %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-ghost btn-sm">Reativar</button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </section>
-    {% endif %}
-  {% else %}
-    {% include "components/empty_state.html" with icon="◫" title="Nenhuma conta ainda" message="Crie sua primeira conta para começar a registrar suas movimentações." action_url="finance:account_create" action_label="Nova conta" %}
-  {% endif %}
+ {% if archived_accounts %}
+ {# ===================== Contas arquivadas ===================== #}
+ <section aria-labelledby="archived-accounts-title">
+ <div class="mb-3 flex items-center justify-between">
+ <div>
+ <h2 id="archived-accounts-title" class="text-sm font-semibold text-foreground">Arquivadas</h2>
+ <p class="text-xs text-muted-foreground">{{ archived_accounts|length }} conta{{ archived_accounts|length|pluralize }} fora de uso</p>
+ </div>
+ </div>
+ <div class="panel table-wrap">
+ <table class="w-full text-left text-sm">
+ <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+ <tr>
+ <th class="px-4 py-3 font-medium">Conta</th>
+ <th class="hidden px-4 py-3 font-medium md:table-cell">Tipo</th>
+ <th class="hidden px-4 py-3 font-medium sm:table-cell">Status</th>
+ <th class="px-4 py-3 text-right font-medium">Saldo</th>
+ <th class="px-4 py-3 text-right font-medium">Ações</th>
+ </tr>
+ </thead>
+ <tbody class="divide-y divide-muted">
+ {% for account in archived_accounts %}
+ <tr class="hover:bg-muted">
+ <td class="px-4 py-3">
+ <a href="{% url 'finance:account_detail' account.pk %}" class="font-medium text-foreground hover:text-brand-700">{{ account.name }}</a>
+ {% if account.institution %}<div class="text-xs text-muted-foreground">{{ account.institution }}</div>{% endif %}
+ </td>
+ <td class="hidden px-4 py-3 text-muted-foreground md:table-cell">{{ account.get_type_display }}</td>
+ <td class="hidden px-4 py-3 sm:table-cell">
+ {% include "components/status_badge.html" with label="Arquivada" tone="neutral" %}
+ </td>
+ <td class="px-4 py-3 text-right">{% include "components/money.html" with cents=account.balance %}</td>
+ <td class="px-4 py-3 text-right">
+ <div class="inline-flex items-center gap-2">
+ <a href="{% url 'finance:account_edit' account.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+ <form method="post" action="{% url 'finance:account_reactivate' account.pk %}">
+ {% csrf_token %}
+ <button type="submit" class="btn btn-ghost btn-sm">Reativar</button>
+ </form>
+ </div>
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ </section>
+ {% endif %}
+ {% else %}
+ {% include "components/empty_state.html" with icon="card" title="Nenhuma conta ainda" message="Crie sua primeira conta para começar a registrar suas movimentações." action_url="finance:account_create" action_label="Nova conta" %}
+ {% endif %}
 {% endblock %}

@@ -1,20 +1,21 @@
 {% comment %}
-  Barra de progresso (acessível: role=progressbar + alternativa textual).
-  Uso: {% include "components/progress.html" with percent=42 tone=... %}
+ Barra de progresso acessível (role=progressbar + alternativa textual).
+ Uso: {% include "components/progress.html" with percent=42 tone=... show_label=True %}
+ tone: exceeded | attention | sucesso (padrão).
 {% endcomment %}
 <div class="w-full" role="group" aria-label="{{ label|default:'Progresso' }}">
-  {% if show_label %}
-  <div class="mb-1.5 flex items-center justify-between text-xs">
-    <span class="text-surface-500 dark:text-surface-400">{{ label|default:"" }}</span>
-    <span class="font-semibold text-surface-700 dark:text-surface-200">{{ percent }}%</span>
-  </div>
-  {% endif %}
-  <div class="neu-track h-2 w-full overflow-hidden rounded-full" role="progressbar"
-       aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100">
-    <div class="neu-fill bar-grow-x h-full rounded-full
-      {% if tone == 'exceeded' %}bg-gradient-to-r from-danger-600 to-danger-400
-      {% elif tone == 'attention' %}bg-gradient-to-r from-warning-500 to-warning-400
-      {% else %}bg-gradient-to-r from-success-500 to-success-300{% endif %}"
-      style="width: {{ percent|default:0 }}%"></div>
-  </div>
+ {% if show_label %}
+ <div class="mb-1.5 flex items-center justify-between text-xs">
+ <span class="text-muted-foreground">{{ label|default:"" }}</span>
+ <span class="font-semibold text-foreground">{{ percent }}%</span>
+ </div>
+ {% endif %}
+ <div class="progress-glow h-2 w-full overflow-hidden rounded-full" role="progressbar"
+ aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100">
+ <div class="bar-grow-x h-full rounded-full
+ {% if tone == 'exceeded' %}!bg-danger-500
+ {% elif tone == 'attention' %}!bg-warning-500
+ {% else %}!bg-brand-500{% endif %}"
+ style="width: {{ percent|default:0 }}%"></div>
+ </div>
 </div>

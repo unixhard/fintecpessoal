@@ -5,82 +5,83 @@
 
 {% block app_content %}
 <div class="mx-auto w-full max-w-4xl space-y-6">
-  {% include "components/page_header.html" with title="Relatório com Análise IA" subtitle="Seu auditor de bolso: sugestões, cuidados, alertas e planejamento para aumentar seu patrimônio." %}
+ {% include "components/page_header.html" with title="Relatório com Análise IA" subtitle="Seu auditor de bolso: sugestões, cuidados, alertas e planejamento para aumentar seu patrimônio." %}
 
-  {# ===================== Barra de geração / limite ===================== #}
-  <div class="neu neu-lift anim-rise p-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <div class="max-w-md">
-        <h2 class="text-lg font-bold text-surface-900 dark:text-white">Gere seu relatório completo</h2>
-        <p class="mt-1 text-sm text-surface-500 dark:text-surface-400">
-          Uma análise completa a cada 3 dias, no estilo de um consultor
-          financeiro especialista.
-        </p>
-      </div>
-      <div class="flex flex-col items-end gap-2">
-        <form method="post" action="{% url 'reports:ai_report' %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-primary" {% if not can_generate or not ai_available %}disabled{% endif %}>
-            ✓ Gerar relatório
-          </button>
-        </form>
-        {% if not ai_available %}
-          <span class="badge-pill bg-warning-500/10 text-warning-600 dark:text-warning-400">IA não configurada — resumo local</span>
-        {% elif not can_generate %}
-          <span class="badge-pill bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400">
-            Próximo em {{ next_available|date:"d/m/Y" }}
-          </span>
-        {% else %}
-          <span class="badge-pill bg-success-500/10 text-success-600 dark:text-success-400">Disponível — novo a cada 3 dias</span>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+ {# ===================== Barra de geração / limite ===================== #}
+ <div class="panel p-6">
+ <div class="flex flex-wrap items-center justify-between gap-4">
+ <div class="max-w-md">
+ <h2 class="text-lg font-bold text-foreground ">Gere seu relatório completo</h2>
+ <p class="mt-1 text-sm text-muted-foreground">
+ Uma análise completa a cada 3 dias, no estilo de um consultor
+ financeiro especialista.
+ </p>
+ </div>
+ <div class="flex flex-col items-end gap-2">
+ <form method="post" action="{% url 'reports:ai_report' %}">
+ {% csrf_token %}
+ <button type="submit" class="btn btn-primary" {% if not can_generate or not ai_available %}disabled{% endif %}>
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l1.8 4.6L18.5 9.5l-4.7 1.9L12 16l-1.8-4.6-4.7-1.9 4.7-1.9Z"/><path d="M18.5 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"/></svg>
+ Gerar relatório
+ </button>
+ </form>
+ {% if not ai_available %}
+ <span class="badge-pill bg-warning-500/10 text-warning-600 dark:text-warning-400">IA não configurada — resumo local</span>
+ {% elif not can_generate %}
+ <span class="badge-pill bg-muted text-muted-foreground">
+ Próximo em {{ next_available|date:"d/m/Y" }}
+ </span>
+ {% else %}
+ <span class="badge-pill bg-success-500/10 text-success-600 dark:text-success-400">Disponível — novo a cada 3 dias</span>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 
-  {# ===================== Conteúdo do relatório ===================== #}
-  {% if report_html %}
-    <div class="overflow-hidden rounded-2xl neu neu-lift anim-rise">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-surface-100 px-6 py-4 dark:border-surface-800">
-        <div>
-          <h3 class="text-base font-bold text-surface-900 dark:text-white">Sua análise</h3>
-          <p class="text-theme-xs text-surface-400 dark:text-surface-500">
-            Gerado em {{ generated_at|date:"d/m/Y \à\s H:i" }}
-            {% if via_ai %} · por IA{% else %} · resumo local{% endif %}
-          </p>
-        </div>
-        {% if via_ai %}
-          <span class="badge-pill bg-success-500/10 text-success-600 dark:text-success-400">IA • especialista em finanças</span>
-        {% else %}
-          <span class="badge-pill bg-warning-500/10 text-warning-600 dark:text-warning-400">Offline</span>
-        {% endif %}
-      </div>
-      <div class="ai-report px-6 py-6 text-sm leading-relaxed text-surface-700 dark:text-surface-200">
-        {{ report_html|safe }}
-      </div>
-    </div>
-  {% elif manual_html %}
-    <div class="overflow-hidden rounded-2xl neu neu-lift anim-rise">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-surface-100 px-6 py-4 dark:border-surface-800">
-        <div>
-          <h3 class="text-base font-bold text-surface-900 dark:text-white">Resumo local</h3>
-          <p class="text-theme-xs text-surface-400 dark:text-surface-500">Gerado sem IA (fallback)</p>
-        </div>
-        <span class="badge-pill bg-warning-500/10 text-warning-600 dark:text-warning-400">Offline</span>
-      </div>
-      <div class="ai-report px-6 py-6 text-sm leading-relaxed text-surface-700 dark:text-surface-200">
-        {{ manual_html|safe }}
-      </div>
-    </div>
-  {% else %}
-    <div class="rounded-2xl border border-dashed border-surface-300 bg-white px-6 py-12 text-center dark:border-surface-700 dark:bg-surface-900">
-      <span class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-100 text-2xl text-surface-400 dark:bg-surface-800 dark:text-surface-400" aria-hidden="true">✦</span>
-      <h2 class="text-xl font-bold text-surface-900 dark:text-white">Seu auditor de bolso está pronto</h2>
-      <p class="mx-auto mt-2 max-w-md text-sm text-surface-500 dark:text-surface-400">
-        Gere um relatório completo com análise de seus gastos, alertas,
-        sugestões de melhoria e um planejamento para aumentar seu patrimônio —
-        como um consultor especialista em finanças.
-      </p>
-    </div>
-  {% endif %}
+ {# ===================== Conteúdo do relatório ===================== #}
+ {% if report_html %}
+ <div class="panel overflow-hidden">
+ <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">
+ <div>
+ <h3 class="text-base font-bold text-foreground ">Sua análise</h3>
+ <p class="text-theme-xs text-muted-foreground dark:text-muted-foreground">
+ Gerado em {{ generated_at|date:"d/m/Y \à\s H:i" }}
+ {% if via_ai %} · por IA{% else %} · resumo local{% endif %}
+ </p>
+ </div>
+ {% if via_ai %}
+ <span class="badge-pill bg-success-500/10 text-success-600 dark:text-success-400">IA • especialista em finanças</span>
+ {% else %}
+ <span class="badge-pill bg-warning-500/10 text-warning-600 dark:text-warning-400">Offline</span>
+ {% endif %}
+ </div>
+ <div class="ai-report px-6 py-6 text-sm leading-relaxed text-foreground">
+ {{ report_html|safe }}
+ </div>
+ </div>
+ {% elif manual_html %}
+ <div class="panel overflow-hidden">
+ <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">
+ <div>
+ <h3 class="text-base font-bold text-foreground ">Resumo local</h3>
+ <p class="text-theme-xs text-muted-foreground dark:text-muted-foreground">Gerado sem IA (fallback)</p>
+ </div>
+ <span class="badge-pill bg-warning-500/10 text-warning-600 dark:text-warning-400">Offline</span>
+ </div>
+ <div class="ai-report px-6 py-6 text-sm leading-relaxed text-foreground">
+ {{ manual_html|safe }}
+ </div>
+ </div>
+ {% else %}
+ <div class="panel px-6 py-12 text-center">
+ <span class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300" aria-hidden="true"><svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l1.8 4.6L18.5 9.5l-4.7 1.9L12 16l-1.8-4.6-4.7-1.9 4.7-1.9Z"/><path d="M18.5 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"/></svg></span>
+ <h2 class="text-xl font-bold text-foreground ">Seu auditor de bolso está pronto</h2>
+ <p class="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+ Gere um relatório completo com análise de seus gastos, alertas,
+ sugestões de melhoria e um planejamento para aumentar seu patrimônio —
+ como um consultor especialista em finanças.
+ </p>
+ </div>
+ {% endif %}
 </div>
 {% endblock %}

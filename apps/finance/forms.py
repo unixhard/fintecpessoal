@@ -8,11 +8,12 @@ isolados por usuário via ``for_user``.
 """
 
 from django import forms
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.core.forms import BRLField
 
-from .models import Account, Category, RecurringRule, Transaction
+from .models import Account, Category, ClassificationRule, Merchant, RecurringRule, Transaction
 
 
 def _active_accounts_choices(user):
@@ -292,3 +293,82 @@ class RecurringForm(forms.Form):
         if kind == RecurringRule.Kind.INCOME and not account:
             self.add_error("account", "Receita recorrente exige uma conta.")
         return cleaned
+
+
+# --------------------------------------------------------------------------- #
+# Regras de classificação (Ordem 18 — FASE 6/12)
+# --------------------------------------------------------------------------- #
+
+
+class ClassificationRuleForm(forms.Form):
+    name = forms.CharField(
+        label="Nome", max_length=120,
+        widget=forms.TextInput(attrs={"placeholder": "Ex.: Uber"}),
+    )
+    condition_type = forms.ChoiceField(
+        label="Condição", choices=ClassificationRule.ConditionType.choices,
+    )
+    pattern = forms.CharField(
+        label="Texto da descrição", max_length=200, required=False,
+        widget=forms.TextInput(attrs={"placeholder": "Ex.: UBER *TRIP (case-insensitive)"}),
+    )
+    merchant = forms.ModelChoiceField(
+        label="Estabelecimento", required=False,
+        queryset=Merchant.objects.none(),
+    )
+    category = forms.ModelChoiceField(
+        label="Categoria", required=False,
+        queryset=Category.objects.none(),
+    )
+    category_name = forms.CharField(
+        label="Nome da categoria (quando não FK)", max_length=120, required=False,
+        widget=forms.TextInput(attrs={"placeholder": "Ex.: Transporte"}),
+    )
+    kind = forms.ChoiceField(
+        label="Tipo de movimentação", choices=ClassificationRule.Kind.choices,
+    )
+    priority = forms.IntegerField(
+        label="Prioridade (menor = maior)", min_value=1, initial=100,
+        widget=forms.NumberInput(attrs={"placeholder": "100"}),
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields["category"].queryset = Category.objects.for_user(user).filter(
+                status=Category.Status.ACTIVE,
+            )
+            self.fields["merchant"].queryset = Merchant.objects.filter(
+                Q(owner=user) | Q(owner__isnull=True)
+            )
+
+    def clean(self):
+        cleaned = super().clean()
+        cond = cleaned.get("condition_type")
+        if cond == ClassificationRule.ConditionType.CONTAINS and not (cleaned.get("pattern") or "").strip():
+            self.add_error("pattern", "Informe o texto que a descrição deve conter.")
+        if cond == ClassificationRule.ConditionType.MERCHANT and not cleaned.get("merchant"):
+            self.add_error("merchant", "Selecione o estabelecimento.")
+        cat = cleaned.get("category")
+        cat_name = (cleaned.get("category_name") or "").strip()
+        if not cat and not cat_name:
+            self.add_error("category", "Informe a categoria ou o nome da categoria.")
+        return cleaned
+
+
+class ReviewCorrectionForm(forms.Form):
+    """Formulário de correção individual na fila de revisão."""
+
+    transaction_id = forms.IntegerField(widget=forms.HiddenInput)
+    category = forms.ModelChoiceField(
+        label="Categoria", required=False,
+        queryset=Category.objects.none(),
+        widget=forms.Select(attrs={"class": "w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm dark:border-surface-700 dark:bg-surface-900"}),
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields["category"].queryset = Category.objects.for_user(user).filter(
+                status=Category.Status.ACTIVE,
+            )

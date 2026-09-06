@@ -3,56 +3,59 @@
 
 {% block title %}Lançamento · FINTECPESSOAL{% endblock %}
 
+{% block shell_title %}Lançamento{% endblock %}
+
+
 {% block app_content %}
 <div class="mx-auto w-full max-w-2xl">
-  {% include "components/page_header.html" with title="Detalhes do lançamento" %}
+ {% include "components/page_header.html" with title="Detalhes do lançamento" %}
 
-  <div class="panel p-6">
-    <dl class="grid gap-5 sm:grid-cols-2">
-      <div>
-        <dt class="text-xs font-medium uppercase text-surface-500">Tipo</dt>
-        <dd class="mt-1 font-medium text-surface-800">{{ transaction.get_type_display }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs font-medium uppercase text-surface-500">Valor</dt>
-        <dd class="mt-1 text-xl font-bold">
-          {% if transaction.type == 'income' %}<span class="text-success-600">+ {{ transaction.amount|centavos }}</span>
-          {% elif transaction.type == 'transfer' %}<span class="text-info-600">{{ transaction.amount|centavos }}</span>
-          {% else %}<span class="text-danger-600">− {{ transaction.amount|centavos }}</span>{% endif %}
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs font-medium uppercase text-surface-500">Data</dt>
-        <dd class="mt-1 text-surface-800">{{ transaction.date|date:"d/m/Y" }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs font-medium uppercase text-surface-500">Conta</dt>
-        <dd class="mt-1 text-surface-800">{{ transaction.account.name|default:"—" }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs font-medium uppercase text-surface-500">Categoria</dt>
-        <dd class="mt-1 text-surface-800">{{ transaction.category.name|default:"—" }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs font-medium uppercase text-surface-500">Descrição</dt>
-        <dd class="mt-1 text-surface-800">{{ transaction.description|default:"—" }}</dd>
-      </div>
-      <div class="sm:col-span-2">
-        <dt class="text-xs font-medium uppercase text-surface-500">Observações</dt>
-        <dd class="mt-1 whitespace-pre-wrap text-surface-800">{{ transaction.notes|default:"—" }}</dd>
-      </div>
-    </dl>
-  </div>
+ <div class="panel p-6">
+ <dl class="grid gap-5 sm:grid-cols-2">
+ <div>
+ <dt class="text-xs font-medium uppercase text-muted-foreground">Tipo</dt>
+ <dd class="mt-1 font-medium text-foreground">{{ transaction.get_type_display }}</dd>
+ </div>
+ <div>
+ <dt class="text-xs font-medium uppercase text-muted-foreground">Valor</dt>
+ <dd class="mt-1 text-xl font-bold">
+ {% if transaction.type == 'income' %}<span class="text-success-600">+ {{ transaction.amount|centavos }}</span>
+ {% elif transaction.type == 'transfer' %}<span class="text-info-600">{{ transaction.amount|centavos }}</span>
+ {% else %}<span class="text-danger-600">− {{ transaction.amount|centavos }}</span>{% endif %}
+ </dd>
+ </div>
+ <div>
+ <dt class="text-xs font-medium uppercase text-muted-foreground">Data</dt>
+ <dd class="mt-1 text-foreground">{{ transaction.date|date:"d/m/Y" }}</dd>
+ </div>
+ <div>
+ <dt class="text-xs font-medium uppercase text-muted-foreground">Conta</dt>
+ <dd class="mt-1 text-foreground">{{ transaction.account.name|default:"—" }}</dd>
+ </div>
+ <div>
+ <dt class="text-xs font-medium uppercase text-muted-foreground">Categoria</dt>
+ <dd class="mt-1 text-foreground">{{ transaction.category.name|default:"—" }}</dd>
+ </div>
+ <div>
+ <dt class="text-xs font-medium uppercase text-muted-foreground">Descrição</dt>
+ <dd class="mt-1 text-foreground">{{ transaction.description|default:"—" }}</dd>
+ </div>
+ <div class="sm:col-span-2">
+ <dt class="text-xs font-medium uppercase text-muted-foreground">Observações</dt>
+ <dd class="mt-1 whitespace-pre-wrap text-foreground">{{ transaction.notes|default:"—" }}</dd>
+ </div>
+ </dl>
+ </div>
 
-  <div class="mt-6 flex flex-wrap items-center gap-3">
-    {% if transaction_editable %}
-    <a href="{% url 'finance:transaction_edit' transaction.pk %}" class="btn btn-primary">Editar</a>
-    <form method="post" action="{% url 'finance:transaction_delete' transaction.pk %}" onsubmit="return confirm('Excluir este lançamento?');">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-danger">Excluir</button>
-    </form>
-    {% endif %}
-    <a href="{% url 'finance:transaction_list' %}" class="btn btn-ghost">Voltar</a>
-  </div>
+ <div class="mt-6 flex flex-wrap items-center gap-3">
+ {% if transaction_editable %}
+ <a href="{% url 'finance:transaction_edit' transaction.pk %}" class="btn btn-primary">Editar</a>
+ <form method="post" action="{% url 'finance:transaction_delete' transaction.pk %}" onsubmit="return confirm('Excluir este lançamento?');">
+ {% csrf_token %}
+ <button type="submit" class="btn btn-danger">Excluir</button>
+ </form>
+ {% endif %}
+ <a href="{% url 'finance:transaction_list' %}" class="btn btn-ghost">Voltar</a>
+ </div>
 </div>
 {% endblock %}

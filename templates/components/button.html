@@ -1,23 +1,23 @@
 {% comment %}
-  Botão/link reutilizável.
-  Uso:
-    {% include "components/button.html" with label="Entrar" type="submit" style="primary" size="lg" extra="w-full" %}
-    {% include "components/button.html" with label="Começar" href="..." style="primary" %}
+ Botão/link reutilizável.
+ Uso:
+ {% include "components/button.html" with label="Entrar" type="submit" style="primary" size="lg" extra="w-full" %}
+ {% include "components/button.html" with label="Começar" href="..." style="primary" %}
 {% endcomment %}
 {% with btn_style=style|default:"primary" btn_size=size|default:"md" %}
 {% if href %}
 <a href="{{ href }}"
-   {% if attrs %}{{ attrs|safe }}{% endif %}
-   class="btn btn-{{ btn_style }} btn-{{ btn_size }} {{ extra|default:'' }}">
-  {{ label }}
+ {% if attrs %}{{ attrs|safe }}{% endif %}
+ class="btn btn-{{ btn_style }} btn-{{ btn_size }} {{ extra|default:'' }}">
+ {{ label }}
 </a>
 {% else %}
 <button type="{{ type|default:'submit' }}"
-        {% if name %}name="{{ name }}"{% endif %}
-        {% if value %}value="{{ value }}"{% endif %}
-        {% if attrs %}{{ attrs|safe }}{% endif %}
-        class="btn btn-{{ btn_style }} btn-{{ btn_size }} {{ extra|default:'' }}">
-  {{ label }}
+ {% if name %}name="{{ name }}"{% endif %}
+ {% if value %}value="{{ value }}"{% endif %}
+ {% if attrs %}{{ attrs|safe }}{% endif %}
+ class="btn btn-{{ btn_style }} btn-{{ btn_size }} {{ extra|default:'' }}">
+ {{ label }}
 </button>
 {% endif %}
 {% endwith %}

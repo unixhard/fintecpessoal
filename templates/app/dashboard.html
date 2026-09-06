@@ -1,646 +1,514 @@
 {% extends "app/_shell.html" %}
+{% comment %}
+ Dashboard — Flux Dark: KPI cards + ApexCharts (área/donut).
+ Preserva os contratos testados: strings do build_dashboard e estado vazio.
+{% endcomment %}
 {% load money %}
-
-{% block title %}Início — FINTECPESSOAL{% endblock %}
 
 {% block shell_title %}Visão geral{% endblock %}
 
 {% block app_content %}
 
-  {# ===================== Cabeçalho + filtros (estilo TailAdmin SaaS) ===================== #}
-  <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-    <div>
-      <h1 class="text-title-sm font-bold text-surface-900 dark:text-white">Seu painel financeiro</h1>
-      <p class="text-theme-sm text-surface-500 dark:text-surface-400">Visão geral da sua vida financeira em um só lugar.</p>
-    </div>
+{% if not has_data %}
+ {# ===================== ESTADO VAZIO / INÍCIO DE JORNADA ===================== #}
+ <div class="anim-rise">
+ <p class="eyebrow">Seu painel financeiro</p>
+ <h1 class="display-2 mt-2 text-3xl font-bold tracking-tight text-foreground">Comece a organizar suas finanças</h1>
+ <p class="mt-3 max-w-2xl text-sm text-muted-foreground">
+ Seu painel nasce em branco, e é assim que deve ser. Complete os primeiros
+ passos abaixo e, em instantes, este espaço passará a contar a história do
+ seu dinheiro — de onde veio, para onde foi e até onde pode chegar.
+ </p>
+ </div>
 
-    <div class="flex flex-wrap items-end gap-3">
-      {# Controle segmentado de período #}
-      <div class="segmented" role="group" aria-label="Período">
-        <a href="{% url 'dashboard:index' %}?period=7d{% if filters.account_id %}&account={{ filters.account_id }}{% endif %}{% if filters.card_id %}&card={{ filters.card_id }}{% endif %}" class="segmented-item {% if period == '7d' %}segmented-item-active{% endif %}">7d</a>
-        <a href="{% url 'dashboard:index' %}?period=30d{% if filters.account_id %}&account={{ filters.account_id }}{% endif %}{% if filters.card_id %}&card={{ filters.card_id }}{% endif %}" class="segmented-item {% if period == '30d' %}segmented-item-active{% endif %}">30d</a>
-        <a href="{% url 'dashboard:index' %}?period=3m{% if filters.account_id %}&account={{ filters.account_id }}{% endif %}{% if filters.card_id %}&card={{ filters.card_id }}{% endif %}" class="segmented-item {% if period == '3m' %}segmented-item-active{% endif %}">3m</a>
-        <a href="{% url 'dashboard:index' %}?period=6m{% if filters.account_id %}&account={{ filters.account_id }}{% endif %}{% if filters.card_id %}&card={{ filters.card_id }}{% endif %}" class="segmented-item {% if period == '6m' %}segmented-item-active{% endif %}">6m</a>
-        <a href="{% url 'dashboard:index' %}?period=12m{% if filters.account_id %}&account={{ filters.account_id }}{% endif %}{% if filters.card_id %}&card={{ filters.card_id }}{% endif %}" class="segmented-item {% if period == '12m' %}segmented-item-active{% endif %}">12m</a>
-      </div>
+ {# Checklist de primeiros passos #}
+ {% if first_steps.show %}
+ <section class="panel mt-8" aria-labelledby="first-steps-title">
+ <div class="mb-4">
+ <div class="flex flex-wrap items-end justify-between gap-2">
+ <div>
+ <h2 id="first-steps-title" class="text-lg font-bold tracking-tight text-foreground">Primeiros passos</h2>
+ <p class="text-sm text-muted-foreground">Cada passo concluído destrava um pedaço da sua visão financeira.</p>
+ </div>
+ <div class="w-40">
+ {% include "components/progress.html" with percent=first_steps.progress show_label=True label="Progresso" %}
+ </div>
+ </div>
+ </div>
+ <ol class="space-y-2">
+ {% for fstep in first_steps.steps %}
+ <li class="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-muted/60">
+ <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full
+ {% if fstep.done %}bg-success-500 text-white ring-2 ring-success-500/30{% else %}border-2 border-dashed border-border text-muted-foreground{% endif %}"
+ aria-hidden="true">
+ {% if fstep.done %}
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg>
+ {% else %}<span class="text-sm font-bold">{{ forloop.counter }}</span>{% endif %}
+ </span>
+ <div class="min-w-0 flex-1">
+ <p class="text-sm font-medium text-foreground">{{ fstep.label }}</p>
+ <p class="text-xs text-muted-foreground">
+ {% if fstep.done %}Concluído{% else %}Pendente{% endif %}
+ </p>
+ </div>
+ {% if not fstep.done %}
+ <a href="{{ fstep.url }}" class="btn btn-primary btn-sm shrink-0">Fazer</a>
+ {% endif %}
+ </li>
+ {% endfor %}
+ </ol>
+ </section>
+ {% endif %}
 
-      <form method="get" action="{% url 'dashboard:index' %}" class="flex flex-wrap items-end gap-2">
-        <input type="hidden" name="period" value="{{ period }}">
-        {% if filters.accounts %}
-        <label class="flex flex-col text-xs text-surface-500 dark:text-surface-400">
-          Conta
-          <select name="account" class="mt-1 w-auto">
-            <option value="">Todas</option>
-            {% for id, acc in filters.accounts.items %}
-            <option value="{{ id }}" {% if filters.account_id == id %}selected{% endif %}>{{ acc.name }}</option>
-            {% endfor %}
-          </select>
-        </label>
-        {% endif %}
-        {% if filters.cards_filter %}
-        <label class="flex flex-col text-xs text-surface-500 dark:text-surface-400">
-          Cartão
-          <select name="card" class="mt-1 w-auto">
-            <option value="">Todos</option>
-            {% for c in filters.cards_filter %}
-            <option value="{{ c.pk }}" {% if filters.card_id == c.pk %}selected{% endif %}>{{ c.name }}</option>
-            {% endfor %}
-          </select>
-        </label>
-        {% endif %}
-        <button type="submit" class="btn btn-primary btn-sm">Aplicar</button>
-      </form>
-    </div>
-  </div>
+ {# Três espaços ainda sem vida — com os textos testados #}
+ <div class="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+ <div>
+ {% include "components/empty_state.html" with icon="list" title="Sem movimentações neste período" message="Seus lançamentos aparecerão aqui assim que você registrar a primeira despesa ou receita." action_url="finance:transaction_create" action_label="Registrar primeiro" %}
+ </div>
+ <div>
+ {% include "components/empty_state.html" with icon="card" title="Sem cartões" message="Adicione um cartão para acompanhar faturas, limite e gastos por categoria." action_url="cards:card_create" action_label="Adicionar cartão" %}
+ </div>
+ <div class="md:col-span-2 xl:col-span-1">
+ {% include "components/empty_state.html" with icon="target" title="Sem metas" message="Defina uma meta para começar a construir patrimônio com intenção." action_url="goals:goal_create" action_label="Criar meta" %}
+ </div>
+ </div>
 
-  {# ===================== Checklist de primeiros passos (progressivo) ===================== #}
-  {% if first_steps.show %}
-  <div class="neu neu-lift anim-rise p-6">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h2 class="text-lg font-bold text-surface-900 dark:text-white">Bem-vindo! Dê seus primeiros passos</h2>
-        <p class="mt-1 text-sm text-surface-500 dark:text-surface-400">
-          Complete os passos abaixo e aproveite todo o potencial do seu painel.
-        </p>
-      </div>
-      <div class="flex items-center gap-3">
-        <span class="text-sm font-semibold text-surface-700 dark:text-surface-200">{{ first_steps.done_count }}/{{ first_steps.steps|length }} concluídos</span>
-        <span class="neu-track h-2 w-28 overflow-hidden rounded-full">
-          <span class="bar-grow-x block h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-300" style="width: {{ first_steps.progress }}%"></span>
-        </span>
-      </div>
-    </div>
-    <ul class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-      {% for step in first_steps.steps %}
-      <li>
-        {% if step.done %}
-        <div class="neu-inset flex items-center gap-2.5 rounded-xl p-3">
-          <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success-500/15 text-xs font-bold text-success-600 dark:text-success-400" aria-hidden="true">✓</span>
-          <span class="text-sm font-medium text-surface-400 line-through dark:text-surface-500">{{ step.label }}</span>
-        </div>
-        {% else %}
-        <a href="{{ step.url }}" class="neu-sm neu-lift flex items-center gap-2.5 rounded-xl p-3 text-surface-800 hover:text-brand-700 dark:text-surface-100 dark:hover:text-brand-300">
-          <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-500/15 text-brand-600 dark:text-brand-300" aria-hidden="true">→</span>
-          <span class="text-sm font-medium">{{ step.label }}</span>
-        </a>
-        {% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-  </div>
-  {% endif %}
+ <div class="mt-8 flex flex-col items-start justify-between gap-4 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center">
+ <div>
+ <h2 class="text-lg font-bold tracking-tight text-foreground">Comece pela sua conta</h2>
+ <p class="mt-1 text-sm text-muted-foreground">O saldo disponível e todo o restante da sua visão dependem dos dados cadastrados.</p>
+ </div>
+ <a href="{% url 'finance:account_create' %}" class="btn btn-primary shrink-0">Criar conta</a>
+ </div>
 
-  {# ===================== Estado vazio contextual ===================== #}
-  {% if not has_data %}
-  <div class="rounded-2xl border border-dashed border-surface-300 bg-white px-6 py-12 text-center dark:border-surface-700 dark:bg-surface-900">
-    <span class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-100 text-2xl text-surface-400 dark:bg-surface-800 dark:text-surface-400" aria-hidden="true">◫</span>
-    <h2 class="heading-display text-2xl text-surface-900 dark:text-white">Comece a organizar suas finanças</h2>
-    <p class="mx-auto mt-2 max-w-md text-sm text-surface-500 dark:text-surface-400">
-      Seu painel ainda está vazio. Cadastre sua primeira conta e registre
-      receitas e despesas para ver aqui seu saldo, fluxo de caixa, orçamentos,
-      metas e dívidas.
-    </p>
-    <div class="mx-auto mt-6 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
-      <a href="{% url 'finance:account_create' %}" class="flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 p-4 text-left hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:hover:bg-surface-800/60">
-        <span class="text-sm font-medium text-surface-800 dark:text-surface-100">Criar conta</span>
-        <span class="text-xs text-surface-400">→</span>
-      </a>
-      <a href="{% url 'finance:transaction_create' %}?kind=expense" class="flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 p-4 text-left hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:hover:bg-surface-800/60">
-        <span class="text-sm font-medium text-surface-800 dark:text-surface-100">Registrar despesa</span>
-        <span class="text-xs text-surface-400">→</span>
-      </a>
-      <a href="{% url 'finance:transaction_create' %}?kind=income" class="flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 p-4 text-left hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:hover:bg-surface-800/60">
-        <span class="text-sm font-medium text-surface-800 dark:text-surface-100">Registrar receita</span>
-        <span class="text-xs text-surface-400">→</span>
-      </a>
-      <a href="{% url 'cards:card_create' %}" class="flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 p-4 text-left hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:hover:bg-surface-800/60">
-        <span class="text-sm font-medium text-surface-800 dark:text-surface-100">Adicionar cartão</span>
-        <span class="text-xs text-surface-400">→</span>
-      </a>
-    </div>
-  </div>
-  {% endif %}
+{% else %}
+ {# ===================== DADOS: FLUX DARK ===================== #}
 
-  {% if has_data %}
+ {# --- Cabeçalho + navegação de período --- #}
+ <div class="anim-rise flex flex-wrap items-end justify-between gap-4">
+ <div>
+ <p class="eyebrow">{{ period_label }}</p>
+ <h1 class="display-2 mt-1 text-3xl font-bold tracking-tight text-foreground">Seu painel financeiro</h1>
+ <p class="mt-2 text-sm text-muted-foreground">
+ {% if month %}
+ Uma leitura do mês — do que entrou, do que saiu e do que ainda pode acontecer.
+ {% else %}
+ Uma leitura do período selecionado — do que entrou, do que saiu e do que ainda pode acontecer.
+ {% endif %}
+ </p>
+ </div>
+ <div class="segmented" role="group" aria-label="Período">
+ <a href="{% url 'dashboard:index' %}?period=7d" class="segmented-item {% if period == '7d' %}segmented-item-active{% endif %}">7d</a>
+ <a href="{% url 'dashboard:index' %}?period=30d" class="segmented-item {% if period == '30d' %}segmented-item-active{% endif %}">30d</a>
+ <a href="{% url 'dashboard:index' %}?period=3m" class="segmented-item {% if period == '3m' %}segmented-item-active{% endif %}">3m</a>
+ <a href="{% url 'dashboard:index' %}?period=6m" class="segmented-item {% if period == '6m' %}segmented-item-active{% endif %}">6m</a>
+ <a href="{% url 'dashboard:index' %}?period=12m" class="segmented-item {% if period == '12m' %}segmented-item-active{% endif %}">12m</a>
+ </div>
+ </div>
 
-  {# ===================== Atalhos rápidos persistentes (UX — criar sem navegar) ===================== #}
-  <div class="flex flex-wrap items-center gap-3" role="group" aria-label="Ações rápidas">
-    <a href="{% url 'finance:transaction_create' %}?kind=expense" class="neu-sm neu-lift inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-danger-600 dark:text-danger-400">
-      <span aria-hidden="true">−</span>Despesa
-    </a>
-    <a href="{% url 'finance:transaction_create' %}?kind=income" class="neu-sm neu-lift inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-success-600 dark:text-success-400">
-      <span aria-hidden="true">＋</span>Receita
-    </a>
-    <a href="{% url 'finance:transfer_create' %}" class="neu-sm neu-lift inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-info-600 dark:text-info-400">
-      <span aria-hidden="true">⇄</span>Transferência
-    </a>
-    <a href="{% url 'cards:card_create' %}" class="neu-sm neu-lift inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-surface-600 dark:text-surface-300">
-      <span aria-hidden="true">▰</span>Novo cartão
-    </a>
-  </div>
+ {# --- KPI CARDS --- #}
+ <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+ <section class="glass-card card-hover anim-stagger p-5" style="--d: 0ms" aria-label="Saldo disponível">
+ <div class="flex items-center justify-between gap-3">
+ <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Saldo disponível</p>
+ <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-400" aria-hidden="true">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2ZM16 13h.01M4 7V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/></svg>
+ </span>
+ </div>
+ <p class="num-display mt-3 text-2xl font-bold tracking-tight text-foreground">{{ disponivel|centavos }}</p>
+ <p class="mt-2 text-xs text-muted-foreground">
+ {% if disponivel_apos >= 0 %}
+ Pós-compromissos: <span class="font-semibold text-success-400">{{ disponivel_apos|centavos }}</span>
+ {% else %}
+ Compromissos superam o saldo. <span class="font-semibold text-danger-400">Fique atento</span>.
+ {% endif %}
+ </p>
+ </section>
 
-  {# ===================== Cards de métricas (Neumorfismo Moderno 2026) ===================== #}
-  <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-    {# Saldo disponível #}
-    <div class="neu neu-lift anim-rise px-6 py-6" style="animation-delay: 30ms">
-      <div class="flex items-center justify-between gap-3">
-        <span class="text-theme-sm font-medium text-surface-500 dark:text-surface-400">Saldo disponível</span>
-        <span class="neu-chip h-11 w-11 shrink-0 bg-brand-500/15 text-lg text-brand-700 dark:text-brand-300" aria-hidden="true">◫</span>
-      </div>
-      <div class="mt-4 flex items-end gap-2">
-        <h4 class="num text-title-xs font-bold sm:text-title-sm {% if disponivel < 0 %}text-danger-600 dark:text-danger-400{% else %}text-surface-900 dark:text-white{% endif %}">
-          {{ disponivel|centavos }}
-        </h4>
-      </div>
-      <span class="badge-pill mt-3 bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400">hoje</span>
-      <p class="mt-1 text-theme-xs text-surface-400 dark:text-surface-500">em contas ativas</p>
-      <div class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-surface-200/50 dark:bg-surface-700/40">
-        <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-300 transition-all duration-700" style="width: 100%"></div>
-      </div>
-    </div>
+ <section class="glass-card card-hover anim-stagger p-5" style="--d: 60ms" aria-label="Entradas do período">
+ <div class="flex items-center justify-between gap-3">
+ <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Entradas</p>
+ <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success-500/10 text-success-400" aria-hidden="true">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10M9 17h8V9"/></svg>
+ </span>
+ </div>
+ <p class="num-display mt-3 text-2xl font-bold tracking-tight text-foreground">{{ cash_flow.receitas|centavos }}</p>
+ <p class="mt-2 text-xs text-muted-foreground">Receitas no período</p>
+ </section>
 
-    {# Disponível após compromissos #}
-    <div class="neu neu-lift anim-rise px-6 py-6" style="animation-delay: 90ms">
-      <div class="flex items-center justify-between gap-3">
-        <span class="text-theme-sm font-medium text-surface-500 dark:text-surface-400">Disponível após compromissos</span>
-        <span class="neu-chip h-11 w-11 shrink-0
-          {% if disponivel_apos < 0 %}bg-danger-500/15 text-danger-700 dark:text-danger-400
-          {% elif disponivel_apos >= money_floor_low %}bg-success-500/15 text-success-700 dark:text-success-400
-          {% else %}bg-warning-500/15 text-warning-700 dark:text-warning-400{% endif %} text-lg" aria-hidden="true">◎</span>
-      </div>
-      <div class="mt-4 flex items-end gap-2">
-        <h4 class="num text-title-xs font-bold sm:text-title-sm {% if disponivel_apos < 0 %}text-danger-600 dark:text-danger-400{% else %}text-surface-900 dark:text-white{% endif %}">
-          {{ disponivel_apos|centavos }}
-        </h4>
-      </div>
-      {% if disponivel_apos < 0 %}
-      <span class="badge-pill mt-3 bg-danger-500/10 text-danger-600 dark:text-danger-400">Negativo</span>
-      {% elif disponivel_apos >= money_floor_low %}
-      <span class="badge-pill mt-3 bg-success-500/10 text-success-600 dark:text-success-400">Saudável</span>
-      {% else %}
-      <span class="badge-pill mt-3 bg-warning-500/10 text-warning-600 dark:text-warning-400">Apertado</span>
-      {% endif %}
-      <p class="mt-1 text-theme-xs text-surface-400 dark:text-surface-500">saldo menos cartões</p>
-      <div class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-surface-200/50 dark:bg-surface-700/40">
-        <div class="h-full rounded-full transition-all duration-700 {% if disponivel_apos < 0 %}bg-gradient-to-r from-danger-500 to-danger-300{% elif disponivel_apos >= money_floor_low %}bg-gradient-to-r from-success-500 to-success-300{% else %}bg-gradient-to-r from-warning-500 to-warning-300{% endif %}" style="width: 100%"></div>
-      </div>
-    </div>
+ <section class="glass-card card-hover anim-stagger p-5" style="--d: 120ms" aria-label="Saídas do período">
+ <div class="flex items-center justify-between gap-3">
+ <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Saídas</p>
+ <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-danger-500/10 text-danger-400" aria-hidden="true">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l10-10M17 15V7H9"/></svg>
+ </span>
+ </div>
+ <p class="num-display mt-3 text-2xl font-bold tracking-tight text-foreground">{{ cash_flow.despesas|centavos }}</p>
+ <p class="mt-2 text-xs text-muted-foreground">Despesas no período</p>
+ </section>
 
-    {# Resultado no período (margem sobre receitas) #}
-    <div class="neu neu-lift anim-rise px-6 py-6" style="animation-delay: 150ms">
-      <div class="flex items-center justify-between gap-3">
-        <span class="text-theme-sm font-medium text-surface-500 dark:text-surface-400">Resultado no período</span>
-        <span class="neu-chip h-11 w-11 shrink-0 {% if cash_flow.resultado < 0 %}bg-danger-500/15 text-danger-700 dark:text-danger-400{% else %}bg-success-500/15 text-success-700 dark:text-success-400{% endif %} text-lg" aria-hidden="true">
-          {% if cash_flow.resultado >= 0 %}↗{% else %}↘{% endif %}
-        </span>
-      </div>
-      <div class="mt-4 flex items-end gap-2">
-        <h4 class="num text-title-xs font-bold sm:text-title-sm {% if cash_flow.resultado < 0 %}text-danger-600 dark:text-danger-400{% else %}text-success-600 dark:text-success-400{% endif %}">
-          {{ cash_flow.resultado|centavos }}
-        </h4>
-      </div>
-      {% if cash_flow.receitas > 0 %}
-      <span class="badge-pill mt-3 {% if cash_flow.resultado < 0 %}bg-danger-500/10 text-danger-600 dark:text-danger-400{% else %}bg-success-500/10 text-success-600 dark:text-success-400{% endif %}">
-        {% if cash_flow.resultado >= 0 %}▲{% else %}▼{% endif %}{% widthratio cash_flow.resultado cash_flow.receitas 100 %}%
-      </span>
-      {% endif %}
-      <p class="mt-1 text-theme-xs text-surface-400 dark:text-surface-500">{{ period_label }}</p>
-      <div class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-surface-200/50 dark:bg-surface-700/40">
-        <div class="h-full rounded-full transition-all duration-700 {% if cash_flow.resultado < 0 %}bg-gradient-to-r from-danger-500 to-danger-300{% else %}bg-gradient-to-r from-success-500 to-success-300{% endif %}" style="width: 100%"></div>
-      </div>
-    </div>
+ <section class="glass-card card-hover anim-stagger p-5" style="--d: 180ms" aria-label="Resultado do período">
+ <div class="flex items-center justify-between gap-3">
+ <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Resultado</p>
+ <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground" aria-hidden="true">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 8-6-16-3 8H2"/></svg>
+ </span>
+ </div>
+ <p class="num-display mt-3 text-2xl font-bold tracking-tight {% if cash_flow.resultado >= 0 %}text-success-400{% else %}text-danger-400{% endif %}">{{ cash_flow.resultado|centavos }}</p>
+ <p class="mt-2 text-xs text-muted-foreground">Todas as receitas menos despesas</p>
+ </section>
+ </div>
 
-    {# Comprometido em cartões (% do saldo) #}
-    <div class="neu neu-lift anim-rise px-6 py-6" style="animation-delay: 210ms">
-      <div class="flex items-center justify-between gap-3">
-        <span class="text-theme-sm font-medium text-surface-500 dark:text-surface-400">Comprometido em cartões</span>
-        <span class="neu-chip h-11 w-11 shrink-0 bg-info-500/15 text-lg text-info-700 dark:text-info-400" aria-hidden="true">▰</span>
-      </div>
-      <div class="mt-4 flex items-end gap-2">
-        <h4 class="num text-title-xs font-bold sm:text-title-sm text-surface-900 dark:text-white">− {{ comprometido|centavos }}</h4>
-      </div>
-      {% if disponivel > 0 %}
-      {% widthratio comprometido disponivel 100 as pct %}
-      <span class="badge-pill mt-3 {% if pct >= 100 %}bg-danger-500/10 text-danger-600 dark:text-danger-400{% elif pct >= 70 %}bg-warning-500/10 text-warning-600 dark:text-warning-400{% else %}bg-info-500/10 text-info-600 dark:text-info-400{% endif %}">{{ pct }}% do saldo</span>
-      {% endif %}
-      <p class="mt-1 text-theme-xs text-surface-400 dark:text-surface-500">faturas e parcelas</p>
-      {% if disponivel > 0 %}
-      {% widthratio comprometido disponivel 100 as pct %}
-      <div class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-surface-200/50 dark:bg-surface-700/40">
-        <div class="h-full rounded-full transition-all duration-700 {% if pct >= 100 %}bg-gradient-to-r from-danger-500 to-danger-300{% elif pct >= 70 %}bg-gradient-to-r from-warning-500 to-warning-300{% else %}bg-gradient-to-r from-info-500 to-info-300{% endif %}" style="width: {{ pct }}%"></div>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-  {% endif %}
+ {# --- GRÁFICOS: Fluxo de caixa (área) + Gastos por categoria (donut) --- #}
+ <div class="mt-6 grid gap-6 lg:grid-cols-3">
+ {% if has_evolution %}
+ <section class="panel lg:col-span-2" aria-labelledby="history-title">
+ <div class="mb-3 flex flex-wrap items-end justify-between gap-2">
+ <div>
+ <h2 id="history-title" class="text-xl font-bold tracking-tight text-foreground">Fluxo de caixa</h2>
+ <p class="text-sm text-muted-foreground">Entradas e saídas ao longo do período</p>
+ </div>
+ <div class="flex items-center gap-4">
+ <span class="flex items-center gap-1.5 text-xs text-muted-foreground"><span class="h-2 w-2 rounded-full bg-success-500" aria-hidden="true"></span>Receitas</span>
+ <span class="flex items-center gap-1.5 text-xs text-muted-foreground"><span class="h-2 w-2 rounded-full bg-danger-500" aria-hidden="true"></span>Despesas</span>
+ <span class="flex items-center gap-1.5 text-xs text-muted-foreground"><span class="h-2 w-2 rounded-full bg-brand-500" aria-hidden="true"></span>Resultado</span>
+ <span class="hidden text-right text-xs text-muted-foreground sm:block">Resultado
+ <span class="num font-semibold {% if cash_flow.resultado >= 0 %}text-success-400{% else %}text-danger-400{% endif %}">{{ cash_flow.resultado|centavos }}</span>
+ </span>
+ </div>
+ </div>
+ <div id="flux-area" class="overflow-hidden"></div>
+ </section>
+ {% endif %}
 
-  {# ===================== Relatório com Análise IA (auditor de bolso) ===================== #}
-  <div class="neu neu-lift anim-rise relative overflow-hidden p-6">
-    <div class="pointer-events-none absolute inset-0" aria-hidden="true">
-      <div class="absolute inset-0 bg-gradient-to-br from-brand-500/10 via-transparent to-success-500/10"></div>
-    </div>
-    <div class="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div class="flex items-start gap-3">
-        <span class="neu-chip flex h-12 w-12 shrink-0 items-center justify-center bg-brand-500/15 text-2xl text-brand-700 dark:text-brand-300" aria-hidden="true">✦</span>
-        <div>
-          <div class="flex flex-wrap items-center gap-2">
-            <h2 class="text-lg font-bold text-surface-900 dark:text-white">Relatório com Análise IA</h2>
-            {% if ai_report_card.has_report %}
-              <span class="badge-pill {% if ai_report_card.via_ai %}bg-brand-500/10 text-brand-700 dark:text-brand-300{% else %}bg-warning-500/10 text-warning-600 dark:text-warning-400{% endif %}">
-                {% if ai_report_card.via_ai %}✦ IA{% else %}resumo local{% endif %}
-              </span>
-            {% endif %}
-          </div>
-          <p class="mt-1 max-w-xl text-sm text-surface-500 dark:text-surface-400">
-            Seu auditor de bolso: sugestões, cuidados, alertas e um
-            planejamento para você aumentar seu patrimônio.
-          </p>
-          {% if ai_report_card.has_report and ai_report_card.summary %}
-          <p class="mt-2 text-sm font-medium text-surface-700 dark:text-surface-200">
-            ✓ {{ ai_report_card.summary }}
-          </p>
-          <p class="mt-0.5 text-theme-xs text-surface-400 dark:text-surface-500">
-            gerado em {{ ai_report_card.generated_at|date:"d/m/Y \à\s H:i" }}
-          </p>
-          {% endif %}
-        </div>
-      </div>
-      <div class="flex flex-col items-stretch gap-2 sm:items-end">
-        <a href="{% url 'reports:ai_report' %}" class="btn btn-primary btn-md whitespace-nowrap">
-          {% if ai_report_card.has_report %}Ver relatório{% else %}Gerar relatório{% endif %}
-        </a>
-        {% if ai_report_card.has_report and ai_report_card.can_generate %}
-          <span class="text-theme-xs text-success-600 dark:text-success-400">Disponível para novo</span>
-        {% elif ai_report_card.has_report %}
-          <span class="text-theme-xs text-surface-400 dark:text-surface-500">
-            Novo a partir de {{ ai_report_card.next_available|date:"d/m/Y" }}
-          </span>
-        {% else %}
-          <span class="text-theme-xs text-surface-400 dark:text-surface-500">1x a cada 3 dias</span>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+ {% if spending_rows %}
+ <section class="panel" aria-labelledby="cats-title">
+ <div class="mb-1 flex items-start justify-between gap-2">
+ <div>
+ <h2 id="cats-title" class="text-xl font-bold tracking-tight text-foreground">Gastos por categoria</h2>
+ <p class="text-sm text-muted-foreground">Para onde seu dinheiro está indo</p>
+ </div>
+ <a href="{% url 'reports:index' %}" class="text-sm font-medium text-brand-400 transition-colors hover:text-brand-300">Ver relatórios</a>
+ </div>
+ <div id="cat-donut"></div>
+ <ol class="mt-2 space-y-3">
+ {% for cat in spending_rows|slice:":5" %}
+ <li>
+ <div class="flex items-center justify-between gap-3 text-sm">
+ <span class="truncate font-medium text-foreground">{{ cat.name }}</span>
+ <span class="flex items-center gap-2">
+ {% if cat.delta_percent is not None %}
+ <span class="text-xs font-semibold {% if cat.delta_percent > 0 %}text-danger-400{% elif cat.delta_percent < 0 %}text-success-400{% else %}text-muted-foreground{% endif %}">
+ {{ cat.delta_percent|stringformat:"+d" }}%
+ </span>
+ {% endif %}
+ <span class="num text-muted-foreground">{{ cat.amount|centavos }}</span>
+ </span>
+ </div>
+ <div class="mt-1.5 h-2 flex-1 overflow-hidden rounded-full bg-muted" role="presentation">
+ <div class="bar-grow-x h-full rounded-full bg-gradient-to-r from-brand-500 to-accent" style="width: {{ cat.share_percent }}%"></div>
+ </div>
+ </li>
+ {% endfor %}
+ </ol>
+ </section>
+ {% endif %}
+ </div>
 
-  {# ===================== Alertas / decisões ===================== #}
-  {% if has_alerts %}
-  <section aria-labelledby="alerts-title" class="space-y-3">
-    <h2 id="alerts-title" class="text-lg font-semibold text-surface-900 dark:text-white">O que merece sua atenção?</h2>
-    {% for a in insights|slice:":4" %}
-      {% if a.severity == 'critical' %}
-        {% include "components/insight_card.html" with insight=a tone="critical" %}
-      {% elif a.severity == 'attention' %}
-        {% include "components/insight_card.html" with insight=a tone="attention" %}
-      {% else %}
-        {% include "components/insight_card.html" with insight=a tone="info" %}
-      {% endif %}
-    {% endfor %}
-  </section>
-  {% endif %}
+ {# --- ATENÇÃO: linha de sinais priorizada --- #}
+ {% if alerts_critical or alerts_attention or alerts_info %}
+ <section class="panel border-danger-500/30" aria-labelledby="attention-title">
+ <div class="mb-4 flex items-center gap-2">
+ <span class="flex h-8 w-8 items-center justify-center rounded-md bg-danger-500/10 text-danger-400" aria-hidden="true">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 4 2.7 19.5h18.6Z"/><path d="M12 10v4M12 16.5v.01"/></svg>
+ </span>
+ <div>
+ <h2 id="attention-title" class="text-lg font-bold tracking-tight text-foreground">Atenção</h2>
+ <p class="text-xs text-muted-foreground">O que merece sua atenção agora</p>
+ </div>
+ </div>
+ <div class="space-y-3">
+ {% for insight in alerts_critical %}{% include "components/insight_card.html" with insight=insight tone="critical" %}{% endfor %}
+ {% for insight in alerts_attention %}{% include "components/insight_card.html" with insight=insight tone="attention" %}{% endfor %}
+ {% for insight in alerts_info %}{% include "components/insight_card.html" with insight=insight tone="info" %}{% endfor %}
+ </div>
+ </section>
+ {% endif %}
 
-  {# ===================== Gráficos (fluxo + gastos) / Cartões + próximos ===================== #}
-  <div class="grid gap-6 xl:grid-cols-12">
+ {# --- CONTAS + PRÓXIMOS 30 DIAS --- #}
+ <div class="grid gap-6 lg:grid-cols-2">
+ {% if accounts %}
+ <section class="panel" aria-labelledby="ctx-accounts">
+ <div class="mb-4 flex items-center justify-between">
+ <h2 id="ctx-accounts" class="text-lg font-bold tracking-tight text-foreground">Suas contas</h2>
+ <a href="{% url 'finance:account_list' %}" class="text-sm font-medium text-brand-400 transition-colors hover:text-brand-300">Gerenciar</a>
+ </div>
+ <ul class="space-y-2">
+ {% for acc in accounts %}
+ <li>
+ <div class="flex items-center justify-between gap-3 text-sm">
+ <span class="flex min-w-0 items-center gap-2">
+ <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground" aria-hidden="true">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 9.5h19"/></svg>
+ </span>
+ <span class="truncate text-foreground">{{ acc.name }}</span>
+ </span>
+ <span class="num font-medium text-foreground">{{ acc.balance|centavos }}</span>
+ </div>
+ <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted" role="presentation">
+ <div class="h-full rounded-full bg-brand-500/40" style="width: {{ acc.share_percent }}%"></div>
+ </div>
+ </li>
+ {% endfor %}
+ </ul>
+ </section>
+ {% endif %}
 
-    <div class="space-y-6 xl:col-span-8">
-      <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
-        <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Fluxo de caixa</h3>
-            <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">{{ period_label }}</p>
-          </div>
-          <div class="flex gap-4 text-center">
-            <div>
-              <p class="text-theme-xs text-surface-400 dark:text-surface-500">Receitas</p>
-              <p class="text-sm font-semibold text-success-600 dark:text-success-400">{{ cash_flow.receitas|centavos }}</p>
-            </div>
-            <div>
-              <p class="text-theme-xs text-surface-400 dark:text-surface-500">Despesas</p>
-              <p class="text-sm font-semibold text-danger-600 dark:text-danger-400">{{ cash_flow.despesas|centavos }}</p>
-            </div>
-          </div>
-        </div>
-        {% if cash_flow.count %}
-          {% include "components/chart_bars.html" with buckets=evolution max_value=evolution_max %}
-        {% else %}
-          {% include "components/empty_state.html" with title="Sem movimentações no período" message="Registre receitas e despesas para ver seu fluxo de caixa." icon="⇅" %}
-        {% endif %}
-      </div>
+ {% if upcoming_events %}
+ <section class="panel" aria-labelledby="future-title">
+ <div class="mb-4 flex items-center justify-between">
+ <h2 id="future-title" class="text-lg font-bold tracking-tight text-foreground">Próximos 30 dias</h2>
+ <span class="text-xs text-muted-foreground">{{ upcoming_events|length }} compromissos</span>
+ </div>
+ <ul class="space-y-2">
+ {% for ev in upcoming_events %}
+ <li class="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5 text-sm">
+ <span class="flex min-w-0 items-center gap-3">
+ <span class="flex h-9 w-9 shrink-0 flex-col items-center justify-center rounded-lg border border-border bg-muted text-center" aria-hidden="true">
+ <span class="text-[13px] font-bold leading-none text-foreground">{{ ev.date|date:"d" }}</span>
+ <span class="text-[9px] uppercase leading-tight text-muted-foreground">{{ ev.date|date:"M" }}</span>
+ </span>
+ <span class="min-w-0">
+ <span class="block truncate font-medium text-foreground">{{ ev.label }}</span>
+ <span class="block text-xs text-muted-foreground">{{ ev.source }}</span>
+ </span>
+ </span>
+ <span class="num shrink-0 font-semibold text-foreground">{{ ev.amount|centavos }}</span>
+ </li>
+ {% endfor %}
+ </ul>
+ </section>
+ {% endif %}
+ </div>
 
-      <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
-        <div class="mb-6">
-          <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Gastos por categoria</h3>
-          <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">{{ period_label }}</p>
-        </div>
-        {% if spending_rows %}
-          <ul class="space-y-4">
-            {% for c in spending_rows %}
-            <li>
-              <div class="mb-1 flex items-center justify-between gap-2 text-sm">
-                <span class="font-medium text-surface-700 dark:text-surface-200">{{ c.name }}</span>
-                <span class="flex items-center gap-2">
-                  {% if c.delta_percent is not None %}
-                  <span class="text-theme-xs {% if c.delta_percent > 0 %}text-danger-600 dark:text-danger-400{% elif c.delta_percent < 0 %}text-success-600 dark:text-success-400{% else %}text-surface-400{% endif %}">
-                    {% if c.delta_percent > 0 %}▲{% elif c.delta_percent < 0 %}▼{% endif %}{{ c.delta_percent }}%
-                  </span>
-                  {% endif %}
-                  <span class="font-semibold text-surface-900 dark:text-white">{{ c.amount|centavos }}</span>
-                </span>
-              </div>
-              <div class="h-2.5 w-full overflow-hidden rounded-full neu-track">
-                <div class="bar-grow-x h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-300" style="width: {{ c.share_percent }}%; animation-delay: {{ forloop.counter }}00ms"></div>
-              </div>
-              <p class="mt-0.5 text-theme-xs text-surface-400 dark:text-surface-500">{{ c.share_percent }}% das despesas{% if c.prev_amount is not None %} · anterior {{ c.prev_amount|centavos }}{% endif %}</p>
-            </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          {% include "components/empty_state.html" with title="Ainda sem gastos por categoria" message="Classifique suas despesas para ver a distribuição por categoria." icon="◌" %}
-        {% endif %}
-      </div>
-    </div>
+ {# --- MOVIMENTAÇÕES RECENTES --- #}
+ <section class="panel" aria-labelledby="recent-title">
+ <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+ <div>
+ <h2 id="recent-title" class="text-lg font-bold tracking-tight text-foreground">Movimentações recentes</h2>
+ {% if recent_transactions %}<p class="text-sm text-muted-foreground">{{ recent_transactions|length }} lançamentos neste período</p>{% endif %}
+ </div>
+ {% if recent_transactions %}
+ <a href="{% url 'finance:transaction_list' %}" class="btn btn-ghost btn-sm">Ver extrato completo</a>
+ {% endif %}
+ </div>
 
-    <div class="space-y-6 xl:col-span-4">
-      <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
-        <div class="mb-4">
-          <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Próximos 30 dias</h3>
-          <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Compromissos à frente</p>
-        </div>
-        {% if upcoming_events %}
-          <ol class="divide-y divide-surface-100 dark:divide-surface-800">
-            {% for ev in upcoming_events|slice:":6" %}
-            <li class="flex items-center justify-between gap-3 py-2.5">
-              <div class="flex items-center gap-3">
-                <span class="neu-chip h-9 w-9 shrink-0 text-xs font-semibold text-surface-600 dark:text-surface-300">
-                  {{ ev.date|date:"d/m" }}
-                </span>
-                <div class="min-w-0">
-                  <p class="truncate text-sm font-medium text-surface-800 dark:text-surface-100">{{ ev.label }}</p>
-                  <p class="text-theme-xs text-surface-400 dark:text-surface-500">
-                    {% if ev.kind == 'invoice' %}Fatura{% else %}Recorrência{% endif %}
-                    {% if ev.date == today %}(hoje){% endif %}
-                  </p>
-                </div>
-              </div>
-              <span class="text-sm font-semibold text-surface-900 dark:text-white">{{ ev.amount|centavos }}</span>
-            </li>
-            {% endfor %}
-          </ol>
-        {% else %}
-          {% include "components/empty_state.html" with title="Nada nos próximos 30 dias" message="Sem faturas, recorrências ou compromissos agendados." icon="▸" %}
-        {% endif %}
-      </div>
+ {% if recent_transactions %}
+ <div class="table-wrap">
+ <table class="w-full text-left">
+ <thead>
+ <tr class="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
+ <th class="py-2.5 pr-4 font-medium">Data</th>
+ <th class="py-2.5 pr-4 font-medium">Descrição</th>
+ <th class="hidden py-2.5 pr-4 font-medium sm:table-cell">Categoria</th>
+ <th class="py-2.5 pr-4 font-medium">Conta</th>
+ <th class="py-2.5 text-right font-medium">Valor</th>
+ </tr>
+ </thead>
+ <tbody class="divide-y divide-border">
+ {% for tx in recent_transactions %}
+ <tr class="text-sm transition-colors hover:bg-muted/50">
+ <td class="whitespace-nowrap py-3 pr-4 text-muted-foreground">{{ tx.date|date:"d/m/Y" }}</td>
+<td class="max-w-[18rem] py-3 pr-4 break-words font-medium text-foreground">{{ tx.description }}</td>
+<td class="hidden py-3 pr-4 text-muted-foreground sm:table-cell">{{ tx.category|default:"—" }}</td>
+<td class="max-w-[10rem] truncate py-3 pr-4 text-muted-foreground">{{ tx.account }}</td>
+ <td class="py-3 text-right">
+ <span class="num font-semibold {% if tx.type == 'expense' or tx.amount < 0 %}text-danger-400{% else %}text-success-400{% endif %}">
+ {% if tx.amount < 0 %}−{% endif %}{{ tx.amount|centavos }}
+ </span>
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ <p class="text-sm text-muted-foreground">Sem movimentações neste período.</p>
+ {% endif %}
+ </section>
 
-      <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
-        <div class="mb-4">
-          <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Cartões</h3>
-          <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Limite usado ≠ dinheiro disponível</p>
-        </div>
-        {% if cards %}
-          <div class="space-y-4">
-            {% for card in cards %}
-            <div class="neu-inset rounded-xl p-4">
-              <div class="flex items-center justify-between">
-                <p class="font-semibold text-surface-900 dark:text-white">{{ card.name }}</p>
-                {% if card.limit > 0 %}
-                <span class="text-theme-xs text-surface-500 dark:text-surface-400">{{ card.used|centavos }} / {{ card.limit|centavos }}</span>
-                {% endif %}
-              </div>
-              {% if card.limit > 0 %}
-              {% include "components/progress.html" with percent=card.used_pct tone=card.usage_tone label="Utilização" show_label=False %}
-              {% endif %}
-              <dl class="mt-3 grid grid-cols-2 gap-2 text-sm">
-                <div><dt class="text-theme-xs text-surface-500 dark:text-surface-400">Disponível</dt><dd class="font-semibold text-success-600 dark:text-success-400">{{ card.available|centavos }}</dd></div>
-                <div><dt class="text-theme-xs text-surface-500 dark:text-surface-400">Comprometido</dt><dd class="font-semibold text-warning-600 dark:text-warning-400">{{ card.used|centavos }}</dd></div>
-                {% if card.open_invoice_amount is not None %}
-                <div><dt class="text-theme-xs text-surface-500 dark:text-surface-400">Fatura aberta</dt><dd class="font-semibold dark:text-surface-100">{{ card.open_invoice_amount|centavos }}</dd></div>
-                <div><dt class="text-theme-xs text-surface-500 dark:text-surface-400">Vencimento</dt><dd class="font-semibold dark:text-surface-100">{{ card.next_invoice_due|date:"d/m" }}</dd></div>
-                {% endif %}
-              </dl>
-            </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          {% include "components/empty_state.html" with title="Sem cartões" message="Adicione um cartão para acompanhar limites e faturas." icon="▰" %}
-        {% endif %}
-      </div>
-    </div>
-  </div>
+ {# --- METAS / DÍVIDAS / CARTÕES --- #}
+ <div class="grid gap-6 lg:grid-cols-3">
+ {% if goals %}
+ <section class="panel" aria-labelledby="goals-title">
+ <div class="mb-4 flex items-center justify-between">
+ <h2 id="goals-title" class="text-lg font-bold tracking-tight text-foreground">Metas</h2>
+ <a href="{% url 'goals:goal_list' %}" class="text-sm font-medium text-brand-400 transition-colors hover:text-brand-300">Ver todas</a>
+ </div>
+ <ul class="space-y-4">
+ {% for g in goals|slice:":3" %}
+ <li>
+ <div class="flex items-center justify-between text-sm">
+ <span class="font-medium text-foreground">{{ g.name }}</span>
+ <span class="num text-xs text-muted-foreground">{{ g.current_amount|centavos }} / {{ g.target_amount|centavos }}</span>
+ </div>
+ <div class="mt-1.5">
+ {% include "components/progress.html" with percent=g.progress_percent show_label=False %}
+ </div>
+ </li>
+ {% endfor %}
+ </ul>
+ </section>
+ {% endif %}
 
-  {# ===================== Movimentações recentes (tabela estilo Recent Invoices) ===================== #}
-  <div class="overflow-hidden rounded-2xl neu neu-lift anim-rise">
-    <div class="px-6 py-4">
-      <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Movimentações recentes</h3>
-      <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Últimas do período</p>
-    </div>
-    {% if recent_transactions %}
-    <div class="overflow-x-auto">
-      <table class="min-w-full">
-        <thead>
-          <tr class="bg-surface-50 dark:bg-surface-800/60">
-            <th class="px-6 py-4 text-left text-theme-sm font-medium whitespace-nowrap text-surface-500 dark:text-surface-400">Data</th>
-            <th class="px-6 py-4 text-left text-theme-sm font-medium whitespace-nowrap text-surface-500 dark:text-surface-400">Descrição</th>
-            <th class="px-6 py-4 text-left text-theme-sm font-medium whitespace-nowrap text-surface-500 dark:text-surface-400">Categoria</th>
-            <th class="px-6 py-4 text-left text-theme-sm font-medium whitespace-nowrap text-surface-500 dark:text-surface-400">Conta</th>
-            <th class="px-6 py-4 text-left text-theme-sm font-medium whitespace-nowrap text-surface-500 dark:text-surface-400">Status</th>
-            <th class="px-6 py-4 text-right text-theme-sm font-medium whitespace-nowrap text-surface-500 dark:text-surface-400">Valor</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-surface-100 dark:divide-surface-800">
-          {% for t in recent_transactions %}
-          <tr>
-            <td class="px-6 py-4 text-sm whitespace-nowrap text-surface-500 dark:text-surface-400">{{ t.date|date:"d/m" }}</td>
-            <td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-surface-800 dark:text-surface-100">{{ t.description }}</td>
-            <td class="px-6 py-4 text-sm whitespace-nowrap text-surface-500 dark:text-surface-400">{{ t.category|default:"—" }}</td>
-            <td class="px-6 py-4 text-sm whitespace-nowrap text-surface-500 dark:text-surface-400">{{ t.account }}</td>
-            <td class="px-6 py-4 text-left">
-              {% if t.type == 'income' %}
-              <span class="badge-pill bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400">Entrada</span>
-              {% elif t.type == 'expense' %}
-              <span class="badge-pill bg-danger-50 text-danger-600 dark:bg-danger-500/15 dark:text-danger-400">Saída</span>
-              {% else %}
-              <span class="badge-pill bg-info-50 text-info-600 dark:bg-info-500/15 dark:text-info-400">Transferência</span>
-              {% endif %}
-            </td>
-            <td class="px-6 py-4 text-right text-sm font-semibold whitespace-nowrap
-              {% if t.type == 'income' %}text-success-600 dark:text-success-400
-              {% elif t.type == 'expense' %}text-danger-600 dark:text-danger-400
-              {% else %}text-info-600 dark:text-info-400{% endif %}">
-              {% if t.type == 'income' %}+{% elif t.type == 'expense' %}−{% else %}⇄{% endif %} {{ t.amount|centavos }}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-    <div class="px-6 py-6">
-      {% include "components/empty_state.html" with title="Sem movimentações neste período" message="Registre receitas e despesas para vê-las aqui." icon="≡" %}
-    </div>
-    {% endif %}
-  </div>
+ {% if debts %}
+ <section class="panel" aria-labelledby="debts-title">
+ <div class="mb-4 flex items-center justify-between">
+ <h2 id="debts-title" class="text-lg font-bold tracking-tight text-foreground">Dívidas</h2>
+ <a href="{% url 'debts:debt_list' %}" class="text-sm font-medium text-brand-400 transition-colors hover:text-brand-300">Ver todas</a>
+ </div>
+ <ul class="space-y-3">
+ {% for d in debts|slice:":3" %}
+ <li class="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5 text-sm">
+ <span class="min-w-0 truncate font-medium text-foreground">{{ d.name }}</span>
+ <span class="num shrink-0 text-danger-400">{{ d.remaining_amount|centavos }}</span>
+ </li>
+ {% endfor %}
+ </ul>
+ </section>
+ {% endif %}
 
-  {# ===================== Atividades (timeline estilo Activities) ===================== #}
-  <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
-    <div class="mb-4">
-      <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Atividades</h3>
-      <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Próximos compromissos e faturas</p>
-    </div>
-    {% if upcoming_events %}
-      <ol class="relative space-y-5 before:absolute before:top-2 before:bottom-2 before:left-[17px] before:w-px before:bg-surface-100 dark:before:bg-surface-800">
-        {% for ev in upcoming_events|slice:":5" %}
-        <li class="flex items-center gap-4">
-          <span class="neu-chip relative z-10 h-9 w-9 shrink-0 text-base
-                     {% if ev.kind == 'invoice' %}text-brand-600 dark:text-brand-300{% else %}text-success-600 dark:text-success-400{% endif %}">
-            {% if ev.kind == 'invoice' %}▤{% else %}↻{% endif %}
-          </span>
-          <div class="min-w-0 flex-1">
-            <p class="truncate text-sm font-medium text-surface-800 dark:text-surface-100">{{ ev.label }}</p>
-            <p class="text-theme-xs text-surface-400 dark:text-surface-500">
-              {% if ev.kind == 'invoice' %}Fatura{% else %}Recorrência{% endif %} · {{ ev.date|date:"d/m" }}{% if ev.date == today %} (hoje){% endif %}
-            </p>
-          </div>
-          <span class="text-sm font-semibold text-surface-900 dark:text-white">{{ ev.amount|centavos }}</span>
-        </li>
-        {% endfor %}
-      </ol>
-    {% else %}
-      {% include "components/empty_state.html" with title="Sem atividades futuras" message="Suas próximas faturas e recorrências aparecerão aqui." icon="↻" %}
-    {% endif %}
-  </div>
+ {% if cards %}
+ <section class="panel" aria-labelledby="cards-title">
+ <div class="mb-4 flex items-center justify-between">
+ <h2 id="cards-title" class="text-lg font-bold tracking-tight text-foreground">Cartões</h2>
+ <a href="{% url 'cards:card_list' %}" class="text-sm font-medium text-brand-400 transition-colors hover:text-brand-300">Ver faturas</a>
+ </div>
+ <ul class="space-y-4">
+ {% for c in cards|slice:":3" %}
+ <li>
+ <div class="flex items-center justify-between text-sm">
+ <span class="font-medium text-foreground">{{ c.name }}</span>
+ <span class="num text-xs {% if c.usage_tone == 'danger' %}text-danger-400{% elif c.usage_tone == 'warning' %}text-warning-400{% else %}text-success-400{% endif %}">
+ {{ c.used_pct }}% usado
+ </span>
+ </div>
+ <div class="mt-1.5">
+ {% if c.usage_tone == 'danger' %}
+ {% include "components/progress.html" with percent=c.used_pct show_label=False tone="exceeded" %}
+ {% elif c.usage_tone == 'warning' %}
+ {% include "components/progress.html" with percent=c.used_pct show_label=False tone="attention" %}
+ {% else %}
+ {% include "components/progress.html" with percent=c.used_pct show_label=False %}
+ {% endif %}
+ </div>
+ </li>
+ {% endfor %}
+ </ul>
+ </section>
+ {% endif %}
+ </div>
 
-  {# ===================== Grid secundário ===================== #}
-  <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+ {# --- AÇÃO: atalhos rápidos + Relatório IA --- #}
+ <div class="grid gap-6 lg:grid-cols-5">
+ <section class="panel lg:col-span-3" aria-label="Ações rápidas">
+ <h2 class="text-base font-semibold tracking-tight text-foreground">Registrar agora</h2>
+ <p class="mt-1 text-sm text-muted-foreground">Mantenha sua história atualizada — levará menos de um minuto.</p>
+ <div class="mt-4 flex flex-wrap gap-2">
+ <a href="{% url 'finance:transaction_create' %}?kind=expense" class="btn btn-primary btn-md">
+ <svg class="mr-1.5 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+ Nova despesa
+ </a>
+ <a href="{% url 'finance:transaction_create' %}?kind=income" class="btn btn-ghost btn-md">Nova receita</a>
+ <a href="{% url 'finance:transaction_create' %}" class="btn btn-ghost btn-md">Outro lançamento</a>
+ </div>
+ </section>
 
-    <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
-      <div class="mb-4">
-        <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Suas contas</h3>
-        <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Dinheiro por conta</p>
-      </div>
-      {% if accounts %}
-        <ul class="divide-y divide-surface-100 dark:divide-surface-800">
-          {% for a in accounts %}
-          <li class="flex items-center justify-between gap-3 py-2.5">
-            <div class="min-w-0">
-              <p class="truncate text-sm font-medium text-surface-800 dark:text-surface-100">{{ a.name }}</p>
-              <p class="text-theme-xs text-surface-400 dark:text-surface-500">{{ a.type_label|default:"—" }} · {{ a.share_percent }}% do total</p>
-            </div>
-            <span class="text-sm font-semibold text-surface-900 dark:text-white">{{ a.balance|centavos }}</span>
-          </li>
-          {% endfor %}
-        </ul>
-        <a href="{% url 'finance:account_list' %}" class="link-accent mt-3 text-sm">Ver contas</a>
-      {% else %}
-        {% include "components/empty_state.html" with title="Sem contas" message="Cadastre uma conta para começar." icon="◫" %}
-      {% endif %}
-    </div>
+ {% if ai_report_card and ai_report_card.has_report %}
+ <section class="panel border-brand-500/30 lg:col-span-2" aria-labelledby="ai-title">
+ <div class="flex items-start gap-3">
+ <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-400" aria-hidden="true">
+ <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a5 5 0 0 1 5 5c0 2-1 3-2 4l-1 6M4 8a5 5 0 0 1 5-5m6 16a2 2 0 1 1-6 0 2 2 0 0 1 6 0Z"/></svg>
+ </span>
+ <div class="min-w-0">
+ <h2 id="ai-title" class="text-base font-semibold tracking-tight text-foreground">Análise da sua vida financeira</h2>
+ {% if ai_report_card.summary %}
+ <p class="mt-1 line-clamp-4 text-sm text-muted-foreground">{{ ai_report_card.summary }}</p>
+ {% endif %}
+ </div>
+ </div>
+ <div class="mt-4 flex items-center gap-2">
+ {% if ai_report_card.can_generate %}
+ <a href="{% url 'reports:ai_report' %}" class="btn btn-ghost btn-sm">Gerar novo</a>
+ {% endif %}
+ <a href="{% url 'reports:ai_report' %}" class="btn btn-primary btn-sm">Ler relatório</a>
+ </div>
+ </section>
+ {% endif %}
+ </div>
 
-    <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
-      <div class="mb-4">
-        <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Próximas faturas</h3>
-      </div>
-      {% if invoices %}
-        <ul class="space-y-3">
-          {% for i in invoices %}
-          <li class="flex items-center justify-between gap-3 rounded-xl neu-sm neu-inset p-3">
-            <div>
-              <p class="text-sm font-medium text-surface-800 dark:text-surface-100">{{ i.card_name }}</p>
-              <p class="text-theme-xs text-surface-500 dark:text-surface-400">Vence {{ i.due_date|date:"d/m" }}</p>
-            </div>
-            <span class="text-sm font-semibold dark:text-white">{{ i.amount|centavos }}</span>
-          </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        {% include "components/empty_state.html" with title="Sem faturas abertas" message="Suas faturas futuras aparecerão aqui." icon="▤" %}
-      {% endif %}
-    </div>
+{% endif %}
+{% endblock %}
 
-    <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
-      <div class="mb-4">
-        <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Parcelamentos</h3>
-        <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Quanto do futuro já está comprometido</p>
-      </div>
-      {% if installments %}
-        <ul class="space-y-3">
-          {% for p in installments %}
-          <li class="flex items-center justify-between gap-3 rounded-xl neu-sm neu-inset p-3">
-            <div class="min-w-0">
-              <p class="truncate text-sm font-medium text-surface-800 dark:text-surface-100">{{ p.description }}</p>
-              <p class="text-theme-xs text-surface-500 dark:text-surface-400">{{ p.card_name }} · {{ p.remaining_count }}x restantes</p>
-            </div>
-            <span class="text-sm font-semibold dark:text-white">{{ p.remaining_total|centavos }}</span>
-          </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        {% include "components/empty_state.html" with title="Sem parcelamentos" message="Compras parceladas em cartão aparecerão aqui." icon="⋮" %}
-      {% endif %}
-    </div>
+{% block page_scripts %}
+(function () {
+ function brl(v, compact) {
+ return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: compact ? 0 : 2 }).format(v);
+ }
+ function fmtSign(v) { return v < 0 ? "−" + brl(Math.abs(v), false) : brl(v, false); }
+ function ready(fn) {
+ if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+ else fn();
+ }
+ ready(function () {
+ if (typeof window.ApexCharts === "undefined") return;
 
-    <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
-      <div class="mb-4">
-        <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Orçamentos</h3>
-        <p class="mt-1 text-theme-sm text-surface-500 dark:text-surface-400">Mês atual</p>
-      </div>
-      {% if budgets %}
-        <ul class="space-y-3">
-          {% for b in budgets %}
-          <li>
-            <div class="mb-1 flex items-center justify-between text-sm">
-              <span class="font-medium text-surface-700 dark:text-surface-200">{{ b.name }}</span>
-              <span class="text-theme-xs text-surface-500 dark:text-surface-400">{{ b.spent|centavos }} / {{ b.limit|centavos }}</span>
-            </div>
-            {% include "components/progress.html" with percent=b.percent tone=b.status show_label=False %}
-          </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        {% include "components/empty_state.html" with title="Sem orçamentos" message="Defina limites por categoria para controlar gastos." icon="◎" %}
-      {% endif %}
-    </div>
+ var areaEl = document.getElementById("flux-area");
+ if (areaEl) {
+ var buckets = [
+ {% for b in evolution %}{ label: "{{ b.label|escapejs }}", receitas: {{ b.receitas }}, despesas: {{ b.despesas }} },{% endfor %}
+ ];
+ if (buckets.length) {
+ new window.ApexCharts(areaEl, {
+ chart: { type: "area", height: 300, toolbar: { show: false }, fontFamily: "Geist, system-ui, sans-serif", foreColor: "#94a3b8", background: "transparent", animations: { easing: "easeinout", speed: 700, dynamicAnimation: { enabled: true, speed: 500 } } },
+ series: [
+ { name: "Receitas", data: buckets.map(function (b) { return b.receitas / 100; }), strokeWidth: 2.5 },
+ { name: "Despesas", data: buckets.map(function (b) { return b.despesas / 100; }), strokeWidth: 2.5 },
+ { name: "Resultado", data: buckets.map(function (b) { return b.saldo / 100; }), strokeWidth: 2, fill: { type: "solid", opacity: 0 } }
+ ],
+dataLabels: { enabled: false },
+stroke: { curve: "smooth", width: 2.5, lineCap: "round" },
+fill: { type: "gradient", gradient: { shadeIntensity: 1, opacityFrom: 0.32, opacityTo: 0.02, stops: [0, 90] } },
+colors: ["#10b981", "#f43f5e", "#6366f1"],
+markers: { size: 3, shape: "circle", opacity: 0.6, strokeColors: "#0f172a", strokeWidth: 2, hover: { size: 5, opacity: 1 } },
+grid: { borderColor: "rgba(148, 163, 184, 0.1)", strokeDashArray: 4, padding: { left: 4, right: 8 } },
+xaxis: { categories: buckets.map(function (b) { return b.label; }), axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: { colors: "#94a3b8", fontSize: "11px" } } },
+yaxis: { labels: { formatter: function (v) { return brl(v, true); }, style: { colors: "#94a3b8", fontSize: "11px" } } },
+legend: { position: "top", horizontalAlign: "right", labels: { colors: "#cbd5e1", fontSize: "12px" }, markers: { size: 5, strokeWidth: 0 }, itemMargin: { horizontal: 10 }, offsetY: -2 },
+tooltip: { theme: "dark", shared: true, intersect: false, marker: { show: true }, y: { formatter: fmtSign } }
+ }).render();
+ }
+ }
 
-    <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
-      <div class="mb-4">
-        <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Metas</h3>
-      </div>
-      {% if goals %}
-        <ul class="space-y-4">
-          {% for g in goals %}
-          <li>
-            <div class="mb-1 flex items-baseline justify-between">
-              <span class="font-medium text-surface-800 dark:text-surface-100">{{ g.name }}</span>
-              <span class="text-sm font-semibold dark:text-white">{{ g.current_amount|centavos }} / {{ g.target_amount|centavos }}</span>
-            </div>
-            {% include "components/progress.html" with percent=g.progress_percent label="Progresso" show_label=False %}
-            {% if g.target_date %}<p class="mt-1 text-theme-xs text-surface-400 dark:text-surface-500">Meta para {{ g.target_date|date:"d/m/Y" }}</p>{% endif %}
-          </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        {% include "components/empty_state.html" with title="Sem metas" message="Defina objetivos, como uma reserva de emergência." icon="◎" %}
-      {% endif %}
-    </div>
-
-    <div class="overflow-hidden rounded-2xl p-6 neu neu-lift anim-rise">
-      <div class="mb-4">
-        <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Dívidas</h3>
-      </div>
-      {% if debts %}
-        <ul class="divide-y divide-surface-100 dark:divide-surface-800">
-          {% for d in debts %}
-          <li class="flex items-center justify-between gap-3 py-2.5">
-            <div>
-              <p class="text-sm font-medium text-surface-800 dark:text-surface-100">{{ d.name }}</p>
-              <p class="text-theme-xs text-surface-500 dark:text-surface-400">Pago {{ d.paid_amount|centavos }} de {{ d.total_amount|centavos }}</p>
-            </div>
-            <span class="text-sm font-semibold text-danger-600 dark:text-danger-400">{{ d.remaining_amount|centavos }}</span>
-          </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        {% include "components/empty_state.html" with title="Sem dívidas" message="Suas dívidas ativas aparecerão aqui." icon="☰" %}
-      {% endif %}
-    </div>
-
-  </div>
+ var donutEl = document.getElementById("cat-donut");
+ if (donutEl) {
+ var cats = [
+ {% for c in spending_rows %}{ name: "{{ c.name|escapejs }}", amount: {{ c.amount }} },{% endfor %}
+ ];
+ if (cats.length) {
+ new window.ApexCharts(donutEl, {
+ chart: { type: "donut", height: 250, toolbar: { show: false }, fontFamily: "Geist, system-ui, sans-serif", foreColor: "#94a3b8", background: "transparent" },
+ labels: cats.map(function (c) { return c.name; }),
+ series: cats.map(function (c) { return Math.max(c.amount, 0) / 100; }),
+colors: ["#6366f1", "#8b5cf6", "#10b981", "#f43f5e", "#f59e0b", "#06b6d4", "#a855f7", "#ec4899"],
+stroke: { colors: ["#0f172a"], width: 3 },
+legend: { position: "bottom", labels: { colors: "#cbd5e1", fontSize: "12px" }, markers: { size: 5, strokeWidth: 0 }, itemMargin: { horizontal: 8, vertical: 4 } },
+ dataLabels: { enabled: false },
+ plotOptions: { pie: { donut: { size: "72%", labels: { show: true, total: { show: true, label: "Total", color: "#64748b", fontSize: "12px", formatter: function (w) { return brl(w.globals.seriesTotals.reduce(function (a, b) { return a + b; }, 0), true); } }, value: { color: "#e2e8f0", fontSize: "18px", formatter: function (v) { return brl(Number(v)); } } } } } },
+ tooltip: { theme: "dark", y: { formatter: function (v) { return brl(Number(v)); } } }
+ }).render();
+ }
+ }
+ });
+})();
 {% endblock %}

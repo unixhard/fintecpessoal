@@ -1,0 +1,66 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}Configurações — FINTECPESSOAL{% endblock %}
+
+{% block shell_title %}Configurações{% endblock %}
+
+{% block app_content %}
+
+ <div>
+ <h1 class="text-2xl font-bold tracking-tight text-foreground">Configurações</h1>
+ <p class="mt-1 text-sm text-muted-foreground">Gerencie seu perfil, dados e segurança.</p>
+ </div>
+
+ <div class="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+
+ <a href="{% url 'settings:profile' %}" class="glass-card p-6 transition-all hover:border-brand-500/40 hover:translate-y-[-1px]">
+ <span class="glass-pill flex h-11 w-11 items-center justify-center rounded-xl text-brand-400" aria-hidden="true">
+ <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+ </span>
+ <h2 class="mt-4 text-lg font-semibold text-foreground">Perfil</h2>
+ <p class="mt-1 text-sm text-muted-foreground">Nome de exibição, email e conta padrão.</p>
+ </a>
+
+ <a href="{% url 'settings:password' %}" class="glass-card p-6 transition-all hover:border-brand-500/40 hover:translate-y-[-1px]">
+ <span class="glass-pill flex h-11 w-11 items-center justify-center rounded-xl text-brand-400" aria-hidden="true">
+ <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg>
+ </span>
+ <h2 class="mt-4 text-lg font-semibold text-foreground">Senha</h2>
+ <p class="mt-1 text-sm text-muted-foreground">Altere sua senha de acesso.</p>
+ </a>
+
+ <a href="{% url 'settings:backup_export' %}" class="glass-card p-6 transition-all hover:border-brand-500/40 hover:translate-y-[-1px]">
+ <span class="glass-pill flex h-11 w-11 items-center justify-center rounded-xl text-brand-400" aria-hidden="true">
+ <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v13M12 16l-4-4M12 16l4-4"/></svg>
+ </span>
+ <h2 class="mt-4 text-lg font-semibold text-foreground">Backup / Exportar</h2>
+ <p class="mt-1 text-sm text-muted-foreground">Baixe todos os seus dados como JSON.</p>
+ </a>
+
+ <a href="{% url 'settings:backup_restore' %}" class="glass-card p-6 transition-all hover:border-brand-500/40 hover:translate-y-[-1px]">
+ <span class="glass-pill flex h-11 w-11 items-center justify-center rounded-xl text-brand-400" aria-hidden="true">
+ <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 16V3M12 3l-4 4M12 3l4 4"/></svg>
+ </span>
+ <h2 class="mt-4 text-lg font-semibold text-foreground">Restaurar</h2>
+ <p class="mt-1 text-sm text-muted-foreground">Importe dados de um arquivo de backup.</p>
+ </a>
+
+ <a href="{% url 'settings:wipe' %}" class="glass-card p-6 transition-all hover:border-warning-500/40 hover:translate-y-[-1px]">
+ <span class="glass-pill flex h-11 w-11 items-center justify-center rounded-xl text-warning-400" aria-hidden="true">
+ <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>
+ </span>
+ <h2 class="mt-4 text-lg font-semibold text-foreground">Limpar dados</h2>
+ <p class="mt-1 text-sm text-muted-foreground">Apague todos os dados financeiros, mantendo a conta.</p>
+ </a>
+
+ <a href="{% url 'settings:delete_account' %}" class="glass-card p-6 transition-all hover:border-danger-500/40 hover:translate-y-[-1px]">
+ <span class="glass-pill flex h-11 w-11 items-center justify-center rounded-xl text-danger-400" aria-hidden="true">
+ <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13M10 11v6M14 11v6"/></svg>
+ </span>
+ <h2 class="mt-4 text-lg font-semibold text-danger-400">Deletar conta</h2>
+ <p class="mt-1 text-sm text-muted-foreground">Exclua permanentemente sua conta e dados.</p>
+ </a>
+
+ </div>
+
+{% endblock %}

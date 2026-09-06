@@ -35,4 +35,18 @@ urlpatterns = [
     path("recorrencias/<int:pk>/pausar/", views.RecurringStatusView.as_view(new_status="paused"), name="recurring_pause"),
     path("recorrencias/<int:pk>/reativar/", views.RecurringStatusView.as_view(new_status="active"), name="recurring_activate"),
     path("recorrencias/<int:pk>/encerrar/", views.RecurringStatusView.as_view(new_status="ended"), name="recurring_end"),
+    # Regras de classificação (Ordem 18 — FASE 6)
+    path("regras/", views.RuleListView.as_view(), name="rule_list"),
+    path("regras/nova/", views.RuleCreateView.as_view(), name="rule_create"),
+    path("regras/<int:pk>/editar/", views.RuleEditView.as_view(), name="rule_edit"),
+    path("regras/<int:pk>/alternar/", views.RuleToggleView.as_view(), name="rule_toggle"),
+    path("regras/<int:pk>/excluir/", views.RuleDeleteView.as_view(), name="rule_delete"),
+    # Fila de revisão / backfill (Ordem 18 — FASE 7/9)
+    path("revisao/", views.ReviewQueueView.as_view(), name="review_queue"),
+    path("revisao/corrigir-lote/", views.ReviewBulkView.as_view(), name="review_bulk"),
+    path("revisao/corrigir/<int:pk>/", views.ReviewIndividualView.as_view(), name="review_individual"),
+    path("revisao/reprocessar/", views.BackfillView.as_view(), name="backfill"),
+    # Assistente Fintec (MÓDULO CHAT) — lançamento por linguagem natural
+    path("assistente/interpretar/", views.ChatParseView.as_view(), name="chat_parse"),
+    path("assistente/confirmar/", views.ChatConfirmView.as_view(), name="chat_confirm"),
 ]

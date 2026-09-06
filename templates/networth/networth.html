@@ -6,87 +6,87 @@
 {% block shell_title %}Patrimônio{% endblock %}
 
 {% block app_content %}
-  {% include "components/page_header.html" with title="Patrimônio líquido" subtitle="Consolidado a partir de saldos, dívidas e cartões." %}
+ {% include "components/page_header.html" with title="Patrimônio líquido" subtitle="Consolidado a partir de saldos, dívidas e cartões." %}
 
-  {# Cartões de métricas #}
-  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    <div class="rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
-      <span class="text-theme-sm text-surface-500 dark:text-surface-400">Ativos (saldos)</span>
-      <div class="mt-2">
-        <span class="num text-2xl font-bold {% if compose.assets >= 0 %}text-success-700 dark:text-success-400{% else %}text-danger-600 dark:text-danger-400{% endif %}">{{ compose.assets|centavos }}</span>
-      </div>
-    </div>
-    <div class="rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
-      <span class="text-theme-sm text-surface-500 dark:text-surface-400">Passivos (dívidas + cartões)</span>
-      <div class="mt-2">
-        <span class="num text-2xl font-bold text-danger-600 dark:text-danger-400">{{ compose.liabilities|centavos }}</span>
-      </div>
-    </div>
-    <div class="rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
-      <span class="text-theme-sm text-surface-500 dark:text-surface-400">Patrimônio líquido</span>
-      <div class="mt-2">
-        <span class="num text-2xl font-bold {% if compose.net_worth >= 0 %}text-surface-900 dark:text-white{% else %}text-danger-600 dark:text-danger-400{% endif %}">{{ compose.net_worth|centavos }}</span>
-      </div>
-    </div>
-    <div class="rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
-      <span class="text-theme-sm text-surface-500 dark:text-surface-400">Reservas em metas</span>
-      <div class="mt-2">
-        <span class="num text-2xl font-bold text-brand-600 dark:text-brand-300">{{ compose.reserves|centavos }}</span>
-      </div>
-    </div>
-  </div>
+ {# Cartões de métricas #}
+ <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+ <div class="panel p-6">
+ <span class="text-theme-sm text-muted-foreground">Ativos (saldos)</span>
+ <div class="mt-2">
+ <span class="num text-2xl font-bold {% if compose.assets >= 0 %}text-success-700 dark:text-success-400{% else %}text-danger-600 dark:text-danger-400{% endif %}">{{ compose.assets|centavos }}</span>
+ </div>
+ </div>
+ <div class="panel p-6">
+ <span class="text-theme-sm text-muted-foreground">Passivos (dívidas + cartões)</span>
+ <div class="mt-2">
+ <span class="num text-2xl font-bold text-danger-600 dark:text-danger-400">{{ compose.liabilities|centavos }}</span>
+ </div>
+ </div>
+ <div class="panel p-6">
+ <span class="text-theme-sm text-muted-foreground">Patrimônio líquido</span>
+ <div class="mt-2">
+ <span class="num text-2xl font-bold {% if compose.net_worth >= 0 %}text-foreground {% else %}text-danger-600 dark:text-danger-400{% endif %}">{{ compose.net_worth|centavos }}</span>
+ </div>
+ </div>
+ <div class="panel p-6">
+ <span class="text-theme-sm text-muted-foreground">Reservas em metas</span>
+ <div class="mt-2">
+ <span class="num text-2xl font-bold text-brand-600 dark:text-brand-300">{{ compose.reserves|centavos }}</span>
+ </div>
+ </div>
+ </div>
 
-  <p class="mt-2 text-theme-xs text-surface-400 dark:text-surface-500">
-    O patrimônio é uma estimativa: ativos (soma do saldo das contas) menos passivos
-    (restante das dívidas + parcelas de cartão comprometidas). As reservas em metas são
-    exibidas separadamente, pois representam intenção, não necessariamente saldo em conta.
-  </p>
+ <p class="mt-2 text-theme-xs text-muted-foreground dark:text-muted-foreground">
+ O patrimônio é uma estimativa: ativos (soma do saldo das contas) menos passivos
+ (restante das dívidas + parcelas de cartão comprometidas). As reservas em metas são
+ exibidas separadamente, pois representam intenção, não necessariamente saldo em conta.
+ </p>
 
-  {# Registrar ponto de hoje #}
-  <div class="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
-    <div class="min-w-0 flex-1">
-      <h3 class="font-semibold text-surface-800 dark:text-surface-100">Acompanhar evolução</h3>
-      <p class="mt-0.5 text-theme-sm text-surface-500 dark:text-surface-400">
-        Registre um ponto de patrimônio ao longo do tempo para ver a curva de evolução.
-        {% if latest %}(último registrado em {{ latest.recorded_on }}){% endif %}
-      </p>
-    </div>
-    <form method="post" action="{% url 'networth:register' %}">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-primary btn-md">Registrar ponto de hoje</button>
-    </form>
-  </div>
+ {# Registrar ponto de hoje #}
+ <div class="panel mt-6 flex flex-wrap items-center gap-3 p-5">
+ <div class="min-w-0 flex-1">
+ <h3 class="font-semibold text-foreground">Acompanhar evolução</h3>
+ <p class="mt-0.5 text-theme-sm text-muted-foreground">
+ Registre um ponto de patrimônio ao longo do tempo para ver a curva de evolução.
+ {% if latest %}(último registrado em {{ latest.recorded_on }}){% endif %}
+ </p>
+ </div>
+ <form method="post" action="{% url 'networth:register' %}">
+ {% csrf_token %}
+ <button type="submit" class="btn btn-primary btn-md">Registrar ponto de hoje</button>
+ </form>
+ </div>
 
-  {# Evolução #}
-  <div class="mt-6 overflow-hidden rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
-    <div class="border-b border-surface-200 px-6 py-4 dark:border-surface-800">
-      <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Evolução do patrimônio</h3>
-    </div>
-    <div class="table-wrap p-6">
-      {% if history %}
-      <table class="w-full min-w-full divide-y divide-surface-100 text-sm dark:divide-surface-800">
-        <thead>
-          <tr class="text-left text-theme-xs uppercase tracking-wide text-surface-400 dark:text-surface-500">
-            <th class="px-2 py-2 font-semibold">Data</th>
-            <th class="px-2 py-2 text-right font-semibold">Ativos</th>
-            <th class="px-2 py-2 text-right font-semibold">Passivos</th>
-            <th class="px-2 py-2 text-right font-semibold">Patrimônio</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-surface-100 dark:divide-surface-800">
-          {% for h in history %}
-          <tr>
-            <td class="px-2 py-2 text-surface-700 dark:text-surface-200">{{ h.date }}</td>
-            <td class="px-2 py-2 text-right text-success-700 dark:text-success-400">{{ h.assets|centavos }}</td>
-            <td class="px-2 py-2 text-right text-danger-600 dark:text-danger-400">{{ h.liabilities|centavos }}</td>
-            <td class="px-2 py-2 text-right font-semibold text-surface-900 dark:text-white">{{ h.net_worth|centavos }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      {% include "components/empty_state.html" with title="Sem histórico ainda" message="Clique em 'Registrar ponto de hoje' para começar a acompanhar a evolução do seu patrimônio." icon="◧" %}
-      {% endif %}
-    </div>
-  </div>
+ {# Evolução #}
+ <div class="panel mt-6 overflow-hidden">
+ <div class="border-b border-border px-6 py-4">
+ <h3 class="text-lg font-semibold text-foreground ">Evolução do patrimônio</h3>
+ </div>
+ <div class="table-wrap p-6">
+ {% if history %}
+ <table class="w-full min-w-full divide-y divide-muted text-sm">
+ <thead>
+ <tr class="text-left text-theme-xs uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
+ <th class="px-2 py-2 font-semibold">Data</th>
+ <th class="px-2 py-2 text-right font-semibold">Ativos</th>
+ <th class="px-2 py-2 text-right font-semibold">Passivos</th>
+ <th class="px-2 py-2 text-right font-semibold">Patrimônio</th>
+ </tr>
+ </thead>
+ <tbody class="divide-y divide-muted">
+ {% for h in history %}
+ <tr>
+ <td class="px-2 py-2 text-foreground">{{ h.date }}</td>
+ <td class="px-2 py-2 text-right text-success-700 dark:text-success-400">{{ h.assets|centavos }}</td>
+ <td class="px-2 py-2 text-right text-danger-600 dark:text-danger-400">{{ h.liabilities|centavos }}</td>
+ <td class="px-2 py-2 text-right font-semibold text-foreground ">{{ h.net_worth|centavos }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ {% else %}
+ {% include "components/empty_state.html" with title="Sem histórico ainda" message="Clique em 'Registrar ponto de hoje' para começar a acompanhar a evolução do seu patrimônio." icon="target" %}
+ {% endif %}
+ </div>
+ </div>
 {% endblock %}

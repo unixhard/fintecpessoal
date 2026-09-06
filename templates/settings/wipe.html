@@ -1,0 +1,32 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}Limpar dados — Configurações{% endblock %}
+
+{% block shell_title %}Limpar dados{% endblock %}
+
+{% block app_content %}
+<div class="mx-auto w-full max-w-xl">
+ {% include "components/page_header.html" with title="Limpar dados financeiros" subtitle="Apague todos os dados financeiros mantendo a conta." %}
+
+ <form method="post" class="space-y-6">
+ {% csrf_token %}
+ {% include "components/error_list.html" %}
+
+ <div class="panel border-danger-500/40 p-6">
+ <p class="text-sm text-muted-foreground">
+ Esta ação apaga <strong>permanentemente</strong> suas contas, movimentações,
+ cartões, orçamentos, metas e dívidas. Sua conta de acesso é mantida.
+ Recomendamos fazer um <a href="{% url 'settings:backup_export' %}" class="link-accent">backup</a> antes.
+ </p>
+ <div class="mt-5">
+ {% include "components/field.html" with field=form.confirm_text %}
+ </div>
+ </div>
+
+ <div class="flex items-center gap-3">
+ <button type="submit" class="btn btn-danger">Apagar todos os dados</button>
+ <a href="{% url 'settings:index' %}" class="btn btn-ghost">Cancelar</a>
+ </div>
+ </form>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}Deletar conta — Configurações{% endblock %}
+
+{% block shell_title %}Deletar conta{% endblock %}
+
+{% block app_content %}
+<div class="mx-auto w-full max-w-xl">
+ {% include "components/page_header.html" with title="Deletar conta" subtitle="Exclua permanentemente sua conta e todos os dados." %}
+
+ <form method="post" class="space-y-6">
+ {% csrf_token %}
+ {% include "components/error_list.html" %}
+
+ <div class="panel border-danger-500/40 p-6">
+ <p class="text-sm text-muted-foreground">
+ Esta ação <strong>não pode ser desfeita</strong>. Todos os seus dados
+ serão permanentemente removidos. Se quiser, faça um
+ <a href="{% url 'settings:backup_export' %}" class="link-accent">backup</a> antes de prosseguir.
+ </p>
+ <div class="mt-5 space-y-5">
+ {% include "components/field.html" with field=form.confirm_text %}
+ {% include "components/field.html" with field=form.password %}
+ </div>
+ </div>
+
+ <div class="flex items-center gap-3">
+ <button type="submit" class="btn btn-danger">Deletar minha conta</button>
+ <a href="{% url 'settings:index' %}" class="btn btn-ghost">Cancelar</a>
+ </div>
+ </form>
+</div>
+{% endblock %}

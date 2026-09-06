@@ -5,8 +5,52 @@ mantendo a regra de isolamento multiusuário fora das views (regra 16).
 Categorias padrão (``is_default``) continuam funcionando; não são tocadas aqui.
 """
 
+from django.db import transaction
+
 from ..models import Category
+from ..taxonomy import DEFAULT_TREE
 from .base import require_owned
+
+
+@transaction.atomic
+def seed_default_categories(*, user):
+    """Semeia (de forma idempotente) a taxonomia padrão para um usuário.
+
+    Usa ``Category.parent`` como hierarquia (sem modelo de subcategoria).
+    Categorias já existentes (mesmo nome+kind+parent) não são duplicadas,
+    então rodar de novo é seguro. Padrão: ``is_default=True``.
+    """
+    created = {"categories": 0, "subcategories": 0}
+
+    for kind, cat_name, children in DEFAULT_TREE:
+        parent, parent_created = _seed_category(user, cat_name, kind, parent=None)
+        if parent_created:
+            created["categories"] += 1
+        for child_name in children:
+            _, child_created = _seed_category(user, child_name, kind, parent=parent)
+            if child_created:
+                created["subcategories"] += 1
+
+    return created
+
+
+def _seed_category(user, name, kind, parent):
+    category, created = Category.objects.get_or_create(
+        owner=user,
+        name=name,
+        kind=kind,
+        parent=parent,
+        defaults={
+            "is_default": True,
+            "status": Category.Status.ACTIVE,
+        },
+    )
+    if not created:
+        # garante o flag de padrão mesmo se a categoria já existia (não destrutivo)
+        if not category.is_default:
+            category.is_default = True
+            category.save(update_fields=["is_default"])
+    return category, created
 
 
 def create_category(

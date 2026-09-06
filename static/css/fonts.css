@@ -1,0 +1,54 @@
+﻿/*
+  FINTECPESSOAL — tipografia self-hosted (sem CDN externo em produção)
+  ====================================================================
+  DU Jour 2026 (estilo FLUX):
+    - "Geist"      : grotesca moderna + mono-friendly — interface / corpo / UI.
+    - "Geist Mono" : tabular/mono — valores, KPIs, kbd, hashes.
+  Caminhos url() são relativos a tailwind.css (assets servidos em /static).
+*/
+
+/* --------------------- Geist (UI / corpo / títulos) --------------------- */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/geist/geist-latin-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/geist/geist-latin-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/geist/geist-latin-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/geist/geist-latin-700.woff2') format('woff2');
+}
+
+/* --------------------- Geist Mono (números / kbd / código) --------------------- */
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/geist-mono/geistmono-latin-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/geist-mono/geistmono-latin-500.woff2') format('woff2');
+}

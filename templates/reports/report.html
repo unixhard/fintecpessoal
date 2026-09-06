@@ -6,112 +6,112 @@
 {% block shell_title %}Relatórios{% endblock %}
 
 {% block app_content %}
-  <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-    <div>
-      <h1 class="heading-display text-2xl text-surface-900 dark:text-white">Relatórios</h1>
-      <p class="mt-1 text-sm text-surface-500 dark:text-surface-400">Análise, comparativos e exportação das suas finanças.</p>
-    </div>
-    <div class="flex flex-wrap items-center gap-3">
-      <div class="segmented" role="group" aria-label="Período">
-        {% for key in periods %}
-        <a href="{% url 'reports:index' %}?period={{ key }}"
-           class="segmented-item {% if period.key == key %}segmented-item-active{% endif %}">{{ key }}</a>
-        {% endfor %}
-      </div>
-      <div class="flex gap-2">
-        <a href="{% url 'reports:csv' %}?period={{ period.key }}" class="btn btn-sm btn-ghost">Exportar CSV</a>
-        <a href="{% url 'reports:print' %}?period={{ period.key }}" target="_blank" class="btn btn-sm btn-primary">Imprimir / PDF</a>
-      </div>
-    </div>
-  </div>
+ <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+ <div>
+ <h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Relatórios</h1>
+ <p class="mt-1.5 text-sm text-muted-foreground">Análise, comparativos e exportação das suas finanças.</p>
+ </div>
+ <div class="flex flex-wrap items-center gap-3">
+ <div class="segmented" role="group" aria-label="Período">
+ {% for key in periods %}
+ <a href="{% url 'reports:index' %}?period={{ key }}"
+ class="segmented-item {% if period.key == key %}segmented-item-active{% endif %}">{{ key }}</a>
+ {% endfor %}
+ </div>
+ <div class="flex gap-2">
+ <a href="{% url 'reports:csv' %}?period={{ period.key }}" class="btn btn-sm btn-ghost">Exportar CSV</a>
+ <a href="{% url 'reports:print' %}?period={{ period.key }}" target="_blank" class="btn btn-sm btn-primary">Imprimir / PDF</a>
+ </div>
+ </div>
+ </div>
 
-  {# Fluxo de caixa do período #}
-  <div class="mt-6 grid gap-4 sm:grid-cols-3">
-    <div class="rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
-      <span class="text-theme-sm text-surface-500 dark:text-surface-400">Receitas</span>
-      <div class="mt-2 text-2xl font-bold text-success-700 dark:text-success-400">{{ cash_flow.receitas|centavos }}</div>
-    </div>
-    <div class="rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
-      <span class="text-theme-sm text-surface-500 dark:text-surface-400">Despesas</span>
-      <div class="mt-2 text-2xl font-bold text-danger-600 dark:text-danger-400">{{ cash_flow.despesas|centavos }}</div>
-    </div>
-    <div class="rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
-      <span class="text-theme-sm text-surface-500 dark:text-surface-400">Resultado</span>
-      <div class="mt-2 text-2xl font-bold {% if cash_flow.resultado >= 0 %}text-surface-900 dark:text-white{% else %}text-danger-600 dark:text-danger-400{% endif %}">{{ cash_flow.resultado|centavos }}</div>
-    </div>
-  </div>
+ {# Fluxo de caixa do período #}
+ <div class="mt-6 grid gap-4 sm:grid-cols-3">
+ <div class="panel p-6">
+ <span class="text-theme-sm text-muted-foreground">Receitas</span>
+ <div class="mt-2 text-2xl font-bold text-success-700 dark:text-success-400">{{ cash_flow.receitas|centavos }}</div>
+ </div>
+ <div class="panel p-6">
+ <span class="text-theme-sm text-muted-foreground">Despesas</span>
+ <div class="mt-2 text-2xl font-bold text-danger-600 dark:text-danger-400">{{ cash_flow.despesas|centavos }}</div>
+ </div>
+ <div class="panel p-6">
+ <span class="text-theme-sm text-muted-foreground">Resultado</span>
+ <div class="mt-2 text-2xl font-bold {% if cash_flow.resultado >= 0 %}text-foreground {% else %}text-danger-600 dark:text-danger-400{% endif %}">{{ cash_flow.resultado|centavos }}</div>
+ </div>
+ </div>
 
-  {# Despesas por categoria #}
-  <div class="mt-6 overflow-hidden rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
-    <div class="border-b border-surface-200 px-6 py-4 dark:border-surface-800">
-      <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Despesas por categoria — {{ period.label }}</h3>
-    </div>
-    {% if by_category %}
-    <div class="table-wrap p-6">
-      <table class="w-full min-w-full divide-y divide-surface-100 text-sm dark:divide-surface-800">
-        <thead>
-          <tr class="text-left text-theme-xs uppercase tracking-wide text-surface-400 dark:text-surface-500">
-            <th class="px-2 py-2 font-semibold">Categoria</th>
-            <th class="px-2 py-2 text-right font-semibold">Valor</th>
-            <th class="px-2 py-2 text-right font-semibold">%</th>
-            <th class="px-2 py-2 text-right font-semibold">Variação vs. período anterior</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-surface-100 dark:divide-surface-800">
-          {% for row in by_category %}
-          <tr>
-            <td class="px-2 py-2 font-medium text-surface-800 dark:text-surface-100">{{ row.name }}</td>
-            <td class="px-2 py-2 text-right text-surface-700 dark:text-surface-200">{{ row.amount|centavos }}</td>
-            <td class="px-2 py-2 text-right text-surface-500 dark:text-surface-400">{{ row.share_percent }}%</td>
-            <td class="px-2 py-2 text-right">
-              {% if row.delta_percent is not None %}
-                <span class="{% if row.delta_percent >= 0 %}text-danger-600 dark:text-danger-400{% else %}text-success-600 dark:text-success-400{% endif %}">
-                  {{ row.delta_percent|stringformat:"+d" }}%
-                </span>
-              {% else %}
-                <span class="text-surface-400 dark:text-surface-500">—</span>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-    <div class="p-6">{% include "components/empty_state.html" with title="Sem despesas no período" message="Classifique suas despesas para ver a distribuição por categoria." icon="▤" %}</div>
-    {% endif %}
-  </div>
+ {# Despesas por categoria #}
+ <div class="panel mt-6 overflow-hidden">
+ <div class="border-b border-border px-6 py-4">
+ <h3 class="text-lg font-semibold text-foreground ">Despesas por categoria — {{ period.label }}</h3>
+ </div>
+ {% if by_category %}
+ <div class="table-wrap p-6">
+ <table class="w-full min-w-full divide-y divide-muted text-sm">
+ <thead>
+ <tr class="text-left text-theme-xs uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
+ <th class="px-2 py-2 font-semibold">Categoria</th>
+ <th class="px-2 py-2 text-right font-semibold">Valor</th>
+ <th class="px-2 py-2 text-right font-semibold">%</th>
+ <th class="px-2 py-2 text-right font-semibold">Variação vs. período anterior</th>
+ </tr>
+ </thead>
+ <tbody class="divide-y divide-muted">
+ {% for row in by_category %}
+ <tr>
+ <td class="px-2 py-2 font-medium text-foreground">{{ row.name }}</td>
+ <td class="px-2 py-2 text-right text-foreground">{{ row.amount|centavos }}</td>
+ <td class="px-2 py-2 text-right text-muted-foreground">{{ row.share_percent }}%</td>
+ <td class="px-2 py-2 text-right">
+ {% if row.delta_percent is not None %}
+ <span class="{% if row.delta_percent >= 0 %}text-danger-600 dark:text-danger-400{% else %}text-success-600 dark:text-success-400{% endif %}">
+ {{ row.delta_percent|stringformat:"+d" }}%
+ </span>
+ {% else %}
+ <span class="text-muted-foreground dark:text-muted-foreground">—</span>
+ {% endif %}
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ <div class="p-6">{% include "components/empty_state.html" with title="Sem despesas no período" message="Classifique suas despesas para ver a distribuição por categoria." icon="card" %}</div>
+ {% endif %}
+ </div>
 
-  {# Evolução mensal #}
-  <div class="mt-6 overflow-hidden rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
-    <div class="border-b border-surface-200 px-6 py-4 dark:border-surface-800">
-      <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Evolução mensal</h3>
-    </div>
-    <div class="table-wrap p-6">
-      {% if evolution %}
-      <table class="w-full min-w-full divide-y divide-surface-100 text-sm dark:divide-surface-800">
-        <thead>
-          <tr class="text-left text-theme-xs uppercase tracking-wide text-surface-400 dark:text-surface-500">
-            <th class="px-2 py-2 font-semibold">Mês</th>
-            <th class="px-2 py-2 text-right font-semibold">Receitas</th>
-            <th class="px-2 py-2 text-right font-semibold">Despesas</th>
-            <th class="px-2 py-2 text-right font-semibold">Saldo</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-surface-100 dark:divide-surface-800">
-          {% for b in evolution %}
-          <tr>
-            <td class="px-2 py-2 text-surface-700 dark:text-surface-200">{{ b.label }}</td>
-            <td class="px-2 py-2 text-right text-success-700 dark:text-success-400">{{ b.receitas|centavos }}</td>
-            <td class="px-2 py-2 text-right text-danger-600 dark:text-danger-400">{{ b.despesas|centavos }}</td>
-            <td class="px-2 py-2 text-right font-semibold text-surface-900 dark:text-white">{{ b.saldo|centavos }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      {% include "components/empty_state.html" with title="Sem movimentações no período" message="Registre movimentações para ver a evolução mensal." icon="◫" %}
-      {% endif %}
-    </div>
-  </div>
+ {# Evolução mensal #}
+ <div class="panel mt-6 overflow-hidden">
+ <div class="border-b border-border px-6 py-4">
+ <h3 class="text-lg font-semibold text-foreground ">Evolução mensal</h3>
+ </div>
+ <div class="table-wrap p-6">
+ {% if evolution %}
+ <table class="w-full min-w-full divide-y divide-muted text-sm">
+ <thead>
+ <tr class="text-left text-theme-xs uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
+ <th class="px-2 py-2 font-semibold">Mês</th>
+ <th class="px-2 py-2 text-right font-semibold">Receitas</th>
+ <th class="px-2 py-2 text-right font-semibold">Despesas</th>
+ <th class="px-2 py-2 text-right font-semibold">Saldo</th>
+ </tr>
+ </thead>
+ <tbody class="divide-y divide-muted">
+ {% for b in evolution %}
+ <tr>
+ <td class="px-2 py-2 text-foreground">{{ b.label }}</td>
+ <td class="px-2 py-2 text-right text-success-700 dark:text-success-400">{{ b.receitas|centavos }}</td>
+ <td class="px-2 py-2 text-right text-danger-600 dark:text-danger-400">{{ b.despesas|centavos }}</td>
+ <td class="px-2 py-2 text-right font-semibold text-foreground ">{{ b.saldo|centavos }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ {% else %}
+ {% include "components/empty_state.html" with title="Sem movimentações no período" message="Registre movimentações para ver a evolução mensal." icon="target" %}
+ {% endif %}
+ </div>
+ </div>
 {% endblock %}

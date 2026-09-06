@@ -1,33 +1,40 @@
 {% comment %}
-  Card de insight/alerta. tree: critical | attention | info
-  Uso: {% include "components/insight_card.html" with insight=item tone="attention" %}
+ Cartão de insight/alerta — linha de atenção priorizada.
+ tone: critical | attention | info
+ Uso: {% include "components/insight_card.html" with insight=item tone="attention" %}
 {% endcomment %}
-<div role="status" class="flex gap-3 rounded-xl border p-4
-  {% if tone == 'critical' %}border-danger-500/30 bg-danger-500/5 dark:border-danger-500/25 dark:bg-danger-500/10
-  {% elif tone == 'attention' %}border-warning-500/30 bg-warning-500/5 dark:border-warning-500/25 dark:bg-warning-500/10
-  {% else %}border-info-500/30 bg-info-500/5 dark:border-info-500/25 dark:bg-info-500/10{% endif %}">
-  <span aria-hidden="true" class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base
-    {% if tone == 'critical' %}bg-danger-500/15 text-danger-600 dark:text-danger-400
-    {% elif tone == 'attention' %}bg-warning-500/15 text-warning-600 dark:text-warning-400
-    {% else %}bg-info-500/15 text-info-600 dark:text-info-400{% endif %}">
-    {% if tone == 'critical' %}✕{% elif tone == 'attention' %}⚠{% else %}ℹ{% endif %}
-  </span>
-  <div class="min-w-0 flex-1">
-    <div class="flex flex-wrap items-center gap-2">
-      <h3 class="text-sm font-semibold text-surface-900 dark:text-white">{{ insight.title }}</h3>
-      <span class="text-xs font-medium uppercase tracking-wide
-        {% if tone == 'critical' %}text-danger-600 dark:text-danger-400
-        {% elif tone == 'attention' %}text-warning-600 dark:text-warning-400
-        {% else %}text-info-600 dark:text-info-400{% endif %}">
-        {{ insight.severity_label }}
-      </span>
-    </div>
-    <p class="mt-0.5 text-sm text-surface-600 dark:text-surface-300">{{ insight.description }}</p>
-    {% if insight.period %}
-    <p class="mt-1 text-xs text-surface-400 dark:text-surface-500">Período: {{ insight.period }}</p>
-    {% endif %}
-    {% if insight.action %}
-    <p class="mt-2 text-sm text-surface-700 dark:text-surface-200"><span class="font-medium">Sugestão:</span> {{ insight.action }}</p>
-    {% endif %}
-  </div>
+<div role="status" class="signal-row border transition-colors duration-200
+ {% if tone == 'critical' %}border-danger-300 bg-danger-50 hover:bg-danger-100/80 dark:border-danger-700 dark:bg-danger-500/10 dark:hover:bg-danger-500/15
+ {% elif tone == 'attention' %}border-warning-300 bg-warning-50 hover:bg-warning-100/80 dark:border-warning-700 dark:bg-warning-500/10 dark:hover:bg-warning-500/15
+ {% else %}border-info-300 bg-info-50 hover:bg-info-100/80 dark:border-info-700 dark:bg-info-500/10 dark:hover:bg-info-500/15{% endif %}">
+ <span class="signal-dot
+ {% if tone == 'critical' %}bg-danger-500/15 text-danger-700 dark:text-danger-300
+ {% elif tone == 'attention' %}bg-warning-500/15 text-warning-700 dark:text-warning-300
+ {% else %}bg-info-500/15 text-info-700 dark:text-info-300{% endif %}" aria-hidden="true">
+ {% if tone == 'critical' %}
+ <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+ {% elif tone == 'attention' %}
+ <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4 2.7 19.5h18.6Z"/><path d="M12 10v4M12 16.5v.01"/></svg>
+ {% else %}
+ <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/></svg>
+ {% endif %}
+ </span>
+ <div class="min-w-0 flex-1">
+ <div class="flex flex-wrap items-center gap-2">
+ <h3 class="text-sm font-semibold text-foreground">{{ insight.title }}</h3>
+ <span class="text-xs font-medium uppercase tracking-wide
+ {% if tone == 'critical' %}text-danger-700 dark:text-danger-300
+ {% elif tone == 'attention' %}text-warning-700 dark:text-warning-300
+ {% else %}text-info-700 dark:text-info-300{% endif %}">
+ {{ insight.severity_label }}
+ </span>
+ </div>
+ <p class="mt-0.5 text-sm text-muted-foreground">{{ insight.description }}</p>
+ {% if insight.period %}
+ <p class="mt-1 text-xs text-muted-foreground">Período: {{ insight.period }}</p>
+ {% endif %}
+ {% if insight.action %}
+ <p class="mt-2 text-sm text-foreground"><span class="font-medium">Sugestão:</span> {{ insight.action }}</p>
+ {% endif %}
+ </div>
 </div>

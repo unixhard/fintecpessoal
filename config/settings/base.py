@@ -89,6 +89,8 @@ LOCAL_APPS = [
     "apps.networth",
     "apps.reminders",
     "apps.comprovantes",
+    "apps.imports",
+    "apps.user_settings",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS
@@ -226,3 +228,7 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Django default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Limites de upload — aumentados para suportar importações com muitas linhas
+# (ex.: 1000+ transações geram >1000 campos POST no formulário de revisão).
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000

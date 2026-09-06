@@ -13,3 +13,7 @@ python-dotenv==1.2.3
 psycopg[binary]==3.2.6
 gunicorn==23.0.0
 whitenoise==6.8.2
+
+# Camada de importação (Ordem 17) — parsers CSV/OFX/XLSX (todos open-source, free tier).
+ofxparse==0.21
+openpyxl==3.1.5

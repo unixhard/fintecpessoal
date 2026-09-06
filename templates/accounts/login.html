@@ -4,33 +4,33 @@
 
 {% block auth_body %}
 <div class="mb-6">
-  <h1 class="heading-display text-3xl text-surface-900 sm:text-4xl">Entrar</h1>
-  <p class="mt-1.5 text-sm text-surface-500">Acesse sua conta para continuar.</p>
+ <h1 class="heading-display text-3xl text-foreground sm:text-4xl">Entrar</h1>
+ <p class="mt-1.5 text-sm text-muted-foreground">Acesse sua conta para continuar.</p>
 </div>
 
 <form method="post" action="{% url 'accounts:login' %}" class="space-y-4" novalidate>
-  {% csrf_token %}
-  {% if form.non_field_errors %}
-  <div class="alert alert-error" role="alert">
-    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
-  </div>
-  {% endif %}
+ {% csrf_token %}
+ {% if form.non_field_errors %}
+ <div class="alert alert-error" role="alert">
+ {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+ </div>
+ {% endif %}
 
-  {% include "components/field.html" with field=form.username %}
-  {% include "components/field.html" with field=form.password %}
+ {% include "components/field.html" with field=form.username %}
+ {% include "components/field.html" with field=form.password %}
 
-  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+ {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
 
-  {% include "components/button.html" with label="Entrar" type="submit" style="primary" extra="w-full btn-arrow" %}
+ {% include "components/button.html" with label="Entrar" type="submit" style="primary" extra="w-full btn-arrow" %}
 </form>
 
 <div class="mt-4 flex items-center justify-between text-sm">
-  <a href="{% url 'accounts:password_reset' %}" class="font-medium text-ink-700 hover:text-ink-900">
-    Esqueci minha senha
-  </a>
+ <a href="{% url 'accounts:password_reset' %}" class="font-medium text-brand-400 transition-colors hover:text-brand-300">
+ Esqueci minha senha
+ </a>
 </div>
 {% endblock %}
 
 {% block auth_footer %}
-Não tem conta ainda? <a href="{% url 'accounts:signup' %}" class="font-semibold text-pink-500">Criar conta</a>
+Não tem conta ainda? <a href="{% url 'accounts:signup' %}" class="font-semibold text-brand-500 hover:text-brand-400">Criar conta</a>
 {% endblock %}

@@ -2,24 +2,27 @@
 
 {% block title %}{{ title }} · FINTECPESSOAL{% endblock %}
 
+{% block shell_title %}Transferência{% endblock %}
+
+
 {% block app_content %}
 <div class="mx-auto w-full max-w-xl">
-  {% include "components/page_header.html" with title=title subtitle="Move dinheiro entre suas contas sem afetar o patrimônio total." %}
+ {% include "components/page_header.html" with title=title subtitle="Move dinheiro entre suas contas sem afetar o patrimônio total." %}
 
-  <form method="post" class="panel p-6">
-    {% csrf_token %}
-    {% include "components/error_list.html" %}
-    <div class="space-y-5">
-      {% include "components/field.html" with field=form.from_account %}
-      {% include "components/field.html" with field=form.to_account %}
-      {% include "components/field.html" with field=form.amount %}
-      {% include "components/field.html" with field=form.date %}
-      {% include "components/field.html" with field=form.description %}
-    </div>
-    <div class="mt-6 flex items-center gap-3">
-      <button type="submit" class="btn btn-primary">Transferir</button>
-      <a href="{% url 'finance:transaction_list' %}" class="btn btn-ghost">Cancelar</a>
-    </div>
-  </form>
+ <form method="post" class="panel p-6">
+ {% csrf_token %}
+ {% include "components/error_list.html" %}
+ <div class="space-y-5">
+ {% include "components/field.html" with field=form.from_account %}
+ {% include "components/field.html" with field=form.to_account %}
+ {% include "components/field.html" with field=form.amount %}
+ {% include "components/field.html" with field=form.date %}
+ {% include "components/field.html" with field=form.description %}
+ </div>
+ <div class="mt-6 flex items-center gap-3">
+ <button type="submit" class="btn btn-primary">Transferir</button>
+ <a href="{% url 'finance:transaction_list' %}" class="btn btn-ghost">Cancelar</a>
+ </div>
+ </form>
 </div>
 {% endblock %}

@@ -2,25 +2,28 @@
 
 {% block title %}{{ title }} · FINTECPESSOAL{% endblock %}
 
+{% block shell_title %}Categoria{% endblock %}
+
+
 {% block app_content %}
 <div class="mx-auto w-full max-w-xl">
-  {% include "components/page_header.html" with title=title %}
+ {% include "components/page_header.html" with title=title %}
 
-  <form method="post" class="panel p-6">
-    {% csrf_token %}
-    {% if request.GET.next %}
-    <input type="hidden" name="next" value="{{ request.GET.next }}">
-    {% endif %}
-    {% include "components/error_list.html" %}
-    <div class="space-y-5">
-      {% include "components/field.html" with field=form.name %}
-      {% include "components/field.html" with field=form.kind %}
-      {% include "components/field.html" with field=form.parent %}
-    </div>
-    <div class="mt-6 flex items-center gap-3">
-      <button type="submit" class="btn btn-primary">Salvar</button>
-      <a href="{% url 'finance:category_list' %}" class="btn btn-ghost">Cancelar</a>
-    </div>
-  </form>
+ <form method="post" class="panel p-6">
+ {% csrf_token %}
+ {% if request.GET.next %}
+ <input type="hidden" name="next" value="{{ request.GET.next }}">
+ {% endif %}
+ {% include "components/error_list.html" %}
+ <div class="space-y-5">
+ {% include "components/field.html" with field=form.name %}
+ {% include "components/field.html" with field=form.kind %}
+ {% include "components/field.html" with field=form.parent %}
+ </div>
+ <div class="mt-6 flex items-center gap-3">
+ <button type="submit" class="btn btn-primary">Salvar</button>
+ <a href="{% url 'finance:category_list' %}" class="btn btn-ghost">Cancelar</a>
+ </div>
+ </form>
 </div>
 {% endblock %}

@@ -1,30 +1,69 @@
 {% extends "base.html" %}
 {% comment %}
-  Base das páginas de autenticação: layout centrado com marca e cartão,
-  mobile-first. Bloco `auth_body` contém o conteúdo do cartão.
+ Base das páginas de autenticação — Flux Dark: fundo com halo brand,
+ marca, cartão glass central (mobile-first) e coluna editorial em desktop.
 {% endcomment %}
 {% block content %}
-<div class="flex min-h-[100dvh] flex-col bg-white">
-  <header class="container-app flex items-center justify-between py-5">
-    {% include "components/brand.html" with size="md" %}
-    <div class="hidden text-sm text-surface-500 sm:block">
-      {% block top_right %}{% endblock %}
-    </div>
-  </header>
+<div class="relative flex min-h-[100dvh] overflow-hidden bg-background">
+ <div class="hero-aura pointer-events-none absolute inset-x-0 top-[-18rem] mx-auto h-[42rem] max-w-4xl opacity-50" aria-hidden="true"></div>
+ <div class="relative mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 sm:px-8">
 
-  <main id="auth-content" class="container-app flex flex-1 items-center justify-center py-8">
-    <div class="w-full max-w-md">
-      <div class="panel p-6 sm:p-8">
-        {% block auth_body %}{% endblock %}
-      </div>
-      <p class="mt-6 text-center text-sm text-surface-500">
-        {% block auth_footer %}{% endblock %}
-      </p>
-    </div>
-  </main>
+ <header class="relative z-10 flex items-center justify-between py-5">
+ {% include "components/brand.html" with size="md" light=False %}
+ <div class="hidden text-sm text-muted-foreground sm:block">
+ {% block top_right %}{% endblock %}
+ </div>
+ </header>
 
-  <footer class="container-app py-6 text-center text-xs text-surface-400">
-    FINTECPESSOAL © 2026 — Controle e inteligência financeira pessoal.
-  </footer>
+ <main class="relative z-10 flex flex-1 items-center py-6">
+ <div class="grid w-full items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+ {# Declaração editorial (desktop) #}
+ <div class="hidden lg:block">
+ <p class="eyebrow">Uma nova forma de ver seu dinheiro</p>
+ <h1 class="display-1 mt-3 text-4xl leading-tight text-foreground">
+ Suas finanças,<br>contadas <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-accent-light">como uma história.</span>
+ </h1>
+ <p class="mt-5 max-w-md text-muted-foreground">
+ Onde você está, o que aconteceu, o que preocupa e para onde vai —
+ um painel que responde às perguntas que importam, sem ruído.
+ </p>
+ <ul class="mt-8 space-y-3">
+ <li class="flex items-center gap-3 text-sm text-foreground">
+ <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-400" aria-hidden="true">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>
+ </span>
+ Visão financeira sem excesso de telas e widgets.
+ </li>
+ <li class="flex items-center gap-3 text-sm text-foreground">
+ <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-400" aria-hidden="true">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>
+ </span>
+ Análise que aponta o que merece atenção.
+ </li>
+ <li class="flex items-center gap-3 text-sm text-foreground">
+ <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-400" aria-hidden="true">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>
+ </span>
+ Seus dados, protegidos e sob seu controle.
+ </li>
+ </ul>
+ </div>
+
+ {# Cartão de autenticação #}
+ <div class="w-full max-w-md">
+ <div class="glass-card !rounded-2xl p-6 sm:p-8">
+ {% block auth_body %}{% endblock %}
+ </div>
+ <p class="mt-6 text-center text-sm text-muted-foreground">
+ {% block auth_footer %}{% endblock %}
+ </p>
+ </div>
+ </div>
+ </main>
+
+ <footer class="relative z-10 py-6 text-center text-xs text-muted-foreground">
+ FINTECPESSOAL © 2026 — Controle e inteligência financeira pessoal.
+ </footer>
+ </div>
 </div>
 {% endblock %}

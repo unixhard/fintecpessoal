@@ -1,27 +1,36 @@
 {% comment %}
-  Mensagens do Django (flash messages) com papel aria-live acessível.
-  Usa o tag das mensagens como nível visual (success/error/warning/info).
+ Mensagens do Django (flash) com papel aria-live acessível.
 {% endcomment %}
 {% if messages %}
 <div class="container-app mt-5 space-y-3" aria-live="polite" role="status">
-  {% for message in messages %}
-    <div class="alert alert-{{ message.tags|default:'info' }}">
-      <span aria-hidden="true">
-        {% if "success" in message.tags %}✓{% elif "error" in message.tags %}✕{% elif "warning" in message.tags %}⚠{% else %}ℹ{% endif %}
-      </span>
-      <p class="flex-1">{{ message }}</p>
-      <button type="button" data-dismiss-message class="ml-2 shrink-0 self-start opacity-60 hover:opacity-100" aria-label="Fechar aviso">✕</button>
-    </div>
-  {% endfor %}
+ {% for message in messages %}
+ <div class="alert alert-{{ message.tags|default:'info' }}">
+ <span aria-hidden="true">
+ {% if "success" in message.tags %}
+ <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+ {% elif "error" in message.tags %}
+ <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg>
+ {% elif "warning" in message.tags %}
+ <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 2.7 19.5h18.6Z"/><path d="M12 10v4M12 16.5v.01"/></svg>
+ {% else %}
+ <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/></svg>
+ {% endif %}
+ </span>
+ <p class="flex-1">{{ message }}</p>
+ <button type="button" data-dismiss-message class="ml-2 shrink-0 self-start opacity-60 hover:opacity-100" aria-label="Fechar aviso">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+ </button>
+ </div>
+ {% endfor %}
 </div>
 <script>
-  (function () {
-    document.querySelectorAll("[data-dismiss-message]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var el = btn.closest(".alert");
-        if (el) el.style.display = "none";
-      });
-    });
-  })();
+ (function () {
+ document.querySelectorAll("[data-dismiss-message]").forEach(function (btn) {
+ btn.addEventListener("click", function () {
+ var el = btn.closest(".alert");
+ if (el) el.style.display = "none";
+ });
+ });
+ })();
 </script>
 {% endif %}

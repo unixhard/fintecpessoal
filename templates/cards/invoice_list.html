@@ -3,44 +3,47 @@
 
 {% block title %}Faturas · FINTECPESSOAL{% endblock %}
 
-{% block app_content %}
-  {% include "components/page_header.html" with title="Faturas" subtitle="Acompanhe e pague as faturas dos seus cartões." %}
+{% block shell_title %}Faturas{% endblock %}
 
-  {% if invoices %}
-  <div class="panel table-wrap">
-    <table class="w-full text-left text-sm">
-      <thead class="border-b border-surface-200 bg-surface-50 text-xs uppercase tracking-wide text-surface-500">
-        <tr>
-          <th class="px-4 py-3 font-medium">Período</th>
-          <th class="px-4 py-3 font-medium">Cartão</th>
-          <th class="px-4 py-3 font-medium">Vencimento</th>
-          <th class="px-4 py-3 font-medium">Status</th>
-          <th class="px-4 py-3 text-right font-medium">Valor</th>
-          <th class="px-4 py-3 text-right font-medium">Ações</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-surface-100">
-        {% for inv in invoices %}
-        <tr class="hover:bg-surface-50">
-          <td class="px-4 py-3 text-surface-600">{{ inv.period_start|date:"d/m/Y" }} a {{ inv.period_end|date:"d/m/Y" }}</td>
-          <td class="px-4 py-3 font-medium text-surface-800">{{ inv.card.name|default:"—" }}</td>
-          <td class="px-4 py-3 text-surface-600">{{ inv.due_date|date:"d/m/Y" }}</td>
-          <td class="px-4 py-3">
-            {% if inv.status == 'paid' %}{% include "components/status_badge.html" with label="Paga" tone="positive" dot=True %}
-            {% elif inv.status == 'overdue' %}{% include "components/status_badge.html" with label="Atrasada" tone="negative" %}
-            {% elif inv.status == 'closed' %}{% include "components/status_badge.html" with label="Fechada" tone="neutral" %}
-            {% else %}{% include "components/status_badge.html" with label="Aberta" tone="attention" %}{% endif %}
-          </td>
-          <td class="px-4 py-3 text-right">{% include "components/money.html" with cents=inv.amount %}</td>
-          <td class="px-4 py-3 text-right">
-            <a href="{% url 'cards:invoice_detail' inv.pk %}" class="btn btn-ghost btn-sm">Ver</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-  {% include "components/empty_state.html" with icon="▰" title="Nenhuma fatura" message="As faturas aparecem aqui quando houver compras registradas nos cartões." %}
-  {% endif %}
+
+{% block app_content %}
+ {% include "components/page_header.html" with title="Faturas" subtitle="Acompanhe e pague as faturas dos seus cartões." %}
+
+ {% if invoices %}
+ <div class="panel table-wrap">
+ <table class="w-full text-left text-sm">
+ <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+ <tr>
+ <th class="px-4 py-3 font-medium">Período</th>
+ <th class="px-4 py-3 font-medium">Cartão</th>
+ <th class="px-4 py-3 font-medium">Vencimento</th>
+ <th class="px-4 py-3 font-medium">Status</th>
+ <th class="px-4 py-3 text-right font-medium">Valor</th>
+ <th class="px-4 py-3 text-right font-medium">Ações</th>
+ </tr>
+ </thead>
+ <tbody class="divide-y divide-muted">
+ {% for inv in invoices %}
+ <tr class="hover:bg-muted">
+ <td class="px-4 py-3 text-muted-foreground">{{ inv.period_start|date:"d/m/Y" }} a {{ inv.period_end|date:"d/m/Y" }}</td>
+ <td class="px-4 py-3 font-medium text-foreground">{{ inv.card.name|default:"—" }}</td>
+ <td class="px-4 py-3 text-muted-foreground">{{ inv.due_date|date:"d/m/Y" }}</td>
+ <td class="px-4 py-3">
+ {% if inv.status == 'paid' %}{% include "components/status_badge.html" with label="Paga" tone="positive" dot=True %}
+ {% elif inv.status == 'overdue' %}{% include "components/status_badge.html" with label="Atrasada" tone="negative" %}
+ {% elif inv.status == 'closed' %}{% include "components/status_badge.html" with label="Fechada" tone="neutral" %}
+ {% else %}{% include "components/status_badge.html" with label="Aberta" tone="attention" %}{% endif %}
+ </td>
+ <td class="px-4 py-3 text-right">{% include "components/money.html" with cents=inv.amount %}</td>
+ <td class="px-4 py-3 text-right">
+ <a href="{% url 'cards:invoice_detail' inv.pk %}" class="btn btn-ghost btn-sm">Ver</a>
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ {% include "components/empty_state.html" with icon="card" title="Nenhuma fatura" message="As faturas aparecem aqui quando houver compras registradas nos cartões." %}
+ {% endif %}
 {% endblock %}

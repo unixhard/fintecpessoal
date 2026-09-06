@@ -1,16 +1,20 @@
 {% comment %}
-  Marca FINTECPESSOAL. Uso:
-    {% include "components/brand.html" with size="lg" light=False %}
+ Marca FINTECPESSOAL — Flux Dark. Uso:
+ {% include "components/brand.html" with size="lg" light=False %}
+ `light` é mantido apenas para compatibilidade de chamadas.
 {% endcomment %}
 {% with brand_size=size|default:"md" %}
 <a href="{% if user.is_authenticated %}{% url 'dashboard:index' %}{% else %}{% url 'core:home' %}{% endif %}"
-   class="inline-flex items-center gap-2.5"
-   aria-label="FINTECPESSOAL">
-  <span class="flex items-center justify-center rounded-xl bg-ink font-bold text-white {% if brand_size == 'lg' %}h-10 w-10 text-lg{% else %}h-9 w-9{% endif %}">
-    F
-  </span>
-  <span class="font-display font-bold tracking-tight {% if brand_size == 'lg' %}text-xl{% else %}text-lg{% endif %} {% if light %}text-white{% else %}text-ink-900 dark:text-white{% endif %}">
-    FINTEC<span class="text-brand-600">PESSOAL</span>
-  </span>
+ class="inline-flex items-center gap-2.5" aria-label="FINTECPESSOAL">
+ <span class="flex items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-accent-light text-white shadow-[0_0_0_1px_rgb(255_255_255/0.08)_inset]
+ {% if brand_size == 'lg' %}h-11 w-11{% else %}h-9 w-9{% endif %}">
+ <svg class="{% if brand_size == 'lg' %}h-6 w-6{% else %}h-5 w-5{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.6L18.5 9.5l-4.7 1.9L12 16l-1.8-4.6-4.7-1.9 4.7-1.9Z"/><path d="M18.5 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"/></svg>
+ </span>
+ <span class="flex flex-col leading-none">
+ <span class="text-base font-bold tracking-tight text-foreground">FINTEC<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-accent-light">PESSOAL</span></span>
+ {% if brand_size == 'lg' %}
+ <span class="mt-0.5 text-[9px] font-medium uppercase tracking-[0.22em] text-muted-foreground">Finanças pessoais</span>
+ {% endif %}
+ </span>
 </a>
 {% endwith %}

@@ -10,7 +10,7 @@ from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 
-from apps.finance.models import Account
+from apps.finance.models import Account, Category
 from apps.finance.services.accounts import create_account
 
 User = get_user_model()
@@ -223,6 +223,10 @@ class OnboardingFlowTests(TestCase):
         self.assertEqual(account.name, "Conta Corrente")
         self.assertEqual(account.type, Account.Type.CHECKING)
         self.assertEqual(account.initial_balance, 150000)
+        # Onboarding semeia a taxonomia padrão (Ordem 18 / FASE 3).
+        self.assertGreater(
+            Category.objects.filter(owner=user, parent__isnull=True).count(), 0
+        )
 
     def test_onboarding_not_accessible_after_completion(self):
         user = self._signup_auth()

@@ -24,6 +24,8 @@ urlpatterns = [
     path("app/patrimonio/", include("apps.networth.urls")),
     path("app/lembretes/", include("apps.reminders.urls")),
     path("app/comprovantes/", include("apps.comprovantes.urls")),
+    path("app/importar/", include("apps.imports.urls")),
+    path("app/configuracoes/", include("apps.user_settings.urls")),
     path("app/", include("apps.dashboard.urls")),
 ]
 

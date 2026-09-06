@@ -1,0 +1,104 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}Regras de Classificação · FINTECPESSOAL{% endblock %}
+
+{% block shell_title %}Regras{% endblock %}
+
+
+{% block app_content %}
+ {% include "components/page_header.html" with title="Regras de Classificação" subtitle="Regras determinísticas que o motor aplica automaticamente para classificar suas movimentações." action_url="finance:rule_create" action_label="Nova regra" action_icon="+" %}
+
+ {# ===================== Regras pessoais ===================== #}
+ <section aria-labelledby="rules-title" class="mb-8">
+ <div class="mb-3 flex items-center justify-between">
+ <div>
+ <h2 id="rules-title" class="text-sm font-semibold text-foreground">Suas regras</h2>
+ <p class="text-xs text-muted-foreground">{{ rules|length }} regra{{ rules|length|pluralize }} pessoal{{ rules|length|pluralize:"is" }}{% if rules %} (maior prioridade vence){% endif %}</p>
+ </div>
+ </div>
+
+ {% if rules %}
+ <div class="panel overflow-hidden">
+ <table class="w-full text-left text-sm">
+ <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+ <tr>
+ <th class="px-4 py-3 font-medium">Regra</th>
+ <th class="px-4 py-3 font-medium">Condição</th>
+ <th class="px-4 py-3 font-medium">Classifica em</th>
+ <th class="px-4 py-3 font-medium">Tipo</th>
+ <th class="px-4 py-3 text-center font-medium">Prioridade</th>
+ <th class="px-4 py-3 text-right font-medium">Ações</th>
+ </tr>
+ </thead>
+ <tbody class="divide-y divide-muted">
+ {% for rule in rules %}
+ <tr class="hover:bg-muted">
+ <td class="px-4 py-3">
+ <span class="font-medium text-foreground">{{ rule.name }}</span>
+ {% if not rule.is_active %}<span class="ml-2 text-xs text-muted-foreground">(pausada)</span>{% endif %}
+ </td>
+ <td class="px-4 py-3 text-muted-foreground">
+ {% if rule.condition_type == "merchant" %}{{ rule.merchant.name|default:"Estabelecimento" }}{% else %}"{{ rule.pattern }}" na descrição{% endif %}
+ </td>
+ <td class="px-4 py-3 text-muted-foreground">{{ rule.category.name|default:rule.category_name|default:"—" }}</td>
+ <td class="px-4 py-3 text-muted-foreground">{{ rule.get_kind_display }}</td>
+ <td class="px-4 py-3 text-center text-muted-foreground">{{ rule.priority }}</td>
+ <td class="px-4 py-3 text-right">
+ <div class="inline-flex items-center gap-2">
+ <a href="{% url 'finance:rule_edit' rule.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+ <form method="post" action="{% url 'finance:rule_toggle' rule.pk %}">
+ {% csrf_token %}
+ <button type="submit" class="btn btn-ghost btn-sm">{% if rule.is_active %}Pausar{% else %}Ativar{% endif %}</button>
+ </form>
+ <form method="post" action="{% url 'finance:rule_delete' rule.pk %}" onsubmit="return confirm('Excluir esta regra?');">
+ {% csrf_token %}
+ <button type="submit" class="btn btn-ghost btn-sm text-danger-600">Excluir</button>
+ </form>
+ </div>
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ {% include "components/empty_state.html" with icon="search" title="Nenhuma regra pessoal" message="Crie regras para que o motor classifique automaticamente lançamentos recorrentes (ex.: UBER → Transporte)." action_url="finance:rule_create" action_label="Nova regra" %}
+ {% endif %}
+ </section>
+
+ {# ===================== Regras globais (read-only) ===================== #}
+ <section aria-labelledby="global-rules-title">
+ <div class="mb-3">
+ <h2 id="global-rules-title" class="text-sm font-semibold text-foreground">Regras globais do catálogo</h2>
+ <p class="text-xs text-muted-foreground">Fornecidas pela plataforma. Read-only para sua conta.</p>
+ </div>
+ {% if global_rules %}
+ <div class="panel overflow-hidden">
+ <table class="w-full text-left text-sm">
+ <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+ <tr>
+ <th class="px-4 py-3 font-medium">Regra</th>
+ <th class="px-4 py-3 font-medium">Condição</th>
+ <th class="px-4 py-3 font-medium">Classifica em</th>
+ <th class="px-4 py-3 font-medium">Tipo</th>
+ <th class="px-4 py-3 text-center font-medium">Prioridade</th>
+ </tr>
+ </thead>
+ <tbody class="divide-y divide-muted">
+ {% for rule in global_rules %}
+ <tr class="hover:bg-muted">
+ <td class="px-4 py-3 font-medium text-foreground">{{ rule.name }}</td>
+ <td class="px-4 py-3 text-muted-foreground">{% if rule.condition_type == "merchant" %}{{ rule.merchant.name|default:"Estabelecimento" }}{% else %}"{{ rule.pattern }}" na descrição{% endif %}</td>
+ <td class="px-4 py-3 text-muted-foreground">{{ rule.category_name|default:"—" }}</td>
+ <td class="px-4 py-3 text-muted-foreground">{{ rule.get_kind_display }}</td>
+ <td class="px-4 py-3 text-center text-muted-foreground">{{ rule.priority }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ <p class="text-sm text-muted-foreground">Nenhuma regra global cadastrada.</p>
+ {% endif %}
+ </section>
+{% endblock %}

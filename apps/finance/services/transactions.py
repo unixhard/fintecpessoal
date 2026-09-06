@@ -1,6 +1,6 @@
 """Serviços de lançamento financeiro (receita e despesa)."""
 
-from ..models import Account, Category, Transaction
+from ..models import Account, Category, Merchant, Transaction
 from .base import ensure_owned_integer_amount, require_owned
 from .errors import InvalidStateError
 
@@ -15,12 +15,22 @@ def record_income(
     category=None,
     source=Transaction.Source.MANUAL,
     notes="",
+    external_id="",
+    merchant=None,
+    normalized_description="",
 ):
     """Registra uma receita (entrada de dinheiro) em uma conta do usuário.
 
     - Valida ownership da conta e (opcionalmente) da categoria.
     - Valida o valor (inteiro > 0, em centavos).
     - Cria um único Transaction do tipo INCOME pertencente ao usuário.
+
+    ``external_id`` é um identificador de origem (ex.: importação) usado para
+    conciliação/dedup futura. Por padrão vazio — não altera o comportamento
+    do fluxo manual.
+
+    ``merchant``/``normalized_description`` são enriquecimento aditivo (FASE 4);
+    por padrão vazio, sem efeito no fluxo manual.
     """
     amount = ensure_owned_integer_amount(amount)
     if not account or account.owner_id != user.id:
@@ -28,6 +38,7 @@ def record_income(
             Account.objects, user, model_label="Conta", object_id=getattr(account, "pk", None)
         )
     category = _resolve_category_owned(user, category)
+    merchant = _resolve_merchant_visible(user, merchant)
 
     transaction = Transaction.objects.create(
         owner=user,
@@ -37,8 +48,11 @@ def record_income(
         description=description,
         account=account,
         category=category,
+        merchant=merchant,
+        normalized_description=normalized_description or "",
         source=source,
         notes=notes,
+        external_id=external_id or "",
     )
     return transaction
 
@@ -53,12 +67,18 @@ def record_expense(
     category=None,
     source=Transaction.Source.MANUAL,
     notes="",
+    external_id="",
+    merchant=None,
+    normalized_description="",
 ):
     """Registra uma despesa (saída de dinheiro) em uma conta do usuário.
 
     Compras no cartão NÃO passam por aqui — elas são obrigações representadas
     pela camada de cartão (apps.cards.services), e a saída da conta só ocorre
     no pagamento da fatura.
+
+    ``external_id`` identifica a origem (ex.: importação); por padrão vazio.
+    ``merchant``/``normalized_description`` são enriquecimento aditivo (FASE 4).
     """
     amount = ensure_owned_integer_amount(amount)
     if not account or account.owner_id != user.id:
@@ -66,6 +86,7 @@ def record_expense(
             Account.objects, user, model_label="Conta", object_id=getattr(account, "pk", None)
         )
     category = _resolve_category_owned(user, category)
+    merchant = _resolve_merchant_visible(user, merchant)
 
     transaction = Transaction.objects.create(
         owner=user,
@@ -75,10 +96,24 @@ def record_expense(
         description=description,
         account=account,
         category=category,
+        merchant=merchant,
+        normalized_description=normalized_description or "",
         source=source,
         notes=notes,
+        external_id=external_id or "",
     )
     return transaction
+
+
+def _resolve_merchant_visible(user, merchant):
+    """Valida que o Merchant é visível ao usuário (global ou pessoal seu)."""
+    if merchant is None:
+        return None
+    if merchant.owner_id is not None and merchant.owner_id != user.id:
+        require_owned(
+            Merchant.objects, user, model_label="Estabelecimento", object_id=merchant.pk
+        )
+    return merchant
 
 
 def _resolve_category_owned(user, category):

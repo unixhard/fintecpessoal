@@ -1,77 +1,77 @@
 {% load static %}{% load money %}<html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Relatório {{ period.label }} · FINTECPESSOAL</title>
-  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}?v=21">
-  <style>
-    html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    body { font-family: ui-sans-serif, system-ui, sans-serif; }
-    .no-print { display: none; }
-    @media print {
-      .no-print { display: none; }
-      body { background: #fff; color: #111827; }
-      main { box-shadow: none !important; border: none !important; }
-    }
-  </style>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <title>Relatório {{ period.label }} · FINTECPESSOAL</title>
+ <link rel="stylesheet" href="{% static 'css/tailwind.css' %}?v=21">
+ <style>
+ html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+ body { font-family: ui-sans-serif, system-ui, sans-serif; }
+ .no-print { display: none; }
+ @media print {
+ .no-print { display: none; }
+ body { background: #fff; color: #111827; }
+ main { box-shadow: none !important; border: none !important; }
+ }
+ </style>
 </head>
-<body class="bg-white text-surface-900">
-  <div class="mx-auto max-w-3xl p-6">
-    <header class="flex items-start justify-between border-b-2 border-brand-600 pb-4">
-      <div>
-        <h1 class="text-2xl font-bold tracking-tight">Relatório financeiro</h1>
-        <p class="mt-1 text-sm text-surface-500">{{ period.label }} · {{ request.user.first_name|default:request.user.username }}</p>
-        <p class="text-xs text-surface-400">Gerado localmente em {{ "now"|date:"d/m/Y \à\s H:i" }}</p>
-      </div>
-      <div class="text-right no-print">
-        <button onclick="window.print()" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white">Imprimir / Salvar PDF</button>
-      </div>
-    </header>
+<body class="bg-white text-foreground">
+ <div class="mx-auto max-w-3xl p-6">
+ <header class="flex items-start justify-between border-b-2 border-brand-600 pb-4">
+ <div>
+ <h1 class="text-2xl font-bold tracking-tight">Relatório financeiro</h1>
+ <p class="mt-1 text-sm text-muted-foreground">{{ period.label }} · {{ request.user.first_name|default:request.user.username }}</p>
+ <p class="text-xs text-muted-foreground">Gerado localmente em {{ "now"|date:"d/m/Y \à\s H:i" }}</p>
+ </div>
+ <div class="text-right no-print">
+ <button onclick="window.print()" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white">Imprimir / Salvar PDF</button>
+ </div>
+ </header>
 
-    <section class="mt-6 grid grid-cols-3 gap-4">
-      <div class="rounded-xl border border-surface-200 p-4">
-        <p class="text-xs text-surface-500">Receitas</p>
-        <p class="mt-1 text-lg font-bold text-success-600">{{ cash_flow.receitas|centavos }}</p>
-      </div>
-      <div class="rounded-xl border border-surface-200 p-4">
-        <p class="text-xs text-surface-500">Despesas</p>
-        <p class="mt-1 text-lg font-bold text-danger-600">{{ cash_flow.despesas|centavos }}</p>
-      </div>
-      <div class="rounded-xl border border-surface-200 p-4">
-        <p class="text-xs text-surface-500">Resultado</p>
-        <p class="mt-1 text-lg font-bold {% if cash_flow.resultado >= 0 %}text-surface-900{% else %}text-danger-600{% endif %}">{{ cash_flow.resultado|centavos }}</p>
-      </div>
-    </section>
+ <section class="mt-6 grid grid-cols-3 gap-4">
+ <div class="rounded-xl border border-border p-4">
+ <p class="text-xs text-muted-foreground">Receitas</p>
+ <p class="mt-1 text-lg font-bold text-success-600">{{ cash_flow.receitas|centavos }}</p>
+ </div>
+ <div class="rounded-xl border border-border p-4">
+ <p class="text-xs text-muted-foreground">Despesas</p>
+ <p class="mt-1 text-lg font-bold text-danger-600">{{ cash_flow.despesas|centavos }}</p>
+ </div>
+ <div class="rounded-xl border border-border p-4">
+ <p class="text-xs text-muted-foreground">Resultado</p>
+ <p class="mt-1 text-lg font-bold {% if cash_flow.resultado >= 0 %}text-foreground{% else %}text-danger-600{% endif %}">{{ cash_flow.resultado|centavos }}</p>
+ </div>
+ </section>
 
-    <section class="mt-8">
-      <h2 class="text-base font-semibold">Despesas por categoria</h2>
-      {% if by_category %}
-      <table class="mt-3 w-full text-sm">
-        <thead>
-          <tr class="border-b border-surface-200 text-left text-xs uppercase tracking-wide text-surface-400">
-            <th class="py-2 font-semibold">Categoria</th>
-            <th class="py-2 text-right font-semibold">Valor</th>
-            <th class="py-2 text-right font-semibold">%</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in by_category %}
-          <tr class="border-b border-surface-100">
-            <td class="py-2 font-medium">{{ row.name }}</td>
-            <td class="py-2 text-right">{{ row.amount|centavos }}</td>
-            <td class="py-2 text-right text-surface-500">{{ row.share_percent }}%</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <p class="mt-2 text-sm text-surface-500">Sem despesas no período.</p>
-      {% endif %}
-    </section>
+ <section class="mt-8">
+ <h2 class="text-base font-semibold">Despesas por categoria</h2>
+ {% if by_category %}
+ <table class="mt-3 w-full text-sm">
+ <thead>
+ <tr class="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+ <th class="py-2 font-semibold">Categoria</th>
+ <th class="py-2 text-right font-semibold">Valor</th>
+ <th class="py-2 text-right font-semibold">%</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for row in by_category %}
+ <tr class="border-b border-border">
+ <td class="py-2 font-medium">{{ row.name }}</td>
+ <td class="py-2 text-right">{{ row.amount|centavos }}</td>
+ <td class="py-2 text-right text-muted-foreground">{{ row.share_percent }}%</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ {% else %}
+ <p class="mt-2 text-sm text-muted-foreground">Sem despesas no período.</p>
+ {% endif %}
+ </section>
 
-    <footer class="mt-10 border-t border-surface-200 pt-4 text-xs text-surface-400">
-      FINTECPESSOAL — relatório gerado localmente. Valores em reais (R$).
-    </footer>
-  </div>
+ <footer class="mt-10 border-t border-border pt-4 text-xs text-muted-foreground">
+ FINTECPESSOAL — relatório gerado localmente. Valores em reais (R$).
+ </footer>
+ </div>
 </body>
 </html>

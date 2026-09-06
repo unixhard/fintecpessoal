@@ -64,10 +64,31 @@ class DashboardFilter:
                 self.card_ids = [card.pk]
 
 
-def build_dashboard(user, *, period="30d", account_id=None, card_id=None, today=None) -> dict:
+def build_dashboard(user, *, period="30d", account_id=None, card_id=None, today=None, month=None) -> dict:
     """Constrói o contexto completo do dashboard para o usuário."""
     today = today or queries._today()
-    period_data = resolve_period(period, today=today)
+
+    # Navegação por mês: quando ``month`` é fornecido (ex: "2024-01"),
+    # sobrescreve o período para aquele mês civil completo.
+    if month:
+        try:
+            from datetime import date as _date
+            parts = month.split("-")
+            m_year, m_month = int(parts[0]), int(parts[1])
+            month_start = _date(m_year, m_month, 1)
+            from calendar import monthrange
+            month_end = _date(m_year, m_month, monthrange(m_year, m_month)[1])
+            period_data = {
+                "key": f"{m_year}-{m_month:02d}",
+                "label": f"{month_start.strftime('%B de %Y').title()}",
+                "start": month_start,
+                "end": month_end,
+            }
+        except (ValueError, IndexError):
+            month = None
+
+    if not month:
+        period_data = resolve_period(period, today=today)
 
     filt = DashboardFilter(
         period=period, account_id=account_id, card_id=card_id, user=user
@@ -127,6 +148,8 @@ def build_dashboard(user, *, period="30d", account_id=None, card_id=None, today=
         "period_label": period_data["label"],
         "period_start": period_data["start"],
         "period_end": period_data["end"],
+        "month": month,
+        "month_nav": _month_nav(period_data["start"]) if month else None,
         "filters": {
             "period": period_data["key"],
             "account_id": filt.account_ids[0] if filt.account_ids else None,
@@ -317,3 +340,19 @@ def _fmt(cents: int) -> str:
     cents = abs(cents)
     reais, cs = divmod(cents, 100)
     return f"{sign}R$ {reais:,}".replace(",", ".") + f",{cs:02d}"
+
+
+def _month_nav(month_start) -> dict:
+    """Links de navegação entre meses (anterior/próximo) para o dashboard."""
+    from datetime import date as _date
+
+    prev = _add_months(month_start, -1)
+    nxt = _add_months(month_start, 1)
+    return {
+        "prev": f"{prev.year}-{prev.month:02d}",
+        "next": f"{nxt.year}-{nxt.month:02d}",
+        "current": f"{month_start.year}-{month_start.month:02d}",
+        "prev_label": prev.strftime("%b/%y"),
+        "next_label": nxt.strftime("%b/%y"),
+        "current_label": month_start.strftime("%b/%y"),
+    }

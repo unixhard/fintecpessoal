@@ -2,61 +2,57 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>{% block title %}FINTECPESSOAL{% endblock %}</title>
+ <title>{% block title %}FINTECPESSOAL{% endblock %}</title>
 
-  <meta name="description" content="FINTECPESSOAL — controle e inteligência financeira pessoal.">
+ <meta name="description" content="FINTECPESSOAL — controle e inteligência financeira pessoal.">
 
-  {# CSS gerado pelo Tailwind (npm run tailwind:build / :watch) #}
-  {# ?v=15 quebra o cache do navegador após o redesign visual (Ordem 15) #}
-    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}?v=27">
+ <link rel="stylesheet" href="{% static 'css/tailwind.css' %}?v=30">
 
-  {% block extra_css %}{% endblock %}
+ {% block extra_css %}{% endblock %}
 
-  {% block extra_head %}{% endblock %}
+ {% block extra_head %}{% endblock %}
 
-  {# Aplica o tema escuro antes do primeiro render (evita "flash" e mantém tudo local). #}
-  <script>
-    (function () {
-      try {
-        var s = localStorage.getItem("fintecpessoal-theme");
-        if (s === "dark") { document.documentElement.classList.add("dark"); return; }
-        if (s === "light") { return; }
-        if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-          document.documentElement.classList.add("dark");
-        }
-      } catch (e) {}
-    })();
-  </script>
+ <script>
+ (function () {
+ try {
+ var s = localStorage.getItem("fintecpessoal-theme");
+ if (s === "light") {
+ document.documentElement.classList.add("light");
+ } else {
+ document.documentElement.classList.add("dark");
+ }
+ } catch (e) {
+ document.documentElement.classList.add("dark");
+ }
+ })();
+ </script>
 </head>
-<body class="min-h-screen bg-canvas text-surface-900 antialiased">
+<body class="min-h-screen bg-background text-foreground antialiased">
 
-  {% comment %}
-    Navegação futura será adicionada neste bloco.
-    O layout usa um header semântico pronto para receber o menu.
-  {% endcomment %}
-  <header class="sr-only">
-    <nav aria-label="Navegação principal">
-      {% block topnav %}{% endblock %}
-    </nav>
-  </header>
+ <header class="sr-only">
+ <nav aria-label="Navegação principal">
+ {% block topnav %}{% endblock %}
+ </nav>
+ </header>
 
-  {# Skip link acessível #}
-  <a href="#conteudo" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:rounded-md focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white">
-    Pular para o conteúdo
-  </a>
+ <a href="#conteudo" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:rounded-md focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white">
+ Pular para o conteúdo
+ </a>
 
-  <main id="conteudo">
-    {% include "components/messages.html" %}
-    {% block content %}{% endblock %}
-  </main>
+ <main id="conteudo">
+ {% include "components/messages.html" %}
+ {% block content %}{% endblock %}
+ </main>
 
-  <footer role="contentinfo">
-    {% block footer %}{% endblock %}
-  </footer>
+ <footer role="contentinfo">
+ {% block footer %}{% endblock %}
+ </footer>
 
-  {% block extra_js %}{% endblock %}
+ <script src="{% static 'vendor/apexcharts.min.js' %}" defer></script>
+ <script src="{% static 'js/app.js' %}" defer></script>
+ {% block extra_js %}{% endblock %}
 </body>
 </html>

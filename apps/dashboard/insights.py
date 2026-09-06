@@ -142,20 +142,26 @@ def _liquidity_risk(data, insights) -> None:
 def _invoice_insufficient_balance(data, insights) -> None:
     disp = data["disponivel"]
     today = data["today"]
+
     for inv in data.get("invoice_events", []):
-        days = (inv.date - today).days
-        if 0 <= days <= INVOICE_NEAR_DAYS and inv.amount > disp:
+        invoice_date = inv["date"]
+        amount = inv["amount"]
+        label = inv["label"]
+
+        days = (invoice_date - today).days
+
+        if 0 <= days <= INVOICE_NEAR_DAYS and amount > disp:
             insights.append(
                 Insight(
                     type="invoice_liquidity",
                     severity="critical",
                     title="Fatura próxima acima do saldo",
                     description=(
-                        f"{inv.label} vence em breve e seu saldo atual não cobre "
+                        f"{label} vence em breve e seu saldo atual não cobre "
                         "o valor. Garanta recursos antes do vencimento."
                     ),
-                    metric=data["money"](inv.amount),
-                    period=inv.date.strftime("%d/%m"),
+                    metric=data["money"](amount),
+                    period=invoice_date.strftime("%d/%m"),
                     action="Verifique seu saldo e programe o pagamento.",
                 )
             )

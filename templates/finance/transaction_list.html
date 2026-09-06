@@ -3,101 +3,103 @@
 
 {% block title %}Movimentações · FINTECPESSOAL{% endblock %}
 
+{% block shell_title %}Movimentações{% endblock %}
+
 {% block app_content %}
-  {% include "components/page_header.html" with title="Movimentações" subtitle="Busque, filtre e ordene seus lançamentos." %}
+ {% include "components/page_header.html" with title="Movimentações" subtitle="Busque, filtre e ordene seus lançamentos." %}
 
-  <form method="get" class="panel mb-6 p-4">
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-      <div class="lg:col-span-2">
-        <label for="q" class="mb-1 block text-xs font-medium text-surface-600">Buscar</label>
-        <input type="text" id="q" name="q" value="{{ current_q }}" placeholder="Descrição, observação, conta…" class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm">
-      </div>
-      <div>
-        <label for="type" class="mb-1 block text-xs font-medium text-surface-600">Tipo</label>
-        <select id="type" name="type" class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm">
-          {% for value, label in filter_choices %}
-          <option value="{{ value }}" {% if current_type == value %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label for="account" class="mb-1 block text-xs font-medium text-surface-600">Conta</label>
-        <select id="account" name="account" class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm">
-          <option value="">Todas</option>
-          {% for a in accounts %}
-          <option value="{{ a.pk }}" {% if current_account == a.pk|stringformat:"s" %}selected{% endif %}>{{ a.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label for="category" class="mb-1 block text-xs font-medium text-surface-600">Categoria</label>
-        <select id="category" name="category" class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm">
-          <option value="">Todas</option>
-          {% for c in categories %}
-          <option value="{{ c.pk }}" {% if current_category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="lg:col-span-2">
-        <label class="mb-1 block text-xs font-medium text-surface-600">Período</label>
-        <div class="grid grid-cols-2 gap-2">
-          <input type="date" id="from" name="from" value="{{ current_from }}" class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm">
-          <input type="date" id="to" name="to" value="{{ current_to }}" class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm">
-        </div>
-      </div>
-    </div>
-    <div class="mt-3 flex items-center gap-2">
-      <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
-      <a href="{% url 'finance:transaction_list' %}" class="btn btn-ghost btn-sm">Limpar</a>
-    </div>
-  </form>
+ <form method="get" class="panel mb-6 p-4">
+ <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+ <div class="lg:col-span-2">
+ <label for="q" class="mb-1 block text-xs font-medium text-muted-foreground">Buscar</label>
+ <input type="text" id="q" name="q" value="{{ current_q }}" placeholder="Descrição, observação, conta…" class="w-full rounded-lg border border-border px-3 py-2 text-sm">
+ </div>
+ <div>
+ <label for="type" class="mb-1 block text-xs font-medium text-muted-foreground">Tipo</label>
+ <select id="type" name="type" class="w-full rounded-lg border border-border px-3 py-2 text-sm">
+ {% for value, label in filter_choices %}
+ <option value="{{ value }}" {% if current_type == value %}selected{% endif %}>{{ label }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <div>
+ <label for="account" class="mb-1 block text-xs font-medium text-muted-foreground">Conta</label>
+ <select id="account" name="account" class="w-full rounded-lg border border-border px-3 py-2 text-sm">
+ <option value="">Todas</option>
+ {% for a in accounts %}
+ <option value="{{ a.pk }}" {% if current_account == a.pk|stringformat:"s" %}selected{% endif %}>{{ a.name }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <div>
+ <label for="category" class="mb-1 block text-xs font-medium text-muted-foreground">Categoria</label>
+ <select id="category" name="category" class="w-full rounded-lg border border-border px-3 py-2 text-sm">
+ <option value="">Todas</option>
+ {% for c in categories %}
+ <option value="{{ c.pk }}" {% if current_category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <div class="lg:col-span-2">
+ <label class="mb-1 block text-xs font-medium text-muted-foreground">Período</label>
+ <div class="grid grid-cols-2 gap-2">
+ <input type="date" id="from" name="from" value="{{ current_from }}" class="w-full rounded-lg border border-border px-3 py-2 text-sm">
+ <input type="date" id="to" name="to" value="{{ current_to }}" class="w-full rounded-lg border border-border px-3 py-2 text-sm">
+ </div>
+ </div>
+ </div>
+ <div class="mt-3 flex items-center gap-2">
+ <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+ <a href="{% url 'finance:transaction_list' %}" class="btn btn-ghost btn-sm">Limpar</a>
+ </div>
+ </form>
 
-  <div class="mb-4 flex flex-wrap items-center gap-2">
-    <a href="{% url 'finance:transaction_create' %}?kind=income" class="btn btn-primary btn-sm">+ Receita</a>
-    <a href="{% url 'finance:transaction_create' %}?kind=expense" class="btn btn-primary btn-sm">− Despesa</a>
-    <a href="{% url 'finance:transfer_create' %}" class="btn btn-ghost btn-sm">⇄ Transferência</a>
-  </div>
+ <div class="mb-4 flex flex-wrap items-center gap-2">
+ <a href="{% url 'finance:transaction_create' %}?kind=income" class="btn btn-primary btn-sm">+ Receita</a>
+ <a href="{% url 'finance:transaction_create' %}?kind=expense" class="btn btn-primary btn-sm">− Despesa</a>
+ <a href="{% url 'finance:transfer_create' %}" class="btn btn-ghost btn-sm"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 7h19M17.5 2.5 21.5 6.5l-4 4M2.5 17h19M22 17l-4 4-4-4" transform="rotate(90 12 12)"/></svg>Transferência</a>
+ </div>
 
-  {% if transactions %}
-  <div class="panel table-wrap">
-    <table class="w-full text-left text-sm">
-      <thead class="border-b border-surface-200 bg-surface-50 text-xs uppercase tracking-wide text-surface-500">
-        <tr>
-          <th class="px-4 py-3 font-medium"><a href="?{% if query %}{{ query }}&{% endif %}sort={% if current_sort == 'date' %}-date{% else %}date{% endif %}" class="hover:text-surface-700">Data</a></th>
-          <th class="px-4 py-3 font-medium">Descrição</th>
-          <th class="px-4 py-3 font-medium">Conta</th>
-          <th class="px-4 py-3 font-medium">Categoria</th>
-          <th class="px-4 py-3 font-medium">Tipo</th>
-          <th class="px-4 py-3 text-right font-medium"><a href="?{% if query %}{{ query }}&{% endif %}sort={% if current_sort == 'amount' %}-amount{% else %}amount{% endif %}" class="hover:text-surface-700">Valor</a></th>
-          <th class="px-4 py-3 text-right font-medium">Ações</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-surface-100">
-        {% for t in transactions %}
-        <tr class="hover:bg-surface-50">
-          <td class="whitespace-nowrap px-4 py-3 text-surface-600">{{ t.date|date:"d/m/Y" }}</td>
-          <td class="px-4 py-3">
-            <a href="{% url 'finance:transaction_detail' t.pk %}" class="font-medium text-surface-800 hover:text-brand-700">{{ t.description|default:"—" }}</a>
-            {% if t.notes %}<div class="truncate text-xs text-surface-500">{{ t.notes }}</div>{% endif %}
-          </td>
-          <td class="px-4 py-3 text-surface-600">{{ t.account.name|default:"—" }}</td>
-          <td class="px-4 py-3 text-surface-600">{{ t.category.name|default:"—" }}</td>
-          <td class="px-4 py-3 text-surface-600">{{ t.get_type_display }}</td>
-          <td class="whitespace-nowrap px-4 py-3 text-right">
-            {% if t.type == 'income' %}<span class="font-medium text-success-600">+ {{ t.amount|centavos }}</span>
-            {% elif t.type == 'transfer' %}<span class="font-medium text-info-600">{{ t.amount|centavos }}</span>
-            {% else %}<span class="font-medium text-danger-600">− {{ t.amount|centavos }}</span>{% endif %}
-          </td>
-          <td class="whitespace-nowrap px-4 py-3 text-right">
-            <a href="{% url 'finance:transaction_edit' t.pk %}" class="btn btn-ghost btn-sm">Editar</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% include "components/pagination.html" with page=page_obj paginator=paginator query=query %}
-  {% else %}
-  {% include "components/empty_state.html" with icon="⇄" title="Nenhuma movimentação" message="Registre uma receita ou despesa para começar." %}
-  {% endif %}
+ {% if transactions %}
+ <div class="panel table-wrap">
+ <table class="w-full text-left text-sm">
+ <thead class="border-b border-border bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+ <tr>
+ <th class="px-4 py-3 font-medium"><a href="?{% if query %}{{ query }}&{% endif %}sort={% if current_sort == 'date' %}-date{% else %}date{% endif %}" class="hover:text-foreground">Data</a></th>
+ <th class="px-4 py-3 font-medium">Descrição</th>
+ <th class="hidden px-4 py-3 font-medium md:table-cell">Conta</th>
+ <th class="hidden px-4 py-3 font-medium md:table-cell">Categoria</th>
+ <th class="hidden px-4 py-3 font-medium lg:table-cell">Tipo</th>
+ <th class="px-4 py-3 text-right font-medium"><a href="?{% if query %}{{ query }}&{% endif %}sort={% if current_sort == 'amount' %}-amount{% else %}amount{% endif %}" class="hover:text-foreground">Valor</a></th>
+ <th class="px-4 py-3 text-right font-medium">Ações</th>
+ </tr>
+ </thead>
+ <tbody class="divide-y divide-muted">
+ {% for t in transactions %}
+ <tr class="hover:bg-muted">
+ <td class="whitespace-nowrap px-4 py-3 text-muted-foreground">{{ t.date|date:"d/m/Y" }}</td>
+ <td class="max-w-[20rem] px-4 py-3 break-words">
+ <a href="{% url 'finance:transaction_detail' t.pk %}" class="font-medium text-foreground hover:text-brand-700">{{ t.description|default:"—" }}</a>
+ {% if t.notes %}<div class="truncate text-xs text-muted-foreground max-w-[16rem]">{{ t.notes }}</div>{% endif %}
+ </td>
+ <td class="hidden px-4 py-3 text-muted-foreground md:table-cell">{{ t.account.name|default:"—" }}</td>
+ <td class="hidden px-4 py-3 text-muted-foreground md:table-cell">{{ t.category.name|default:"—" }}</td>
+ <td class="hidden px-4 py-3 text-muted-foreground lg:table-cell">{{ t.get_type_display }}</td>
+ <td class="whitespace-nowrap px-4 py-3 text-right">
+ {% if t.type == 'income' %}<span class="font-medium text-success-600">+ {{ t.amount|centavos }}</span>
+ {% elif t.type == 'transfer' %}<span class="font-medium text-info-600">{{ t.amount|centavos }}</span>
+ {% else %}<span class="font-medium text-danger-600">− {{ t.amount|centavos }}</span>{% endif %}
+ </td>
+ <td class="whitespace-nowrap px-4 py-3 text-right">
+ <a href="{% url 'finance:transaction_edit' t.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% include "components/pagination.html" with page=page_obj paginator=paginator query=query %}
+ {% else %}
+ {% include "components/empty_state.html" with icon="list" title="Nenhuma movimentação" message="Registre uma receita ou despesa para começar." %}
+ {% endif %}
 {% endblock %}

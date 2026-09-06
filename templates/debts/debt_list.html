@@ -3,58 +3,61 @@
 
 {% block title %}Dívidas · FINTECPESSOAL{% endblock %}
 
+{% block shell_title %}Dívidas{% endblock %}
+
+
 {% block app_content %}
-  {% include "components/page_header.html" with title="Dívidas" subtitle="Acompanhe suas dívidas e organize a quitação." action_url="debts:debt_create" action_label="Nova dívida" action_icon="+" %}
+ {% include "components/page_header.html" with title="Dívidas" subtitle="Acompanhe suas dívidas e organize a quitação." action_url="debts:debt_create" action_label="Nova dívida" action_icon="+" %}
 
-  {% if summary.total_remaining > 0 %}
-  <div class="mb-6 grid gap-4 sm:grid-cols-3">
-    <div class="panel p-5">
-      <p class="text-sm text-surface-500">Total</p>
-      <p class="mt-1 text-xl font-bold">{% include "components/money.html" with cents=summary.total_amount %}</p>
-    </div>
-    <div class="panel p-5">
-      <p class="text-sm text-surface-500">Pago</p>
-      <p class="mt-1 text-xl font-bold text-success-600">{% include "components/money.html" with cents=summary.paid_amount %}</p>
-    </div>
-    <div class="panel p-5">
-      <p class="text-sm text-surface-500">Restante</p>
-      <p class="mt-1 text-xl font-bold text-danger-600">{% include "components/money.html" with cents=summary.total_remaining %}</p>
-    </div>
-  </div>
-  {% endif %}
+ {% if summary.total_remaining > 0 %}
+ <div class="mb-6 grid gap-4 sm:grid-cols-3">
+ <div class="panel p-5">
+ <p class="text-sm text-muted-foreground">Total</p>
+ <p class="mt-1 text-xl font-bold">{% include "components/money.html" with cents=summary.total_amount %}</p>
+ </div>
+ <div class="panel p-5">
+ <p class="text-sm text-muted-foreground">Pago</p>
+ <p class="mt-1 text-xl font-bold text-success-600">{% include "components/money.html" with cents=summary.paid_amount %}</p>
+ </div>
+ <div class="panel p-5">
+ <p class="text-sm text-muted-foreground">Restante</p>
+ <p class="mt-1 text-xl font-bold text-danger-600">{% include "components/money.html" with cents=summary.total_remaining %}</p>
+ </div>
+ </div>
+ {% endif %}
 
-  {% if debts %}
-  <div class="panel overflow-hidden">
-    <ul class="divide-y divide-surface-100">
-      {% for row in rows %}
-      {% with d=row.debt %}
-      <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div class="min-w-0">
-          <a href="{% url 'debts:debt_detail' d.pk %}" class="font-semibold text-surface-800 hover:text-brand-700">{{ d.name }}</a>
-          <p class="text-xs text-surface-500">{{ d.get_type_display|default:"" }}
-            {% if d.creditor %} · {{ d.creditor }}{% endif %}
-            {% if d.end_date %} · vence {{ d.end_date|date:"d/m/Y" }}{% endif %}</p>
-        </div>
-        <div class="flex flex-col items-start gap-2 sm:w-72 sm:items-end">
-          <div class="flex w-full items-center justify-between text-sm">
-            <span class="text-surface-500">{% include "components/money.html" with cents=row.paid_amount %} de {% include "components/money.html" with cents=row.total_amount %}</span>
-            <span class="font-semibold text-surface-700">{{ row.percent }}%</span>
-          </div>
-          {% include "components/progress.html" with percent=row.percent tone=d.status|yesno:"healthy,attention" show_label=False %}
-          {% if d.status == 'paid_off' %}{% include "components/status_badge.html" with label="Quitada" tone="positive" dot=True %}
-          {% elif d.status == 'defaulted' %}{% include "components/status_badge.html" with label="Inadimplente" tone="exceeded" dot=True %}
-          {% elif d.status == 'archived' %}{% include "components/status_badge.html" with label="Arquivada" tone="neutral" dot=True %}
-          {% else %}{% include "components/status_badge.html" with label="Ativa" tone="info" dot=True %}{% endif %}
-        </div>
-        {% if row.remaining_amount > 0 %}
-        <a href="{% url 'debts:debt_detail' d.pk %}" class="btn btn-primary btn-sm">Pagar</a>
-        {% endif %}
-      </li>
-      {% endwith %}
-      {% endfor %}
-    </ul>
-  </div>
-  {% else %}
-  {% include "components/empty_state.html" with icon="☰" title="Nenhuma dívida" message="Registre suas dívidas para controlar pagamentos e planejar a quitação." action_url="debts:debt_create" action_label="Nova dívida" %}
-  {% endif %}
+ {% if debts %}
+ <div class="panel overflow-hidden">
+ <ul class="divide-y divide-muted">
+ {% for row in rows %}
+ {% with d=row.debt %}
+ <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+ <div class="min-w-0">
+ <a href="{% url 'debts:debt_detail' d.pk %}" class="font-semibold text-foreground hover:text-brand-700">{{ d.name }}</a>
+ <p class="text-xs text-muted-foreground">{{ d.get_type_display|default:"" }}
+ {% if d.creditor %} · {{ d.creditor }}{% endif %}
+ {% if d.end_date %} · vence {{ d.end_date|date:"d/m/Y" }}{% endif %}</p>
+ </div>
+ <div class="flex flex-col items-start gap-2 sm:w-72 sm:items-end">
+ <div class="flex w-full items-center justify-between text-sm">
+ <span class="text-muted-foreground">{% include "components/money.html" with cents=row.paid_amount %} de {% include "components/money.html" with cents=row.total_amount %}</span>
+ <span class="font-semibold text-foreground">{{ row.percent }}%</span>
+ </div>
+ {% include "components/progress.html" with percent=row.percent tone=d.status|yesno:"healthy,attention" show_label=False %}
+ {% if d.status == 'paid_off' %}{% include "components/status_badge.html" with label="Quitada" tone="positive" dot=True %}
+ {% elif d.status == 'defaulted' %}{% include "components/status_badge.html" with label="Inadimplente" tone="exceeded" dot=True %}
+ {% elif d.status == 'archived' %}{% include "components/status_badge.html" with label="Arquivada" tone="neutral" dot=True %}
+ {% else %}{% include "components/status_badge.html" with label="Ativa" tone="info" dot=True %}{% endif %}
+ </div>
+ {% if row.remaining_amount > 0 %}
+ <a href="{% url 'debts:debt_detail' d.pk %}" class="btn btn-primary btn-sm">Pagar</a>
+ {% endif %}
+ </li>
+ {% endwith %}
+ {% endfor %}
+ </ul>
+ </div>
+ {% else %}
+ {% include "components/empty_state.html" with icon="target" title="Nenhuma dívida" message="Registre suas dívidas para controlar pagamentos e planejar a quitação." action_url="debts:debt_create" action_label="Nova dívida" %}
+ {% endif %}
 {% endblock %}
