@@ -405,6 +405,7 @@ class Transaction(OwnedModel):
         indexes = [
             models.Index(fields=["owner", "date"]),
             models.Index(fields=["owner", "account", "date"]),
+            models.Index(fields=["owner", "type", "date"]),
             models.Index(fields=["external_id"]),
         ]
 

@@ -47,6 +47,9 @@ class CreditCard(OwnedModel):
         ordering = ["name"]
         verbose_name = "cartão de crédito"
         verbose_name_plural = "cartões de crédito"
+        indexes = [
+            models.Index(fields=["owner", "status"]),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(limit__gte=0),
@@ -240,6 +243,10 @@ class Installment(OwnedModel):
         ordering = ["purchase", "number"]
         verbose_name = "parcela"
         verbose_name_plural = "parcelas"
+        indexes = [
+            models.Index(fields=["purchase", "status"]),
+            models.Index(fields=["invoice"]),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(amount__gt=0),
@@ -330,6 +337,9 @@ class CreditCardInvoice(OwnedModel):
         ordering = ["-due_date"]
         verbose_name = "fatura de cartão"
         verbose_name_plural = "faturas de cartão"
+        indexes = [
+            models.Index(fields=["owner", "status", "due_date"]),
+        ]
         constraints = [
             models.UniqueConstraint(
                 fields=["card", "period_start", "period_end"],

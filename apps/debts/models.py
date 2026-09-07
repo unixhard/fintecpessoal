@@ -52,6 +52,9 @@ class Debt(OwnedModel):
         ordering = ["name"]
         verbose_name = "dívida"
         verbose_name_plural = "dívidas"
+        indexes = [
+            models.Index(fields=["owner", "status"]),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(total_amount__gte=0),

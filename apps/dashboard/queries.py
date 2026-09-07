@@ -418,6 +418,9 @@ def committed_by_card(user) -> list[CreditCardSummary]:
         ):
             open_invoices.setdefault(row["card_id"], row)
 
+    invoice_ids = [inv["id"] for inv in open_invoices.values()]
+    invoice_totals = _invoice_amounts(user, invoice_ids)
+
     summaries = []
     for card in cards:
         used = used_by_card.get(card.pk, 0)
@@ -426,7 +429,7 @@ def committed_by_card(user) -> list[CreditCardSummary]:
         open_amount = None
         next_due = (inv or {}).get("due_date")
         if inv:
-            open_amount = _invoice_amount(user, inv["id"], card)
+            open_amount = invoice_totals.get(inv["id"])
         summaries.append(
             CreditCardSummary(
                 pk=card.pk,
@@ -455,14 +458,23 @@ def _usage_tone(used: int, limit: int) -> str:
     return "healthy"
 
 
+def _invoice_amounts(user, invoice_ids) -> dict[int, int]:
+    """Valores totais (derivados) de várias faturas em uma única query."""
+    if not invoice_ids:
+        return {}
+    rows = (
+        Installment.objects.filter(
+            invoice_id__in=invoice_ids, purchase__owner=user
+        )
+        .values("invoice_id")
+        .annotate(total=Sum("amount"))
+    )
+    return {r["invoice_id"]: r["total"] or 0 for r in rows}
+
+
 def _invoice_amount(user, invoice_id, card) -> int:
     """Valor (derivado) de uma fatura = soma das parcelas do período."""
-    agg = (
-        Installment.objects.filter(
-            invoice_id=invoice_id, purchase__owner=user
-        ).aggregate(total=Sum("amount"))
-    )
-    return agg["total"] or 0
+    return _invoice_amounts(user, [invoice_id]).get(invoice_id, 0)
 
 
 # --------------------------------------------------------------------------- #
@@ -695,6 +707,7 @@ def upcoming_events(user, *, days=30) -> list[UpcomingEvent]:
             ],
         ).select_related("card")
     )
+    invoice_totals = _invoice_amounts(user, [i.pk for i in invoices])
     for inv in invoices:
         if inv.due_date < today and inv.status == CreditCardInvoice.Status.OVERDUE:
             label, kind = f"Fatura em atraso — {inv.card.name}", "invoice"
@@ -705,7 +718,7 @@ def upcoming_events(user, *, days=30) -> list[UpcomingEvent]:
         events.append(
             UpcomingEvent(
                 date=inv.due_date,
-                amount=_invoice_amount(user, inv.pk, inv.card),
+                amount=invoice_totals.get(inv.pk, 0),
                 label=label,
                 kind=kind,
                 source=inv.card.name,
@@ -774,6 +787,7 @@ def upcoming_invoices(user, *, limit=6) -> list[InvoiceRow]:
         .select_related("card")
         .order_by("due_date")[:limit]
     )
+    invoice_totals = _invoice_amounts(user, [i.pk for i in invoices])
     rows = []
     for inv in invoices:
         rows.append(
@@ -783,7 +797,7 @@ def upcoming_invoices(user, *, limit=6) -> list[InvoiceRow]:
                 due_date=inv.due_date,
                 closing_date=inv.closing_date,
                 status=inv.status,
-                amount=_invoice_amount(user, inv.pk, inv.card),
+                amount=invoice_totals.get(inv.pk, 0),
             )
         )
     return rows
@@ -833,44 +847,75 @@ def budgets(user, *, today=None) -> list[BudgetRow]:
     )
     period_start = today.replace(day=1)
     rows = []
-    for budget in active:
-        spent = _budget_spent(user, budget, period_start, today)
-        limit = budget.limit_amount
-        percent = int(round(spent / limit * 100)) if limit else 0
-        status = "healthy"
-        if limit and percent >= 100:
-            status = "exceeded"
-        elif limit and percent >= 80:
-            status = "attention"
-        rows.append(
-            BudgetRow(
-                pk=budget.pk,
-                name=budget.category.name
-                if budget.kind == Budget.Kind.CATEGORY and budget.category
-                else "Global",
-                limit=limit,
-                spent=spent,
-                remaining=max(limit - spent, 0),
-                percent=percent,
-                status=status,
+    if active:
+        cat_budgets = [b for b in active if b.kind == Budget.Kind.CATEGORY and b.category]
+        global_flag = any(b.kind != Budget.Kind.CATEGORY for b in active)
+
+        # Uma única query: gasto por categoria (e subcategorias) no mês.
+        all_cat_ids = set()
+        for b in cat_budgets:
+            all_cat_ids.add(b.category_id)
+            all_cat_ids.update(
+                b.category.subcategories.values_list("pk", flat=True)
             )
-        )
+        spent_by_cat: dict[int, int] = {}
+        if all_cat_ids:
+            agg = (
+                Transaction.objects.for_user(user)
+                .filter(
+                    type=Transaction.Type.EXPENSE,
+                    date__gte=period_start,
+                    date__lte=today,
+                    category_id__in=all_cat_ids,
+                )
+                .values("category_id")
+                .annotate(total=Sum("amount"))
+            )
+            for r in agg:
+                spent_by_cat[r["category_id"]] = r["total"] or 0
+        global_spent = 0
+        if global_flag:
+            global_spent = (
+                Transaction.objects.for_user(user)
+                .filter(
+                    type=Transaction.Type.EXPENSE,
+                    date__gte=period_start,
+                    date__lte=today,
+                )
+                .aggregate(total=Sum("amount"))["total"]
+                or 0
+            )
+
+        for budget in active:
+            cat_budget = budget.kind == Budget.Kind.CATEGORY and budget.category
+            if cat_budget:
+                ids = [budget.category_id] + list(
+                    budget.category.subcategories.values_list("pk", flat=True)
+                )
+                spent = sum(spent_by_cat.get(cid, 0) for cid in ids)
+            else:
+                spent = global_spent
+            limit = budget.limit_amount
+            percent = int(round(spent / limit * 100)) if limit else 0
+            status = "healthy"
+            if limit and percent >= 100:
+                status = "exceeded"
+            elif limit and percent >= 80:
+                status = "attention"
+            rows.append(
+                BudgetRow(
+                    pk=budget.pk,
+                    name=budget.category.name
+                    if cat_budget
+                    else "Global",
+                    limit=limit,
+                    spent=spent,
+                    remaining=max(limit - spent, 0),
+                    percent=percent,
+                    status=status,
+                )
+            )
     return rows
-
-
-def _budget_spent(user, budget, start, end) -> int:
-    qs = Transaction.objects.for_user(user).filter(
-        type=Transaction.Type.EXPENSE, date__gte=start, date__lte=end
-    )
-    cat_budget = budget.kind == Budget.Kind.CATEGORY and budget.category
-    if cat_budget:
-        # inclui subcategorias
-        ids = [budget.category_id] + list(
-            budget.category.subcategories.values_list("pk", flat=True)
-        )
-        qs = qs.filter(category_id__in=ids)
-    agg = qs.aggregate(total=Sum("amount"))
-    return agg["total"] or 0
 
 
 def goals(user) -> list[GoalRow]:
@@ -911,8 +956,8 @@ def debts(user) -> list[DebtRow]:
 # --------------------------------------------------------------------------- #
 
 
-def account_summary(user) -> list[AccountSummary]:
-    balances = account_balances(user)
+def account_summary(user, balances=None) -> list[AccountSummary]:
+    balances = balances if balances is not None else account_balances(user)
     total = sum(b.balance for b in balances.values())
     account_types = {
         a.pk: (a.type, a.get_type_display())

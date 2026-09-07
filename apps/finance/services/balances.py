@@ -2,12 +2,51 @@
 
 Não há saldo mutável redundante: o saldo de uma conta é sempre derivado de
 ``initial_balance`` + efeito das transações (decisão já existente no domínio).
+
+Todos os cáculos são feitos por agregação SQL em uma única query, evitando o
+carregamento de todas as transações em Python (N+1 / cópia de objetos).
 """
+
+from django.db.models import Case, IntegerField, Sum, Value, When, F
 
 from ..models import Account, Transaction
 
 
-def account_balance(account):
+def _balance_qs(user, *, account=None, accounts=None):
+    """QuerySet de transações com o efeito no saldo anotado por linha."""
+    qs = Transaction.objects.filter(owner=user)
+    if account is not None:
+        qs = qs.filter(account_id=account.pk if hasattr(account, "pk") else account)
+    if accounts is not None:
+        qs = qs.filter(account_id__in=accounts)
+    return qs
+
+
+def _net_effect_qs(user, *, account=None, accounts=None):
+    """Agrega o efeito líquido de todas as transações do escopo em uma query."""
+    return _balance_qs(user, account=account, accounts=accounts).aggregate(
+        total=Sum(
+            Case(
+                When(type=Transaction.Type.INCOME, then=F("amount")),
+                When(
+                    type=Transaction.Type.TRANSFER,
+                    transfer_out__isnull=False,
+                    then=-F("amount"),
+                ),
+                When(
+                    type=Transaction.Type.TRANSFER,
+                    transfer_in__isnull=False,
+                    then=F("amount"),
+                ),
+                # EXPENSE / ADJUSTMENT
+                default=-F("amount"),
+                output_field=IntegerField(),
+            )
+        )
+    )
+
+
+def account_balance(account) -> int:
     """Saldo atual de uma conta (centavos), derivado das movimentações.
 
     - INCOME ............ + valor
@@ -18,27 +57,20 @@ def account_balance(account):
     A transferência interna soma zero no patrimônio total (uma - e uma +).
     """
     total = account.initial_balance
-    for tx in account.transactions.all():
-        if tx.type == Transaction.Type.INCOME:
-            total += tx.amount
-        elif tx.type == Transaction.Type.TRANSFER:
-            if hasattr(tx, "transfer_out"):
-                total -= tx.amount
-            elif hasattr(tx, "transfer_in"):
-                total += tx.amount
-        else:  # EXPENSE / ADJUSTMENT
-            total -= tx.amount
-    return total
+    agg = _net_effect_qs(account.owner, account=account)
+    return total + (agg["total"] or 0)
 
 
-def net_worth(user, *, as_of=None):
+def net_worth(user, *, as_of=None) -> int:
     """Patrimônio total do usuário = soma dos saldos de todas as suas contas."""
-    total = 0
-    for account in Account.objects.for_user(user):
-        total += account_balance(account)
+    accounts = list(Account.objects.for_user(user))
+    total = sum(a.initial_balance for a in accounts)
+    if accounts:
+        agg = _net_effect_qs(user, accounts=[a.pk for a in accounts])
+        total += agg["total"] or 0
     return total
 
 
-def total_balance(user):
+def total_balance(user) -> int:
     """Alias de ``net_worth``: soma dos saldos das contas do usuário."""
     return net_worth(user)

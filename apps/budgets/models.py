@@ -47,6 +47,9 @@ class Budget(OwnedModel):
 
     class Meta:
         ordering = ["kind", "id"]
+        indexes = [
+            models.Index(fields=["owner", "is_active"]),
+        ]
         verbose_name = "orçamento"
         verbose_name_plural = "orçamentos"
         constraints = [

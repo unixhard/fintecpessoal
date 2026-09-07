@@ -4,15 +4,18 @@ A rota index renderiza o DASHBOARD com dados reais a partir do ViewModel
 (ordem 7). As demais áreas continuam como placeholders estruturais.
 """
 
+from datetime import timedelta
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
+from django.utils import timezone
 from django.views.generic import TemplateView
 
 from apps.budgets.models import Budget
 from apps.cards.models import CreditCard
 from apps.finance.models import Account, Transaction
 from apps.goals.models import Goal
-from apps.reports.services import can_generate, latest_report, next_available_date
+from apps.reports.services import COOLDOWN_DAYS, latest_report
 
 from .viewmodel import build_dashboard
 
@@ -103,14 +106,20 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
     def _ai_report_card(self, user) -> dict:
         """Informações do Relatório de Análise IA exibidas na dashboard."""
         report = latest_report(user)
+        today = timezone.localdate()
+        next_available = (
+            report.generated_at.date() + timedelta(days=COOLDOWN_DAYS)
+            if report
+            else today
+        )
         return {
             "latest": report,
             "has_report": report is not None,
             "generated_at": report.generated_at if report else None,
             "summary": report.summary if report else None,
             "via_ai": bool(report and report.via_ai),
-            "can_generate": can_generate(user),
-            "next_available": next_available_date(user),
+            "can_generate": next_available <= today,
+            "next_available": next_available,
         }
 
 

@@ -11,6 +11,7 @@ from datetime import date, timedelta
 from calendar import monthrange
 
 from django.db.models import Sum
+from django.db.models.functions import TruncMonth
 
 from apps.cards.models import CreditCard
 from apps.finance.models import Account, Category, Transaction
@@ -29,7 +30,6 @@ from .queries import (
     goals,
     installment_obligations,
     monthly_evolution,
-    net_balance,
     recent_transactions,
     resolve_period,
     spending_by_category,
@@ -96,7 +96,8 @@ def build_dashboard(user, *, period="30d", account_id=None, card_id=None, today=
     accounts_filter = filt.account_ids or None
     cards_filter = filt.card_ids or None
 
-    disponivel = net_balance(user)
+    account_balances_all = account_balances(user)
+    disponivel = sum(ab.balance for ab in account_balances_all.values())
     comprometido = committed(user)
 
     cf = cash_flow(
@@ -117,7 +118,7 @@ def build_dashboard(user, *, period="30d", account_id=None, card_id=None, today=
     budget_rows = budgets(user, today=today)
     goal_rows = goals(user)
     debt_rows = debts(user)
-    account_rows = account_summary(user)
+    account_rows = account_summary(user, balances=account_balances_all)
     events = upcoming_events(user, days=30)
     recent = _filter_recent_by_period(
         recent_transactions(user, limit=12, accounts=accounts_filter, cards=cards_filter),
@@ -154,7 +155,7 @@ def build_dashboard(user, *, period="30d", account_id=None, card_id=None, today=
             "period": period_data["key"],
             "account_id": filt.account_ids[0] if filt.account_ids else None,
             "card_id": filt.card_ids[0] if filt.card_ids else None,
-            "accounts": account_balances(user),
+            "accounts": account_balances_all,
             "cards_filter": card_rows,
         },
         # Herói / liquidez
@@ -228,9 +229,47 @@ def _period_history(user, today, accounts_filter, cards_filter) -> dict:
     - ``recent_expenses``: maiores despesas do mês corrente (para anomalia).
     """
     first_of_month = today.replace(day=1)
-    current_cat = _cat_expense(user, first_of_month, today, accounts_filter, cards_filter)
 
-    # Média de despesa (janela 30 dias) + maiores despesas do mês
+    # Padrão pessoal por categoria: una query agrupada por mês+categoria dos
+    # últimos 4 meses (mês corrente + 3 anteriores completos).
+    prev_months = []
+    cursor = first_of_month
+    for _ in range(3):
+        cursor = _add_months(cursor, -1)
+        prev_months.insert(0, cursor)
+    period_start = prev_months[0]  # começo do 1º mês anterior completo
+    pattern_qs = (
+        Transaction.objects.for_user(user)
+        .filter(
+            type=Transaction.Type.EXPENSE,
+            date__gte=period_start,
+            date__lte=today,
+        )
+    )
+    if accounts_filter:
+        pattern_qs = pattern_qs.filter(account__in=accounts_filter)
+    if cards_filter:
+        pattern_qs = pattern_qs.filter(paid_invoices__card__in=cards_filter)
+    rows = (
+        pattern_qs.annotate(month=TruncMonth("date"))
+        .values("month", "category_id")
+        .annotate(total=Sum("amount"))
+    )
+
+    # current_cat = gasto do mês corrente; per_month = gasto dos 3 anteriores.
+    month_keys = [_to_month_first(pm) for pm in [*prev_months, first_of_month]]
+    current_cat: dict[int, int] = {}
+    per_month: list[dict[int, int]] = [{} for _ in prev_months]
+    index_by_month = {m: i for i, m in enumerate(month_keys[:-1])}
+    for row in rows:
+        mkey = _to_month_first(row["month"])
+        if mkey == month_keys[-1]:
+            current_cat[row["category_id"]] = (current_cat.get(row["category_id"], 0) + (row["total"] or 0))
+        elif mkey in index_by_month:
+            bucket = per_month[index_by_month[mkey]]
+            bucket[row["category_id"]] = bucket.get(row["category_id"], 0) + (row["total"] or 0)
+
+    # Média de despesa (janela 30 dias) + maiores despesas do mês corrente.
     start30 = today - timedelta(days=29)
     exp_qs = (
         Transaction.objects.for_user(user)
@@ -246,15 +285,7 @@ def _period_history(user, today, accounts_filter, cards_filter) -> dict:
         avg_expense = int(sum(amounts) / len(amounts))
 
     recent_expenses = []
-    month_exp = (
-        Transaction.objects.for_user(user)
-        .filter(type=Transaction.Type.EXPENSE, date__gte=first_of_month, date__lte=today)
-    )
-    if accounts_filter:
-        month_exp = month_exp.filter(account__in=accounts_filter)
-    if cards_filter:
-        month_exp = month_exp.filter(paid_invoices__card__in=cards_filter)
-    for tx in month_exp.select_related("account", "category").order_by("-amount")[:10]:
+    for tx in exp_qs.select_related("account", "category").order_by("-amount")[:10]:
         recent_expenses.append(
             RecentTransaction(
                 pk=tx.pk,
@@ -267,17 +298,10 @@ def _period_history(user, today, accounts_filter, cards_filter) -> dict:
             )
         )
 
-    # Padrão pessoal por categoria (3 meses anteriores completos)
-    pattern = {}
-    prev_months = []
-    cursor = first_of_month
-    for _ in range(3):
-        cursor = _add_months(cursor, -1)
-        prev_months.insert(0, cursor)
-    per_month = [_cat_expense(user, m, _end_of_month(m), accounts_filter, cards_filter) for m in prev_months]
     all_ids = set(current_cat.keys())
     for cm in per_month:
         all_ids.update(cm.keys())
+    pattern = {}
     for cat_id in all_ids:
         sample = sum(1 for cm in per_month if cm.get(cat_id, 0) > 0)
         total = sum(cm.get(cat_id, 0) for cm in per_month)
@@ -293,16 +317,10 @@ def _period_history(user, today, accounts_filter, cards_filter) -> dict:
     }
 
 
-def _cat_expense(user, start, end, accounts_filter, cards_filter) -> dict:
-    qs = Transaction.objects.for_user(user).filter(
-        type=Transaction.Type.EXPENSE, date__gte=start, date__lte=end
-    )
-    if accounts_filter:
-        qs = qs.filter(account__in=accounts_filter)
-    if cards_filter:
-        qs = qs.filter(paid_invoices__card__in=cards_filter)
-    rows = qs.values("category_id").annotate(total=Sum("amount"))
-    return {r["category_id"]: r["total"] or 0 for r in rows}
+def _to_month_first(d) -> date:
+    """Normaliza uma data para o primeiro dia do mês (compara mês de dados)."""
+    d = d or date.today()
+    return d.replace(day=1)
 
 
 def _cat_names(user, ids) -> dict:
@@ -311,10 +329,6 @@ def _cat_names(user, ids) -> dict:
     for cat in queryset:
         names[cat.pk] = cat.name
     return names
-
-
-def _end_of_month(m: date) -> date:
-    return m.replace(day=monthrange(m.year, m.month)[1])
 
 
 def _add_months(source: date, months: int) -> date:
