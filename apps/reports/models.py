@@ -1,7 +1,8 @@
 """Modelos do app reports (relatórios).
 
 ``AIReport`` guarda o resultado de uma análise por IA — um relatório em texto
-(Markdown) gerado a cada 3 dias, com isolamento por usuário (OwnedModel).
+(Markdown) gerado conforme o cooldown do app (padrão 3 dias, configurável via
+REPORT_COOLDOWN_DAYS), com isolamento por usuário (OwnedModel).
 """
 
 from django.db import models

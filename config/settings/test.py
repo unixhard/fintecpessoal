@@ -13,6 +13,12 @@ from .base import (  # noqa: F401
     load_dotenv,
 )
 
+import os
+
+# Garante cooldown padrão (3 dias) nos testes, mesmo se .env local definir 0
+# (liberado para teste manual). Os testes de cooldown partem desse valor base.
+os.environ["REPORT_COOLDOWN_DAYS"] = "3"
+
 load_dotenv(BASE_DIR / ".env")
 
 from .base import *  # noqa: F401,F403

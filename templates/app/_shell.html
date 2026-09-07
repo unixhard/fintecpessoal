@@ -160,7 +160,7 @@
  </span>
  <span class="min-w-0">
  <span class="block text-sm font-medium text-foreground">Análise IA disponível</span>
- <span class="block text-xs text-muted-foreground">Gere seu relatório completo a cada 3 dias.</span>
+ <span class="block text-xs text-muted-foreground">{% if cooldown_days|default:3 > 0 %}Gere seu relatório completo a cada {{ cooldown_days|default:3 }} dias.{% else %}Gere seu relatório completo sempre que quiser.{% endif %}</span>
  </span>
  </a>
  </div>

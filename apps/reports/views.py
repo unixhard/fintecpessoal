@@ -20,6 +20,7 @@ from apps.dashboard import queries
 from apps.core.services.ai import AIServiceError, ai_enabled
 
 from .services import (
+    COOLDOWN_DAYS,
     CooldownError,
     build_manual_report,
     can_generate,
@@ -134,11 +135,11 @@ def _brl(cents):
 
 
 class AIReportView(LoginRequiredMixin, View):
-    """Relatório de análise por IA ("auditor de bolso"), 1x a cada 3 dias.
+    """Relatório de análise por IA ("auditor de bolso"), com cooldown configurável.
 
     GET  -> exibe o último relatório (se houver) e o estado do limite.
-    POST -> gera um novo (respeitando o cooldown de 3 dias). Se a IA estiver
-            indisponível, exibe um relatório local sem consumir o limite.
+    POST -> gera um novo (respeitando o cooldown de ``COOLDOWN_DAYS`` dias). Se a
+            IA estiver indisponível, exibe um relatório local sem consumir o limite.
     """
 
     template_name = "reports/ai_report.html"
@@ -156,6 +157,7 @@ class AIReportView(LoginRequiredMixin, View):
             "can_generate": can_generate(user),
             "next_available": next_available_date(user),
             "ai_available": ai_enabled(),
+            "cooldown_days": COOLDOWN_DAYS,
         }
         if extra:
             ctx.update(extra)
@@ -189,9 +191,10 @@ class AIReportView(LoginRequiredMixin, View):
                 request,
                 self._context(request, manual_html=manual_html),
             )
+        msg_cooldown = f"a cada {COOLDOWN_DAYS} dias" if COOLDOWN_DAYS > 0 else "quando quiser"
         messages.success(
             request,
-            "Relatório de análise gerado com IA. Você pode gerar um novo a cada 3 dias.",
+            f"Relatório de análise gerado com IA. Você pode gerar um novo {msg_cooldown}.",
         )
         return redirect(reverse("reports:ai_report"))
 

@@ -1,9 +1,23 @@
 {% extends "app/_shell.html" %}
+{% load static %}
 
 {% block title %}Análise IA — FINTECPESSOAL{% endblock %}
 {% block shell_title %}Análise IA{% endblock %}
 
 {% block app_content %}
+{# ===================== Overlay de loading (geração do relatório) ===================== #}
+<div id="report-loading" class="report-overlay hidden" role="status" aria-live="polite" aria-hidden="true">
+ <div class="report-overlay-card anim-pop">
+ <span class="report-overlay-ring" aria-hidden="true"></span>
+ <span class="report-overlay-halo" aria-hidden="true"></span>
+ <h2 class="text-base font-bold text-foreground">Gerando sua análise…</h2>
+ <p class="mt-1 max-w-xs text-sm text-muted-foreground">
+ Consultando seus dados e montando o relatório com o auditor de bolso. Leva só alguns segundos.
+ </p>
+ <div class="report-overlay-bar" aria-hidden="true"><span></span></div>
+ </div>
+</div>
+
 <div class="mx-auto w-full max-w-4xl space-y-6">
  {% include "components/page_header.html" with title="Relatório com Análise IA" subtitle="Seu auditor de bolso: sugestões, cuidados, alertas e planejamento para aumentar seu patrimônio." %}
 
@@ -13,12 +27,17 @@
  <div class="max-w-md">
  <h2 class="text-lg font-bold text-foreground ">Gere seu relatório completo</h2>
  <p class="mt-1 text-sm text-muted-foreground">
- Uma análise completa a cada 3 dias, no estilo de um consultor
+ {% if cooldown_days|default:3 > 0 %}
+ Uma análise completa a cada {{ cooldown_days|default:3 }} dias, no estilo de um consultor
  financeiro especialista.
+ {% else %}
+ Uma análise completa sempre que você quiser, no estilo de um consultor
+ financeiro especialista.
+ {% endif %}
  </p>
  </div>
  <div class="flex flex-col items-end gap-2">
- <form method="post" action="{% url 'reports:ai_report' %}">
+ <form method="post" action="{% url 'reports:ai_report' %}" id="report-generate-form">
  {% csrf_token %}
  <button type="submit" class="btn btn-primary" {% if not can_generate or not ai_available %}disabled{% endif %}>
  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l1.8 4.6L18.5 9.5l-4.7 1.9L12 16l-1.8-4.6-4.7-1.9 4.7-1.9Z"/><path d="M18.5 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"/></svg>
@@ -32,7 +51,7 @@
  Próximo em {{ next_available|date:"d/m/Y" }}
  </span>
  {% else %}
- <span class="badge-pill bg-success-500/10 text-success-600 dark:text-success-400">Disponível — novo a cada 3 dias</span>
+ <span class="badge-pill bg-success-500/10 text-success-600 dark:text-success-400">Disponível{% if cooldown_days|default:3 > 0 %} — novo a cada {{ cooldown_days|default:3 }} dias{% else %} — geração livre{% endif %}</span>
  {% endif %}
  </div>
  </div>
@@ -54,6 +73,15 @@
  {% else %}
  <span class="badge-pill bg-warning-500/10 text-warning-600 dark:text-warning-400">Offline</span>
  {% endif %}
+ <div class="flex items-center gap-1.5">
+ <button type="button" id="btn-listen-report" class="btn btn-ghost btn-sm" aria-label="Ouvir o relatório em voz alta" aria-pressed="false">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+ <span data-listen-label>Ouvir</span>
+ </button>
+ <button type="button" id="btn-stop-report" class="btn btn-ghost btn-sm hidden" aria-label="Parar a leitura" hidden>
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+ </button>
+ </div>
  </div>
  <div class="ai-report px-6 py-6 text-sm leading-relaxed text-foreground">
  {{ report_html|safe }}
@@ -67,6 +95,15 @@
  <p class="text-theme-xs text-muted-foreground dark:text-muted-foreground">Gerado sem IA (fallback)</p>
  </div>
  <span class="badge-pill bg-warning-500/10 text-warning-600 dark:text-warning-400">Offline</span>
+ <div class="flex items-center gap-1.5">
+ <button type="button" id="btn-listen-report" class="btn btn-ghost btn-sm" aria-label="Ouvir o resumo em voz alta" aria-pressed="false">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+ <span data-listen-label>Ouvir</span>
+ </button>
+ <button type="button" id="btn-stop-report" class="btn btn-ghost btn-sm hidden" aria-label="Parar a leitura" hidden>
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+ </button>
+ </div>
  </div>
  <div class="ai-report px-6 py-6 text-sm leading-relaxed text-foreground">
  {{ manual_html|safe }}
@@ -84,4 +121,23 @@
  </div>
  {% endif %}
 </div>
+{% endblock %}
+
+{% block page_scripts %}
+var reportForm = document.getElementById("report-generate-form");
+var reportLoading = document.getElementById("report-loading");
+if (reportForm && reportLoading) {
+ reportForm.addEventListener("submit", function () {
+ if (reportLoading.classList.contains("hidden")) {
+ reportLoading.classList.remove("hidden");
+ reportLoading.setAttribute("aria-hidden", "false");
+ document.body.classList.add("overflow-hidden");
+ }
+ });
+}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/report_speech.js' %}" defer></script>
 {% endblock %}

@@ -4,17 +4,19 @@ O usuário gera um relatório completo de suas finanças — com sugestões,
 cuidados, alertas e planejamento para aumentar o patrimônio — no tom de um
 consultor financeiro especialista.
 
-Limitação central: **1 geração a cada 3 dias** (``COOLDOWN_DAYS``). O relatório
-é persistido em ``AIReport`` (isolado por usuário).
+Limitação central: **1 geração a cada X dias** (``COOLDOWN_DAYS``, via
+env ``REPORT_COOLDOWN_DAYS``, padrão 3). O relatório é persistido em
+``AIReport`` (isolado por usuário).
 
 Fallback gracioso: se a IA estiver indisponível (sem chave / sem internet /
 erro), o fluxo NÃO quebra — é exibido um relatório local determinístico a
-partir dos mesmos dados, sem consumir o limite de 3 dias (não é persistido).
+partir dos mesmos dados, sem consumir o limite de cooldown (não é persistido).
 """
 
 from __future__ import annotations
 
 import html
+import os
 import re
 from datetime import date, timedelta
 
@@ -26,11 +28,14 @@ from apps.finance.services.balances import net_worth
 
 from .models import AIReport
 
-COOLDOWN_DAYS = 3
+# Intervalo (dias) entre gerações por IA. Configurável via env para permitir
+# janelas de teste (ex.: REPORT_COOLDOWN_DAYS=0 libera gerações ilimitadas).
+COOLDOWN_DAYS_MAX = 365
+COOLDOWN_DAYS = max(0, min(int(os.getenv("REPORT_COOLDOWN_DAYS", "3")), COOLDOWN_DAYS_MAX))
 
 
 class CooldownError(Exception):
-    """Tentativa de gerar relatório dentro do intervalo de 3 dias."""
+    """Tentativa de gerar relatório dentro do intervalo de cooldown."""
 
     def __init__(self, next_allowed: date | None = None):
         self.next_allowed = next_allowed
@@ -70,6 +75,13 @@ def _remaining_days(user, *, today=None) -> int:
 # --------------------------------------------------------------------------- #
 
 
+def _display_name(user) -> str:
+    """Nome exibível para a IA usar no tom pessoal (display_name > nome > username)."""
+    display = getattr(getattr(user, "profile", None), "display_name", "") or ""
+    full = (user.get_full_name() or "").strip()
+    return (display or full or user.get_username() or "você").strip()
+
+
 def _fmt(cents: int) -> str:
     try:
         cents = int(cents or 0)
@@ -89,6 +101,7 @@ def collect_context(user) -> dict:
     cf = data.get("cash_flow")
 
     return {
+        "nome": _display_name(user),
         "patrimonio_centavos": net_worth(user),
         "disponivel_centavos": data.get("disponivel", 0),
         "comprometido_centavos": data.get("comprometido", 0),
@@ -173,11 +186,24 @@ def collect_context(user) -> dict:
             }
             for i in insights
         ],
+        "evolucao_mensal": [
+            {
+                "label": b.label,
+                "receitas_centavos": b.receitas,
+                "despesas_centavos": b.despesas,
+                "saldo_centavos": b.saldo,
+            }
+            for b in data.get("evolution", []) or []
+        ],
     }
 
 
 def _render_context(ctx: dict) -> str:
     lines = []
+    nome = ctx.get("nome") or "usuário"
+    lines.append("VOCÊ ESTÁ FALANDO COM:")
+    lines.append(f"- Nome/apelido da pessoa: {nome} (chame-a assim, pelo nome, pelo menos 2 vezes).")
+    lines.append("")
     lines.append("CONTEXTO (valores em CENTAVOS, salvo indicação).")
     lines.append(f"- Patrimônio total (todas as contas): {ctx['patrimonio_centavos']}")
     lines.append(f"- Saldo disponível (contas ativas): {ctx['disponivel_centavos']}")
@@ -223,6 +249,19 @@ def _render_context(ctx: dict) -> str:
         lines.append("- Alertas determinísticos já identificados:")
         for a in ctx["alertas_deterministicos"]:
             lines.append(f"  * [{a['severidade']}] {a['titulo']}: {a['descricao']}. Ação: {a['acao']}")
+    if ctx.get("evolucao_mensal"):
+        lines.append("- Evolução mensal (receitas/despesas/saldo por mês):")
+        for ev in ctx["evolucao_mensal"]:
+            lines.append(
+                f"  * {ev['label']}: receitas {ev['receitas_centavos']}, "
+                f"despesas {ev['despesas_centavos']}, saldo {ev['saldo_centavos']}"
+            )
+    if ctx.get("relatorio_anterior"):
+        r = ctx["relatorio_anterior"]
+        lines.append("")
+        lines.append("RELATÓRIO ANTERIOR (da última conversa, para comparar o que mudou — use como base de continuidade, sem inventar nada fora destes dados):")
+        lines.append(f"- Data anterior: {r.get('data', 'desconhecida')}")
+        lines.append(f"- Conteúdo anterior:\n{r.get('conteudo', '')}")
     return "\n".join(lines)
 
 
@@ -231,26 +270,77 @@ def _render_context(ctx: dict) -> str:
 # --------------------------------------------------------------------------- #
 
 _SYSTEM_PROMPT = (
-    "Você é um 'auditor de bolso': consultor financeiro sênior e especialista "
-    "em finanças pessoais. Seu trabalho é analisar os dados fornecidos e "
-    "produzir um relatório completo, honesto e acionável, no tom de um mentor "
-    "que ajuda a pessoa a aumentar o patrimônio e ter melhores resultados.\n\n"
-    "REGRAS:\n"
-    "- Use SOMENTE os dados fornecidos. NUNCA invente números, categorias ou métricas.\n"
-    "- Se faltar amostra ou dados, diga com franqueza que não há informação "
-    "suficiente e recomende cadastrar mais dados.\n"
-    "- Seja específico, prático e dê números sempre que possível; evite clichês.\n"
-    "- Responda em Português do Brasil.\n"
-    "- Produza Markdown com estas seções, nesta ordem:\n"
+    "Você é o 'CFO de Bolso' — o consultor financeiro pessoal e de confiança "
+    "do usuário, parte do app FINTECPESSOAL. Não entregue um relatório frio: "
+    "conduza a pessoa como um CFO de verdade, olhando sempre para 4 frentes "
+    "quando os dados permitirem:\n"
+    "1. DINHEIRO — o que entra, sai e sobra hoje.\n"
+    "2. SEGURANÇA — o que pode quebrar essa situação (dívida cara, falta de "
+    "reserva, risco concentrado).\n"
+    "3. OPORTUNIDADES — o que a pessoa está deixando na mesa.\n"
+    "4. CRESCIMENTO PATRIMONIAL — para onde tudo isso leva em 1, 5 e 10 anos.\n\n"
+    "IDENTIDADE E TOM:\n"
+    "- Fale DIRETAMENTE com a pessoa, na 2ª pessoa ('você'), nunca em 3ª pessoa.\n"
+    "- Se conhecer o nome/apelido da pessoa, use-o pelo menos 2 vezes.\n"
+    "- Tom de mentor próximo, NUNCA de auditor distante.\n"
+    "- Explique qualquer termo técnico em 1 frase simples (ex.: 'CDB é um "
+    "investimento de renda fixa que rende como um empréstimo ao banco').\n"
+    "- Comemore o progresso real ANTES de apontar problemas.\n"
+    "- NUNCA abra a conversa com um alerta.\n"
+    "- Trate a pessoa como capaz: nunca infantilize, nunca assuma "
+    "conhecimento prévio, mas também nunca subestime a inteligência dela.\n"
+    "- Seja o oposto de burocrático: cada frase deve ajudar a pessoa a decidir "
+    "algo, não apenas descrever a situação.\n\n"
+    "REGRAS DE INTEGRIDADE (inegociáveis):\n"
+    "- Use SOMENTE os dados fornecidos. NUNCA invente números, categorias, "
+    "taxas de juros, alíquotas, produtos financeiros ou métricas.\n"
+    "- Se faltar dado para uma das 4 frentes, diga com franqueza o que falta "
+    "e exatamente qual informação resolveria isso.\n"
+    "- Toda projeção ou simulação deve declarar as premissas usadas (ex.: "
+    "'assumindo que você mantém a taxa de poupança atual de X%'). NUNCA "
+    "apresente projeção como garantia.\n"
+    "- Seja específico e numérico. Proibido dar recomendação sem número, prazo "
+    "ou ação anexada (nada de 'controle seus gastos' solto).\n"
+    "- Responda em Português do Brasil.\n\n"
+    "ESTRUTURA DA RESPOSTA (Markdown, nesta ordem):\n"
+    "  ## 👋 Antes de tudo\n"
+    "  (1-2 frases: reconhecimento genuíno do esforço/cenário + o que vamos "
+    "olhar hoje)\n"
     "  ## 📋 Visão geral\n"
     "  ## 🩺 Saúde financeira\n"
+    "  (nota de 0 a 10 com justificativa; compare com o período anterior se "
+    "houver histórico)\n"
+    "  ## 🛡️ Segurança\n"
+    "  (reserva de emergência, dívida cara, concentração de risco — antes de "
+    "falar em crescer, garanta que não há buraco no barco)\n"
+    "  ## 🔍 Oportunidades\n"
+    "  (o que a pessoa está deixando na mesa: dinheiro parado sem render, gasto "
+    "recorrente renegociável, dívida cara a priorizar, folga não aproveitada — "
+    "sempre com número associado)\n"
     "  ## ⚠️ Alertas e cuidados\n"
-    "  ## 💡 Sugestões de melhoria\n"
-    "  ## 🎯 Planejamento para aumentar o patrimônio\n"
-    "  ## ✅ Ações concretas\n"
-    "- Em 'Saúde financeira' dê uma nota de 0 a 10 com justificativa.\n"
-    "- Em 'Ações concretas' liste exatamente 3 ações para a semana.\n"
-    "- Mantenha o relatório entre 400 e 800 palavras."
+    "  (riscos imediatos que precisam de atenção esta semana)\n"
+    "  ## 📈 Projeção de patrimônio\n"
+    "  (cenário 'se nada mudar' vs 'se seguir as ações recomendadas', em 1, 5 e "
+    "10 anos quando o dado permitir — sempre com premissas explícitas)\n"
+    "  ## 🎯 Plano de crescimento patrimonial\n"
+    "  (estratégia de médio/longo prazo — não uma lista solta de dicas)\n"
+    "  ## ✅ Suas 3 ações desta semana\n"
+    "  (exatamente 3, pequenas, com prazo e número-alvo cada)\n"
+    "  ## 🗣️ Uma pergunta para você\n"
+    "  (uma pergunta de decisão real que só a pessoa pode responder — é o "
+    "gancho para a próxima conversa)\n\n"
+    "LIMITES DE TAMANHO:\n"
+    "- Entre 600 e 1200 palavras no corpo principal.\n"
+    "- Se um dos 4 pilares não tiver dado suficiente, diga isso em 1-2 frases "
+    "na seção correspondente em vez de preencher com genérico.\n\n"
+    "CONTINUIDADE:\n"
+    "- Se houver contexto de relatório anterior, referencie explicitamente o "
+    "que mudou desde a última vez.\n"
+    "- Termine indicando quando faz sentido a pessoa voltar (ex.: 'volte em 7 "
+    "dias, quando o extrato fechar').\n\n"
+    "Você também tem os ALERTAS DETERMINÍSTICOS do sistema disponíveis — valide "
+    "se estão corretos para os dados e, se estiverem, incorpore-os nas seções de "
+    "Segurança/Alertas. Não os repita de forma genérica."
 )
 
 
@@ -280,6 +370,12 @@ def generate_ai_report(*, user, today=None) -> AIReport:
             )
 
     ctx = collect_context(user)
+    previous = latest_report(user)
+    if previous is not None:
+        ctx["relatorio_anterior"] = {
+            "data": previous.generated_at.astimezone().strftime("%d/%m/%Y"),
+            "conteudo": previous.content,
+        }
     content = generate_text(
         system_prompt=_SYSTEM_PROMPT,
         user_prompt=_render_context(ctx),
@@ -301,11 +397,18 @@ def build_manual_report(user) -> str:
     """Relatório determinístico a partir dos mesmos dados, sem chamar a IA.
 
     É o fallback gracioso quando a IA está indisponível. Não é salvo no banco
-    e não consome o limite de 3 dias — o usuário pode tentar de novo depois.
+    e não consome o limite de cooldown — o usuário pode tentar de novo depois.
+    Segue a mesma estrutura do relatório por IA, sem projeções inventadas.
     """
     ctx = collect_context(user)
+    nome = ctx.get("nome") or "você"
     f = _fmt
     lines = [
+        "## 👋 Antes de tudo",
+        f"{nome}, olhei seus números dos últimos 30 dias e preparei um resumo "
+        "para você continuar de onde paramos. A IA está fora do ar agora, então "
+        "este é um recorte direto dos seus dados.",
+        "",
         "## 📋 Visão geral",
         f"- Saldo disponível (contas ativas): **{f(ctx['disponivel_centavos'])}**",
         f"- Patrimônio total: {f(ctx['patrimonio_centavos'])}",
@@ -318,24 +421,63 @@ def build_manual_report(user) -> str:
     ]
     if ctx["resultado_centavos"] < 0:
         lines.append(
-            "Você está gastando mais do que recebe nos últimos 30 dias. Esse "
-            "ritmo reduz seu patrimônio — é o ponto mais urgente a corrigir."
+            f"Nota: **3/10**. {nome}, você está gastando mais do que recebe no "
+            "período — esse ritmo reduz seu patrimônio e é o ponto mais urgente "
+            "a corrigir."
         )
     elif ctx["disponivel_apos_centavos"] < 0:
         lines.append(
-            "Suas obrigações de cartão superam o saldo disponível. Antes de "
-            "pensar em investir, é preciso reconquistar margem de liquidez."
+            "Nota: **4/10**. Suas obrigações de cartão superam o saldo disponível. "
+            "Antes de pensar em investir, é preciso reconquistar margem de liquidez."
         )
     elif not ctx["spending"] and ctx["disponivel_centavos"] >= 0:
         lines.append(
-            "Ainda há poucos dados para uma nota precisa. Cadastre despesas e "
-            "receitas regularmente para uma avaliação mais confiável."
+            "Nota: **6/10** (provisória). Ainda há poucos dados para uma nota "
+            "precisa — cadastre despesas e receitas regularmente para uma "
+            "avaliação mais confiável."
         )
     else:
         lines.append(
-            "Você está no azul nos últimos 30 dias, com margem após os "
-            "compromissos. Continue registrando tudo para o próximo relatório."
+            f"Nota: **7/10**. {nome}, você está no azul nos últimos 30 dias, com "
+            "margem após os compromissos. Continue registrando tudo para o "
+            "próximo relatório."
         )
+
+    lines += ["", "## 🛡️ Segurança"]
+    if ctx["disponivel_apos_centavos"] < 0:
+        lines.append(
+            "Sua maior prioridade agora é encerrar o mês sem saldo negativo: "
+            "reduza gastos descartáveis até a próxima receita."
+        )
+    elif ctx["resultado_centavos"] >= 0:
+        lines.append(
+            "Você tem uma base de liquidez positiva. Recomendo ir reservando "
+            "uma parte do resultado para uma reserva de emergência de 3 a 6 "
+            "meses de despesas antes de assumir novos compromissos."
+        )
+    else:
+        lines.append("Com dados atuais, ainda não consigo dimensionar sua reserva — registre mais lançamentos.")
+
+    lines += ["", "## 🔍 Oportunidades"]
+    top = ctx["spending"][:3]
+    if top:
+        maior = top[0]
+        lines.append(
+            f"- Sua maior despesa está em **{maior['nome']}** "
+            f"({maior['pct']}% do total). Revisar essa categoria costuma ser a "
+            "oportunidade de curto prazo mais fácil (ex.: renegociar assinatura "
+            "ou plano)."
+        )
+    if ctx["cartoes"]:
+        for c in ctx["cartoes"]:
+            if c["uso_pct"] >= 70:
+                lines.append(
+                    f"- O cartão **{c['nome']}** está com uso alto "
+                    f"({c['uso_pct']}% do limite); liberar limite reduz custo de "
+                    "crédito e risco."
+                )
+    if not top and not ctx["cartoes"]:
+        lines.append("- Com poucos dados ainda, as oportunidades ficam mais claras no próximo relatório.")
 
     lines += ["", "## ⚠️ Alertas e cuidados"]
     if ctx["alertas_deterministicos"]:
@@ -344,61 +486,59 @@ def build_manual_report(user) -> str:
     else:
         lines.append("- Nenhum alerta determinístico detectado no momento.")
 
-    lines += ["", "## 💡 Sugestões de melhoria"]
-    top = ctx["spending"][:3]
-    if top:
-        maior = top[0]
+    lines += ["", "## 📈 Projeção de patrimônio"]
+    if ctx["resultado_centavos"] > 0 and ctx["receitas_centavos"] > 0:
+        taxa = min(int(ctx["resultado_centavos"] / ctx["receitas_centavos"] * 100), 99)
         lines.append(
-            f"- Sua maior despesa está em **{maior['nome']}** "
-            f"({maior['pct']}% do total). Revise essa categoria para "
-            "encontrar oportunidades de redução."
+            f"Assumindo que você mantenha a poupança atual de **{taxa}% da receita** "
+            "e os mesmos valores, seu patrimônio cresce de forma gradual e "
+            "previsível. Este é um cenário ilustrativo, não uma garantia."
         )
-    if ctx["cartoes"]:
-        for c in ctx["cartoes"]:
-            if c["uso_pct"] >= 70:
-                lines.append(
-                    f"- O cartão **{c['nome']}** está com uso alto "
-                    f"({c['uso_pct']}% do limite). Mantenha abaixo de 30% para "
-                    "proteger seu score e o custo do crédito."
-                )
-    if not ctx["goals"]:
-        lines.append("- Crie metas (ex.: reserva de emergência de 3 a 6 meses de despesas).")
+    else:
+        lines.append(
+            "Sem resultado positivo consistente, ainda não há projeção honesta "
+            "a fazer — primeiro vamos recuperar a margem mensal."
+        )
 
-    lines += ["", "## 🎯 Planejamento para aumentar o patrimônio"]
+    lines += ["", "## 🎯 Plano de crescimento patrimonial"]
     if ctx["dividas"]:
         total = sum(d["restante_centavos"] for d in ctx["dividas"])
         lines.append(
-            f"- Quite as dívidas de maior custo primeiro (restam {f(total)}). "
-            "Cada real pago em juros altos é um retorno garantido."
+            f"- Quite primeiro as dívidas de maior custo (restam {f(total)}): "
+            "cada real pago em juros altos é um retorno garantido."
         )
     lines.append(
         "- **Pague-se primeiro:** automatize uma transferência para poupança/"
-        "investimento logo que a receita cair."
+        "investimento assim que a receita cair."
     )
-    if ctx["resultado_centavos"] > 0:
-        taxa = min(int(ctx["resultado_centavos"] / max(ctx["receitas_centavos"], 1) * 100), 99)
-        lines.append(
-            f"- Você poupou cerca de {taxa}% da receita em 30 dias. Suba esse "
-            "percentual aos poucos (ex.: +2%) para acelerar o patrimônio."
-        )
+    lines.append(
+        "- Considere metas concretas (ex.: reserva de emergência de 3 a 6 meses "
+        "de despesas) para dar direção ao plano."
+    )
 
-    lines += ["", "## ✅ Ações concretas"]
+    lines += ["", "## ✅ Suas 3 ações desta semana"]
     lines.append(
-        "- **Revisar hoje:** confirmar que cada lançamento está categorizado "
-        "e nenhum está duplicado."
+        "1. **Hoje:** conferir se cada lançamento está categorizado e sem duplicados. "
+        "Meta: zero divergências."
     )
     lines.append(
-        "- **Nesta semana:** definir orçamentos para as 3 maiores categorias "
-        "de despesa."
+        "2. **Até 3 dias:** definir orçamento para as 3 maiores categorias de despesa "
+        "do mês. Meta: limites definidos no app."
     )
     lines.append(
-        "- **Nos próximos 3 dias:** programar pagamentos das faturas próximas "
-        "e remover qualquer gasto supérfluo."
+        "3. **Até 7 dias:** programar os pagamentos das próximas faturas e cortar "
+        "um gasto recorrente desnecessário. Meta: uma economia recorrente a mais."
     )
     lines += [
         "",
+        "## 🗣️ Uma pergunta para você",
+        "O que pesaria mais para você neste momento: aumentar a folga no fim do "
+        "mês ou acelerar a quitação de alguma dívida? A resposta guia o próximo "
+        "passo do plano.",
+        "",
         "> ⚠️ *A IA não está disponível agora — este é um resumo local. Você "
-        "pode gerar o relatório completo com IA mais tarde (novo a cada 3 dias).*",
+        "pode gerar o relatório completo com IA mais tarde"
+        + (" (novo a cada 3 dias).*" if COOLDOWN_DAYS > 0 else ".*"),
     ]
     return "\n".join(lines)
 

@@ -1,6 +1,6 @@
 """Testes do Relatório de Análise IA (auditor de bolso).
 
-Cobrem: cooldown de 3 dias, isolamento por usuário, fallback gracioso sem IA
+Cobrem: cooldown (configurável), isolamento por usuário, fallback gracioso sem IA
 (sem quebrar, sem consumir o limite), geração por IA (mockada — offline), e a
 renderização leve de Markdown.
 """
