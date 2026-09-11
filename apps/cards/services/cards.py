@@ -87,6 +87,77 @@ def set_card_status(*, user, card, status):
     return card
 
 
+def delete_card(*, user, card):
+    """Exclui um cartão do usuário junto com tudo que o referencia.
+
+    - Estorna faturas pagas (apagando a Transaction de pagamento);
+    - desvincula a conta de pagamento (PROTECT) das faturas;
+    - apaga faturas e compras (as parcelas são apagadas em cascata).
+
+    Retorna a quantidade de lançamentos de pagamento removidos.
+    """
+    from django.db import transaction as db_transaction
+    from django.utils import timezone
+
+    from apps.finance.models import Transaction
+
+    from ..models import CreditCardInvoice, Installment, InstallmentPurchase
+    from .invoices import reverse_invoice_payment
+
+    require_owned(
+        CreditCard.objects, user, model_label="Cartão",
+        object_id=getattr(card, "pk", None),
+    )
+
+    from apps.finance.models import RecurringRule
+
+    deleted_payments = 0
+    with db_transaction.atomic():
+        # Recorrências que usam este cartão (PROTECT): sem o cartão, regras de
+        # despesa ficariam sem conta/cartão (regras do model) — são excluídas.
+        for rule in list(
+            RecurringRule.objects.for_user(user).filter(card=card)
+        ):
+            rule.delete()
+        invoices_paid = list(
+            CreditCardInvoice.objects.for_user(user)
+            .filter(card=card, status=CreditCardInvoice.Status.PAID)
+            .select_related("payment_transaction")
+        )
+        for invoice in invoices_paid:
+            if invoice.payment_transaction_id:
+                try:
+                    reverse_invoice_payment(user=user, invoice=invoice)
+                    deleted_payments += 1
+                except Exception:
+                    # Se o pagamento já foi removido, garante a limpeza.
+                    invoice.payment_transaction = None
+                    invoice.payment_account = None
+                    invoice.save()
+            else:
+                invoice.payment_account = None
+                invoice.save()
+
+        # Faturas não pagas: desvincula conta de pagamento (PROTECT) e apaga.
+        remaining = (
+            CreditCardInvoice.objects.for_user(user)
+            .filter(card=card)
+            .exclude(status=CreditCardInvoice.Status.PAID)
+        )
+        for invoice in list(remaining):
+            if invoice.payment_account_id:
+                invoice.payment_account = None
+                invoice.save()
+        CreditCardInvoice.objects.for_user(user).filter(card=card).delete()
+
+        # Compras (parcelas em cascata).
+        InstallmentPurchase.objects.for_user(user).filter(card=card).delete()
+
+        card.delete()
+
+    return deleted_payments
+
+
 def _validate_day(value, label):
     if isinstance(value, bool) or not isinstance(value, int):
         raise InvalidAmountError(f"{label} inválido.")

@@ -20,6 +20,7 @@
   <th class="hidden px-4 py-3 font-medium md:table-cell">1ª parcela</th>
   <th class="px-4 py-3 font-medium">Valor da parcela</th>
   <th class="px-4 py-3 text-right font-medium">Valor total</th>
+  <th class="px-4 py-3 text-right font-medium">Ações</th>
   </tr>
   </thead>
   <tbody class="divide-y divide-muted">
@@ -31,6 +32,15 @@
   <td class="hidden px-4 py-3 text-muted-foreground md:table-cell" data-label="1ª parcela">{{ p.first_due_date|date:"d/m/Y" }}</td>
   <td class="px-4 py-3 text-muted-foreground" data-label="Valor da parcela">{% include "components/money.html" with cents=p.installment_amount %}</td>
   <td class="px-4 py-3 text-right" data-label="Valor total">{% include "components/money.html" with cents=p.total_amount %}</td>
+  <td class="whitespace-nowrap px-4 py-3 text-right t-actions" data-label="Ações">
+  <div class="inline-flex items-center gap-2">
+  <a href="{% url 'cards:purchase_edit' p.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+  <form method="post" action="{% url 'cards:purchase_delete' p.pk %}" onsubmit="return confirm('Excluir esta compra e suas parcelas?');">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-ghost btn-sm text-danger-600 hover:text-danger-700">Excluir</button>
+  </form>
+  </div>
+  </td>
   </tr>
  {% endfor %}
  </tbody>

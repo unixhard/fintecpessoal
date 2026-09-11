@@ -34,6 +34,7 @@
   <th class="px-4 py-3 font-medium">Descrição</th>
   <th class="hidden px-4 py-3 font-medium md:table-cell">Tipo</th>
   <th class="px-4 py-3 text-right font-medium">Valor</th>
+  <th class="px-4 py-3 text-right font-medium">Ações</th>
   </tr>
   </thead>
   <tbody class="divide-y divide-muted">
@@ -49,6 +50,15 @@
   {% if t.type == 'income' %}<span class="font-medium text-success-600">+ {{ t.amount|centavos }}</span>
   {% else %}<span class="font-medium text-danger-600">− {{ t.amount|centavos }}</span>{% endif %}
   </td>
+  <td class="whitespace-nowrap px-4 py-3 text-right t-actions" data-label="Ações">
+  <div class="inline-flex items-center gap-2">
+  <a href="{% url 'finance:transaction_edit' t.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+  <form method="post" action="{% url 'finance:transaction_delete' t.pk %}" onsubmit="return confirm('Excluir este lançamento? Esta ação não pode ser desfeita.');">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-ghost btn-sm text-danger-600 hover:text-danger-700">Excluir</button>
+  </form>
+  </div>
+  </td>
   </tr>
   {% endfor %}
   </tbody>
@@ -58,8 +68,12 @@
  {% include "components/empty_state.html" with icon="list" title="Sem movimentações" message="Nenhuma movimentação registrada nesta conta ainda." %}
  {% endif %}
 
- <div class="mt-6 flex items-center gap-3">
- <a href="{% url 'finance:account_edit' account.pk %}" class="btn btn-ghost">Editar conta</a>
- <a href="{% url 'finance:account_list' %}" class="btn btn-ghost">Voltar</a>
- </div>
+<div class="mt-6 flex items-center gap-3">
+  <a href="{% url 'finance:account_edit' account.pk %}" class="btn btn-ghost">Editar conta</a>
+  <form method="post" action="{% url 'finance:account_delete' account.pk %}" onsubmit="return confirm('Excluir a conta {{ account.name }}? Todas as movimentações e transferências vinculadas serão removidas. Esta ação não pode ser desfeita.');">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-ghost text-danger-600 hover:text-danger-700">Excluir conta</button>
+  </form>
+  <a href="{% url 'finance:account_list' %}" class="btn btn-ghost">Voltar</a>
+  </div>
 {% endblock %}

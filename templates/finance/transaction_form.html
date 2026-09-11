@@ -46,6 +46,19 @@
  {% endif %}
  </div>
  {% include "components/field.html" with field=form.date %}
+ {% if is_transfer %}
+ <div class="space-y-1.5">
+ <label class="block text-sm font-medium text-foreground">Conta</label>
+ <div class="rounded-md border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground">
+ <strong>{{ from_account_name|default:"Origem" }}</strong>
+ <span class="text-muted-foreground"> → </span>
+ <strong>{{ to_account_name|default:"Destino" }}</strong>
+ <input type="hidden" name="{{ form.account.html_name }}" value="{{ form.account.value }}">
+ </div>
+ <p class="text-xs text-muted-foreground">A transferência conecta origem → destino. Para trocar as contas, exclua e refaça a transferência.</p>
+ </div>
+ <p class="text-xs text-muted-foreground">Transferências não possuem categoria.</p>
+ {% else %}
  {% include "components/field.html" with field=form.account %}
  <div class="space-y-1.5">
  <div class="flex items-center justify-between">
@@ -69,6 +82,7 @@
  </ul>
  {% endif %}
  </div>
+ {% endif %}
  {% include "components/field.html" with field=form.description %}
  {% include "components/field.html" with field=form.notes %}
  </div>

@@ -1,6 +1,8 @@
 """Serviços de lançamento financeiro (receita e despesa)."""
 
-from ..models import Account, Category, Merchant, Transaction
+from django.db import transaction as db_transaction
+
+from ..models import Account, Category, Merchant, Transaction, Transfer
 from .base import ensure_owned_integer_amount, require_owned
 from .errors import InvalidStateError
 
@@ -128,26 +130,13 @@ def _resolve_category_owned(user, category):
 
 
 def _assert_editable(transaction):
-    """Lançamentos com vínculos estruturais não podem ser editados/excluídos.
+    """Permite edição/exclusão de qualquer lançamento do usuário.
 
-    - transferência: tem duas pernas (origem/destino) — editar uma perna sozinha
-      dessincronizaria o par;
-    - pagamento de fatura / compra no cartão: pertence à obrigação do cartão;
-    - o tipo do lançamento é imutável (não se transforma receita em despesa).
+    O usuário tem controle total: receitas, despesas, ajustes, transferências,
+    pagamentos de fatura e lançamentos vinculados a compras no cartão podem ser
+    alterados ou excluídos (com os devidos efeitos colaterais, como estorno de
+    fatura e remoção da dupla perna de transferência).
     """
-    if transaction.transfer_id:
-        raise InvalidStateError(
-            "Lançamentos de transferência devem ser editados/excluídos pela "
-            "transferência e não individualmente."
-        )
-    if transaction.card_purchase_id:
-        raise InvalidStateError(
-            "Lançamento vinculado a compra no cartão não pode ser editado aqui."
-        )
-    if hasattr(transaction, "paid_invoices") and transaction.paid_invoices.exists():
-        raise InvalidStateError(
-            "Lançamento de pagamento de fatura não pode ser editado aqui."
-        )
 
 
 def update_transaction(
@@ -161,19 +150,34 @@ def update_transaction(
     notes=None,
     account=None,
 ):
-    """Atualiza um lançamento simples (receita/despesa/ajuste) do usuário.
+    """Atualiza um lançamento do usuário (qualquer tipo).
 
-    Restrições (regras financeiras existentes, nunca violadas):
-    - só lançamentos manuais sem vínculo estrutural (transferência, compra de
-      cartão ou pagamento de fatura) são editáveis;
+    Regras:
     - ownership da transação, conta e categoria é validado;
-    - o TIPO não é editável (evita reclassificação indevida de receita/despesa).
+    - o TIPO não é editável (evita reclassificação indevida de receita/despesa);
+    - transferências: atualiza as DUAS pernas + registro Transfer em conjunto
+      (a conta individual de cada perna é mantida; valor/data/descrição/notas
+      sincronizam a dupla);
+    - pagamento de fatura / compra no cartão: alterações seguem como um
+      lançamento simples (o estorno é feito pelo fluxo de fatura).
     """
     require_owned(
         Transaction.objects, user, model_label="Transação",
         object_id=getattr(transaction, "pk", None),
     )
     _assert_editable(transaction)
+
+    if transaction.transfer_id is not None:
+        return _update_transfer_leg(
+            user=user,
+            transaction=transaction,
+            amount=amount,
+            date=date,
+            description=description,
+            category=category,
+            notes=notes,
+            account=account,
+        )
 
     if amount is not None:
         amount = ensure_owned_integer_amount(amount)
@@ -197,23 +201,154 @@ def update_transaction(
     return transaction
 
 
-def delete_transaction(*, user, transaction):
-    """Exclui um lançamento simples do usuário (se seguro fazê-lo).
+def _update_transfer_leg(
+    *,
+    user,
+    transaction,
+    amount=None,
+    date=None,
+    description=None,
+    category=None,
+    notes=None,
+    account=None,
+):
+    """Atualiza uma transferência a partir de uma de suas pernas.
 
-    Rejeita lançamentos com vínculo estrutural (transferência, compra de cartão,
-    pagamento de fatura). Ocorrências geradas por recorrência podem ser
-    excluídas (a regra em si permanece intocada).
+    A perna recebida é a referência: os campos de valor/data/descrição/notas
+    são aplicados nas DUAS pernas e no registro Transfer, mantendo o par
+    sincronizado. A conta de cada perna é preservada (a transferência conecta
+    origem->destino; trocar a "conta" de uma perna isolada quebraria o par).
+    """
+    transfer = Transfer.objects.for_user(user).filter(out_transaction=transaction).first()
+    if transfer is None:
+        transfer = Transfer.objects.for_user(user).filter(in_transaction=transaction).first()
+    if transfer is None and transaction.transfer_id:
+        transfer = Transfer.objects.for_user(user).filter(pk=transaction.transfer_id).first()
+    if transfer is None:
+        raise InvalidStateError("Transação de transferência sem vínculo válido.")
+
+    if category not in (None, ""):
+        raise InvalidStateError(
+            "Transferências não possuem categoria: remova a categoria e salve novamente."
+        )
+
+    out_leg = transfer.out_transaction
+    in_leg = transfer.in_transaction
+
+    with db_transaction.atomic():
+        if amount is not None:
+            amount = ensure_owned_integer_amount(amount)
+            transfer.amount = amount
+            if out_leg:
+                out_leg.amount = amount
+            if in_leg:
+                in_leg.amount = amount
+        if date is not None:
+            transfer.date = date
+            if out_leg:
+                out_leg.date = date
+            if in_leg:
+                in_leg.date = date
+        if description is not None:
+            desc = (description or "").strip()
+            if out_leg:
+                out_leg.description = desc
+            if in_leg:
+                in_leg.description = desc
+        if notes is not None:
+            notes_val = (notes or "").strip()
+            transfer.notes = notes_val
+            if out_leg:
+                out_leg.notes = notes_val
+            if in_leg:
+                in_leg.notes = notes_val
+        if account is not None:
+            if account.pk != transaction.account_id:
+                raise InvalidStateError(
+                    "A conta de uma transferência é definida no momento da "
+                    "criação (origem e destino). Para mudá-la, exclua e refaça "
+                    "a transferência."
+                )
+        transfer.save()
+        if out_leg:
+            out_leg.save()
+        if in_leg:
+            in_leg.save()
+
+    return transaction
+
+
+def delete_transaction(*, user, transaction):
+    """Exclui um lançamento do usuário (qualquer tipo).
+
+    - Transferências: exclui as DUAS pernas + registro Transfer (atômico).
+    - Pagamento de fatura: estorna o pagamento (fatura volta a aberta e as
+      parcelas voltam a pendentes) e exclui o lançamento.
+    - Demais lançamentos (receita, despesa, ajuste, compra de cartão): exclui
+      diretamente, preservando o histórico (o vínculo com a compra, quando
+      houver, é desfeito via SET_NULL).
     """
     require_owned(
         Transaction.objects, user, model_label="Transação",
         object_id=getattr(transaction, "pk", None),
     )
     _assert_editable(transaction)
-    if transaction.type not in (
-        Transaction.Type.INCOME,
-        Transaction.Type.EXPENSE,
-        Transaction.Type.ADJUSTMENT,
-    ):
-        raise InvalidStateError("Este tipo de lançamento não pode ser excluído.")
+
+    if transaction.transfer_id is not None:
+        return _delete_transfer(user=user, transaction=transaction)
+
+    if _has_paid_invoices(transaction):
+        return _delete_invoice_payment(user=user, transaction=transaction)
+
     transaction.delete()
+    return None
+
+
+def _has_paid_invoices(transaction):
+    try:
+        return transaction.paid_invoices.exists()
+    except Exception:
+        return False
+
+
+def _delete_transfer(*, user, transaction):
+    """Exclui uma transferência inteira (duas pernas + registro Transfer)."""
+    with db_transaction.atomic():
+        transfer = transaction.transfer
+        if transfer is None:
+            transfer = (
+                Transfer.objects.for_user(user)
+                .filter(out_transaction=transaction)
+                .first()
+                or Transfer.objects.for_user(user)
+                .filter(in_transaction=transaction)
+                .first()
+            )
+        legs = set()
+        if transfer:
+            if transfer.out_transaction_id:
+                legs.add(transfer.out_transaction_id)
+            if transfer.in_transaction_id:
+                legs.add(transfer.in_transaction_id)
+            credits = Transaction.objects.filter(
+                owner=user, transfer=transfer
+            ).exclude(pk__in=legs)
+            for _credit in credits:
+                legs.add(_credit.pk)
+            transfer.delete()
+        for pk in legs:
+            Transaction.objects.filter(owner=user, pk=pk).delete()
+        transaction.delete()
+    return None
+
+
+def _delete_invoice_payment(*, user, transaction):
+    """Apaga o lançamento de pagamento de fatura estornando o pagamento."""
+    from apps.cards.services.invoices import reverse_invoice_payment
+
+    with db_transaction.atomic():
+        for invoice in list(transaction.paid_invoices.all()):
+            reverse_invoice_payment(user=user, invoice=invoice)
+        if transaction.pk is not None:
+            transaction.delete()
     return None

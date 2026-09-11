@@ -171,6 +171,22 @@ class CardStatusView(LoginRequiredMixin, View):
         return redirect(reverse("cards:card_list"))
 
 
+class CardDeleteView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        card = get_object_or_404(
+            CreditCard.objects.for_user(request.user), pk=kwargs.get("pk")
+        )
+        try:
+            deleted_payments = cards_svc.delete_card(user=request.user, card=card)
+            msg = "Cartão excluído."
+            if deleted_payments:
+                msg += f" {deleted_payments} pagamento(s) de fatura também removido(s)."
+            messages.success(request, msg)
+        except Exception as exc:
+            messages.error(request, str(exc) or "Não foi possível excluir o cartão.")
+        return redirect(reverse("cards:card_list"))
+
+
 # --------------------------------------------------------------------------- #
 # Compras
 # --------------------------------------------------------------------------- #
@@ -216,6 +232,70 @@ class PurchaseListView(LoginRequiredMixin, ListView):
         return InstallmentPurchase.objects.for_user(self.request.user).select_related(
             "card"
         ).order_by("-first_due_date")
+
+
+class PurchaseEditView(LoginRequiredMixin, FormView):
+    template_name = "cards/purchase_form.html"
+    form_class = PurchaseForm
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["title"] = "Editar compra no cartão"
+        return ctx
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_initial(self):
+        purchase = get_object_or_404(
+            InstallmentPurchase.objects.for_user(self.request.user),
+            pk=self.kwargs.get("pk"),
+        )
+        return {
+            "card": purchase.card_id,
+            "description": purchase.description,
+            "total_amount": purchase.total_amount,
+            "installment_count": purchase.installment_count,
+            "first_due_date": purchase.first_due_date,
+        }
+
+    def form_valid(self, form):
+        purchase = get_object_or_404(
+            InstallmentPurchase.objects.for_user(self.request.user),
+            pk=self.kwargs.get("pk"),
+        )
+        try:
+            purchases_svc.update_purchase(
+                user=self.request.user,
+                purchase=purchase,
+                description=form.cleaned_data["description"],
+                total_amount=form.cleaned_data["total_amount"],
+                installment_count=form.cleaned_data["installment_count"],
+                first_due_date=form.cleaned_data["first_due_date"],
+            )
+            messages.success(self.request, "Compra atualizada.")
+        except Exception as exc:
+            messages.error(self.request, str(exc) or "Não foi possível atualizar a compra.")
+            return self.render_to_response(self.get_context_data(form=form))
+        return redirect(reverse("cards:purchase_list"))
+
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class PurchaseDeleteView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        purchase = get_object_or_404(
+            InstallmentPurchase.objects.for_user(request.user), pk=kwargs.get("pk")
+        )
+        try:
+            purchases_svc.delete_purchase(user=request.user, purchase=purchase)
+            messages.success(request, "Compra excluída.")
+        except Exception as exc:
+            messages.error(request, str(exc) or "Não foi possível excluir a compra.")
+        return redirect(reverse("cards:purchase_list"))
 
 
 # --------------------------------------------------------------------------- #
@@ -294,3 +374,16 @@ class InvoicePayView(LoginRequiredMixin, FormView):
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
+
+
+class InvoiceReverseView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        invoice = get_object_or_404(
+            CreditCardInvoice.objects.for_user(request.user), pk=kwargs.get("pk")
+        )
+        try:
+            invoices_svc.reverse_invoice_payment(user=request.user, invoice=invoice)
+            messages.success(request, "Pagamento da fatura estornado.")
+        except Exception as exc:
+            messages.error(request, str(exc) or "Não foi possível estornar o pagamento.")
+        return redirect(reverse("cards:invoice_detail", args=[invoice.pk]))

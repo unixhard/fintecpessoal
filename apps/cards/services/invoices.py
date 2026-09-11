@@ -197,6 +197,47 @@ def pay_invoice(
     return transaction
 
 
+def reverse_invoice_payment(*, user, invoice):
+    """Estorna o pagamento de uma fatura já paga.
+
+    - Apaga a Transaction de pagamento criada pelo ``pay_invoice`` (se houver);
+    - devolve as parcelas ao status pendente;
+    - devolve a fatura ao status pré-pagamento (``open``, ou ``closed`` caso o
+      fechamento já tenha passado, ou ``overdue`` se já venceu).
+
+    Usado por ``delete_transaction`` quando o lançamento excluído é um
+    pagamento de fatura.
+    """
+    if not invoice or invoice.owner_id != user.id:
+        require_owned(
+            CreditCardInvoice.objects, user,
+            model_label="Fatura", object_id=getattr(invoice, "pk", None),
+        )
+    if invoice.status != CreditCardInvoice.Status.PAID:
+        raise InvalidStateError("Só faturas pagas podem ser estornadas.")
+
+    payment = invoice.payment_transaction
+
+    today = timezone.localdate()
+    if invoice.due_date < today:
+        new_status = CreditCardInvoice.Status.OVERDUE
+    elif invoice.closing_date < today:
+        new_status = CreditCardInvoice.Status.CLOSED
+    else:
+        new_status = CreditCardInvoice.Status.OPEN
+
+    with db_transaction.atomic():
+        invoice.installments.update(status=Installment.Status.PENDING)
+        invoice.status = new_status
+        invoice.payment_transaction = None
+        invoice.payment_account = None
+        invoice.save()
+        if payment is not None:
+            payment.delete()
+
+    return invoice
+
+
 def roll_invoice_statuses(today=None):
     """Avança o status das faturas abertas/fechadas conforme o calendário.
 

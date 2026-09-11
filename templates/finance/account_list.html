@@ -44,12 +44,16 @@
   <td class="px-4 py-3 text-right" data-label="Saldo">{% include "components/money.html" with cents=account.balance %}</td>
   <td class="px-4 py-3 text-right t-actions" data-label="Ações">
  <div class="inline-flex items-center gap-2">
- <a href="{% url 'finance:account_edit' account.pk %}" class="btn btn-ghost btn-sm">Editar</a>
- <form method="post" action="{% url 'finance:account_archive' account.pk %}" onsubmit="return confirm('Arquivar a conta {{ account.name }}? Você pode reativá-la depois.');">
- {% csrf_token %}
- <button type="submit" class="btn btn-ghost btn-sm">Arquivar</button>
- </form>
- </div>
+<a href="{% url 'finance:account_edit' account.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+  <form method="post" action="{% url 'finance:account_archive' account.pk %}" onsubmit="return confirm('Arquivar a conta {{ account.name }}? Você pode reativá-la depois.');">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-ghost btn-sm">Arquivar</button>
+  </form>
+  <form method="post" action="{% url 'finance:account_delete' account.pk %}" onsubmit="return confirm('Excluir a conta {{ account.name }}? Todas as movimentações e transferências vinculadas serão removidas. Esta ação não pode ser desfeita.');">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-ghost btn-sm text-danger-600 hover:text-danger-700">Excluir</button>
+  </form>
+  </div>
  </td>
  </tr>
  {% endfor %}
@@ -95,12 +99,16 @@
   <td class="px-4 py-3 text-right" data-label="Saldo">{% include "components/money.html" with cents=account.balance %}</td>
   <td class="px-4 py-3 text-right t-actions" data-label="Ações">
  <div class="inline-flex items-center gap-2">
- <a href="{% url 'finance:account_edit' account.pk %}" class="btn btn-ghost btn-sm">Editar</a>
- <form method="post" action="{% url 'finance:account_reactivate' account.pk %}">
- {% csrf_token %}
- <button type="submit" class="btn btn-ghost btn-sm">Reativar</button>
- </form>
- </div>
+<a href="{% url 'finance:account_edit' account.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+  <form method="post" action="{% url 'finance:account_reactivate' account.pk %}">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-ghost btn-sm">Reativar</button>
+  </form>
+  <form method="post" action="{% url 'finance:account_delete' account.pk %}" onsubmit="return confirm('Excluir a conta {{ account.name }}? Todas as movimentações e transferências vinculadas serão removidas. Esta ação não pode ser desfeita.');">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-ghost btn-sm text-danger-600 hover:text-danger-700">Excluir</button>
+  </form>
+  </div>
  </td>
  </tr>
  {% endfor %}

@@ -16,7 +16,12 @@ from .services.accounts import create_account
 from .services.balances import account_balance, net_worth
 from .services.errors import ForbiddenResourceError, InvalidAmountError, InvalidStateError
 from .services.recurrences import generate_occurrence
-from .services.transactions import record_expense, record_income
+from .services.transactions import (
+    delete_transaction,
+    record_expense,
+    record_income,
+    update_transaction,
+)
 from .services.transfers import transfer_between
 
 User = get_user_model()
@@ -300,3 +305,177 @@ class RecurrenceServiceTests(BaseServiceTestCase):
             generate_occurrence(
                 user=self.other, rule=rule, target_date=date(2026, 9, 1)
             )
+
+
+class UniversalEditDeleteTests(BaseServiceTestCase):
+    """Controle total: editar/excluir QUALQUER lançamento do usuário."""
+
+    def setUp(self):
+        super().setUp()
+        self.a = Account.objects.create(owner=self.user, name="A", initial_balance=100000)
+        self.b = Account.objects.create(owner=self.user, name="B")
+        self.expense_cat = Category.objects.create(
+            owner=self.user, name="Comida", kind=Category.Kind.EXPENSE
+        )
+
+    def test_edits_income_amount_and_category(self):
+        tx = record_income(
+            user=self.user, account=self.a, amount=100,
+            date=date(2026, 1, 1), description="X",
+        )
+        category = Category.objects.create(
+            owner=self.user, name="Trabalho", kind=Category.Kind.INCOME
+        )
+        updated = update_transaction(
+            user=self.user, transaction=tx, amount=200,
+            date=date(2026, 2, 1), description="Y", category=category,
+        )
+        updated.refresh_from_db()
+        self.assertEqual(updated.amount, 200)
+        self.assertEqual(updated.date, date(2026, 2, 1))
+        self.assertEqual(updated.description, "Y")
+        self.assertEqual(updated.category_id, category.id)
+
+    def test_edits_transfer_keeps_both_legs_in_sync(self):
+        transfer = transfer_between(
+            user=self.user, from_account=self.a, to_account=self.b,
+            amount=2000, date=date(2026, 1, 10),
+        )
+        out_leg = transfer.out_transaction
+        update_transaction(
+            user=self.user, transaction=out_leg, amount=3500,
+            date=date(2026, 3, 15), description="Transfer atualizada",
+        )
+        transfer.refresh_from_db()
+        out_leg.refresh_from_db()
+        in_leg = transfer.in_transaction
+        in_leg.refresh_from_db()
+        self.assertEqual(transfer.amount, 3500)
+        self.assertEqual(out_leg.amount, 3500)
+        self.assertEqual(in_leg.amount, 3500)
+        self.assertEqual(out_leg.date, date(2026, 3, 15))
+        self.assertEqual(in_leg.date, date(2026, 3, 15))
+        self.assertEqual(out_leg.description, "Transfer atualizada")
+        self.assertEqual(in_leg.description, "Transfer atualizada")
+
+    def test_editing_transfer_rejects_swapping_account_of_a_leg(self):
+        transfer = transfer_between(
+            user=self.user, from_account=self.a, to_account=self.b,
+            amount=2000, date=date(2026, 1, 10),
+        )
+        with self.assertRaises(InvalidStateError):
+            update_transaction(
+                user=self.user, transaction=transfer.out_transaction,
+                account=self.b,
+            )
+
+    def test_editing_transfer_rejects_category(self):
+        transfer = transfer_between(
+            user=self.user, from_account=self.a, to_account=self.b,
+            amount=2000, date=date(2026, 1, 10),
+        )
+        with self.assertRaises(InvalidStateError):
+            update_transaction(
+                user=self.user, transaction=transfer.out_transaction,
+                category=self.expense_cat,
+            )
+
+    def test_deletes_transfer_removes_both_legs_and_record(self):
+        transfer = transfer_between(
+            user=self.user, from_account=self.a, to_account=self.b,
+            amount=3000, date=date(2026, 1, 10),
+        )
+        delete_transaction(user=self.user, transaction=transfer.out_transaction)
+        self.assertEqual(
+            Transaction.objects.filter(owner=self.user).count(), 0
+        )
+        self.assertEqual(Transfer.objects.for_user(self.user).count(), 0)
+        self.assertEqual(account_balance(self.a), 100000)
+        self.assertEqual(account_balance(self.b), 0)
+
+    def test_deletes_transfer_from_inbound_leg(self):
+        transfer = transfer_between(
+            user=self.user, from_account=self.a, to_account=self.b,
+            amount=3000, date=date(2026, 1, 10),
+        )
+        delete_transaction(user=self.user, transaction=transfer.in_transaction)
+        self.assertEqual(
+            Transaction.objects.filter(owner=self.user).count(), 0
+        )
+        self.assertEqual(Transfer.objects.for_user(self.user).count(), 0)
+
+    def test_deletes_invoice_payment_reverses_invoice(self):
+        from apps.cards.models import CreditCard, CreditCardInvoice
+        from apps.cards.services.invoices import pay_invoice, get_or_create_invoice
+
+        card = CreditCard.objects.create(owner=self.user, name="Visa")
+        invoice = get_or_create_invoice(self.user, card, date(2026, 5, 1))
+        CreditCardInvoice.objects.filter(pk=invoice.pk).update(
+            status="open"
+        )
+        invoice.refresh_from_db()
+        # Parcela para dar valor à fatura.
+        from apps.cards.models import Installment, InstallmentPurchase
+
+        purchase = InstallmentPurchase.objects.create(
+            owner=self.user, card=card, description="Notebook",
+            total_amount=500000, installment_count=1, installment_amount=500000,
+            first_due_date=date(2026, 5, 1),
+        )
+        installment = Installment.objects.create(
+            owner=self.user, purchase=purchase, number=1,
+            amount=500000, due_date=date(2026, 5, 10),
+        )
+        invoice = get_or_create_invoice(self.user, card, installment.due_date)
+        installment.invoice = invoice
+        installment.save()
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.amount, 500000)
+
+        payment = pay_invoice(
+            user=self.user, invoice=invoice, account=self.a,
+            date=date(2026, 5, 10),
+        )
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.status, CreditCardInvoice.Status.PAID)
+
+        delete_transaction(user=self.user, transaction=payment)
+        invoice.refresh_from_db()
+        self.assertNotEqual(invoice.status, CreditCardInvoice.Status.PAID)
+        self.assertIsNone(invoice.payment_transaction_id)
+        self.assertEqual(
+            invoice.installments.filter(
+                status=Installment.Status.PENDING
+            ).count(),
+            1,
+        )
+
+    def test_deletes_plain_transaction(self):
+        tx = record_expense(
+            user=self.user, account=self.a, amount=50,
+            date=date(2026, 1, 1), description="Café",
+        )
+        delete_transaction(user=self.user, transaction=tx)
+        self.assertFalse(
+            Transaction.objects.filter(owner=self.user).exists()
+        )
+
+    def test_rejects_editing_other_users_transaction(self):
+        other_account = Account.objects.create(owner=self.other, name="Bob")
+        other_tx = record_expense(
+            user=self.other, account=other_account, amount=10,
+            date=date(2026, 1, 1),
+        )
+        with self.assertRaises(ForbiddenResourceError):
+            update_transaction(
+                user=self.user, transaction=other_tx, amount=99,
+            )
+
+    def test_rejects_deleting_other_users_transaction(self):
+        other_account = Account.objects.create(owner=self.other, name="Bob")
+        other_tx = record_expense(
+            user=self.other, account=other_account, amount=10,
+            date=date(2026, 1, 1),
+        )
+        with self.assertRaises(ForbiddenResourceError):
+            delete_transaction(user=self.user, transaction=other_tx)

@@ -30,7 +30,7 @@
  </div>
  <div>
  <dt class="text-xs font-medium uppercase text-muted-foreground">Conta</dt>
- <dd class="mt-1 text-foreground">{{ transaction.account.name|default:"—" }}</dd>
+ <dd class="mt-1 text-foreground">{% if transfer_from or transfer_to %}<strong>{{ transfer_from|default:"—" }}</strong> <span class="text-muted-foreground">→</span> <strong>{{ transfer_to|default:"—" }}</strong>{% else %}{{ transaction.account.name|default:"—" }}{% endif %}</dd>
  </div>
  <div>
  <dt class="text-xs font-medium uppercase text-muted-foreground">Categoria</dt>

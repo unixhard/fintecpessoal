@@ -62,13 +62,20 @@
  {% if purchases %}
  <ul class="divide-y divide-muted">
  {% for p in purchases %}
- <li class="flex items-center justify-between py-2.5">
- <div>
- <p class="text-sm font-medium text-foreground">{{ p.description }}</p>
- <p class="text-xs text-muted-foreground">{{ p.installment_count }}x · 1ª em {{ p.first_due_date|date:"d/m/Y" }}</p>
- </div>
- <span class="text-sm font-medium">{% include "components/money.html" with cents=p.total_amount %}</span>
- </li>
+<li class="flex items-center justify-between py-2.5">
+  <div>
+  <p class="text-sm font-medium text-foreground">{{ p.description }}</p>
+  <p class="text-xs text-muted-foreground">{{ p.installment_count }}x · 1ª em {{ p.first_due_date|date:"d/m/Y" }}</p>
+  </div>
+  <div class="flex items-center gap-2">
+  <span class="text-sm font-medium">{% include "components/money.html" with cents=p.total_amount %}</span>
+  <a href="{% url 'cards:purchase_edit' p.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+  <form method="post" action="{% url 'cards:purchase_delete' p.pk %}" onsubmit="return confirm('Excluir esta compra e suas parcelas?');">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-ghost btn-sm text-danger-600 hover:text-danger-700">Excluir</button>
+  </form>
+  </div>
+  </li>
  {% endfor %}
  </ul>
  {% else %}
@@ -86,6 +93,10 @@
  {% else %}
  <form method="post" action="{% url 'cards:card_reactivate' card.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Reativar</button></form>
  {% endif %}
- <a href="{% url 'cards:card_list' %}" class="btn btn-ghost btn-sm">Voltar</a>
- </div>
+<a href="{% url 'cards:card_list' %}" class="btn btn-ghost btn-sm">Voltar</a>
+  <form method="post" action="{% url 'cards:card_delete' card.pk %}" onsubmit="return confirm('Excluir este cartão? Todas as faturas, compras e parcelas serão removidas. Esta ação não pode ser desfeita.');">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-ghost btn-sm text-danger-600 hover:text-danger-700">Excluir cartão</button>
+  </form>
+  </div>
 {% endblock %}

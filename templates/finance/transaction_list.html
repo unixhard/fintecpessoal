@@ -91,7 +91,13 @@
  {% else %}<span class="font-medium text-danger-600">− {{ t.amount|centavos }}</span>{% endif %}
  </td>
 <td class="whitespace-nowrap px-4 py-3 text-right t-actions" data-label="Ações">
+  <div class="inline-flex items-center gap-2">
   <a href="{% url 'finance:transaction_edit' t.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+  <form method="post" action="{% url 'finance:transaction_delete' t.pk %}" onsubmit="return confirm('Excluir este lançamento? Esta ação não pode ser desfeita.');">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-ghost btn-sm text-danger-600 hover:text-danger-700">Excluir</button>
+  </form>
+  </div>
   </td>
   </tr>
  {% endfor %}

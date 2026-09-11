@@ -43,7 +43,7 @@ from .forms import (
     TransactionEditForm,
     TransferForm,
 )
-from .models import Account, Category, ClassificationRule, Merchant, RecurringRule, Transaction
+from .models import Account, Category, ClassificationRule, Merchant, RecurringRule, Transaction, Transfer
 
 
 def _fmt_brl(cents):
@@ -193,6 +193,22 @@ class AccountStatusView(LoginRequiredMixin, View):
         else:
             accounts_svc.reactivate_account(user=request.user, account=account)
             messages.success(request, "Conta reativada.")
+        return redirect(reverse("finance:account_list"))
+
+
+class AccountDeleteView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        account = get_object_or_404(
+            Account.objects.for_user(request.user), pk=kwargs.get("pk")
+        )
+        try:
+            deleted = accounts_svc.delete_account(user=request.user, account=account)
+            messages.success(
+                request,
+                f"Conta excluída ({deleted} lançamento(s) removidos).",
+            )
+        except Exception as exc:
+            messages.error(request, str(exc) or "Não foi possível excluir a conta.")
         return redirect(reverse("finance:account_list"))
 
 
@@ -405,15 +421,28 @@ class TransactionDetailView(LoginRequiredMixin, _OwnedObjectMixin, TemplateView)
         transaction = self.get_object()
         ctx = super().get_context_data(**kwargs)
         ctx["transaction"] = transaction
-        editable = not (
-            transaction.transfer_id
-            or transaction.card_purchase_id
-            or (
-                hasattr(transaction, "paid_invoices")
-                and transaction.paid_invoices.exists()
-            )
-        )
-        ctx["transaction_editable"] = editable
+        ctx["transaction_editable"] = True
+        if transaction.transfer_id:
+            transfer = None
+            try:
+                transfer = (
+                    Transfer.objects.filter(
+                        owner=self.request.user,
+                        out_transaction=transaction,
+                    ).first()
+                    or Transfer.objects.filter(
+                        owner=self.request.user,
+                        in_transaction=transaction,
+                    ).first()
+                    or Transfer.objects.filter(pk=transaction.transfer_id).first()
+                )
+            except Exception:
+                transfer = None
+            if transfer is not None:
+                if transfer.from_account_id:
+                    ctx["transfer_from"] = transfer.from_account.name
+                if transfer.to_account_id:
+                    ctx["transfer_to"] = transfer.to_account.name
         return ctx
 
 
@@ -589,6 +618,30 @@ class TransactionEditView(LoginRequiredMixin, _OwnedObjectMixin, FormView):
         transaction = self.get_object()
         ctx["title"] = "Editar lançamento"
         ctx["kind"] = transaction.type
+        ctx["is_transfer"] = bool(transaction.transfer_id)
+        if transaction.transfer_id:
+            transfer = None
+            try:
+                transfer = (
+                    Transfer.objects.filter(
+                        owner=self.request.user,
+                        out_transaction=transaction,
+                    ).first()
+                    or Transfer.objects.filter(
+                        owner=self.request.user,
+                        in_transaction=transaction,
+                    ).first()
+                    or Transfer.objects.filter(pk=transaction.transfer_id).first()
+                )
+            except Exception:
+                transfer = None
+            if transfer is not None:
+                ctx["from_account_name"] = (
+                    transfer.from_account.name if transfer.from_account_id else ""
+                )
+                ctx["to_account_name"] = (
+                    transfer.to_account.name if transfer.to_account_id else ""
+                )
         return ctx
 
     def get_form_kwargs(self):
@@ -611,16 +664,20 @@ class TransactionEditView(LoginRequiredMixin, _OwnedObjectMixin, FormView):
 
     def form_valid(self, form):
         transaction = self.get_object()
-        transactions_svc.update_transaction(
-            user=self.request.user,
-            transaction=transaction,
-            amount=form.cleaned_data["amount"],
-            date=form.cleaned_data["date"],
-            description=form.cleaned_data.get("description") or "",
-            notes=form.cleaned_data.get("notes") or "",
-            account=form.cleaned_data["account"],
-            category=form.cleaned_data.get("category"),
-        )
+        try:
+            transactions_svc.update_transaction(
+                user=self.request.user,
+                transaction=transaction,
+                amount=form.cleaned_data["amount"],
+                date=form.cleaned_data["date"],
+                description=form.cleaned_data.get("description") or "",
+                notes=form.cleaned_data.get("notes") or "",
+                account=form.cleaned_data["account"],
+                category=form.cleaned_data.get("category"),
+            )
+        except Exception as exc:
+            messages.error(self.request, str(exc) or "Não foi possível atualizar o lançamento.")
+            return self.render_to_response(self.get_context_data(form=form))
         messages.success(self.request, "Lançamento atualizado.")
         return redirect(reverse("finance:transaction_detail", args=[transaction.pk]))
 
@@ -630,11 +687,15 @@ class TransactionDeleteView(LoginRequiredMixin, View):
         transaction = get_object_or_404(
             Transaction.objects.for_user(request.user), pk=kwargs.get("pk")
         )
+        is_transfer = bool(getattr(transaction, "transfer_id", None))
         try:
             transactions_svc.delete_transaction(
                 user=request.user, transaction=transaction
             )
-            messages.success(request, "Lançamento excluído.")
+            if is_transfer:
+                messages.success(request, "Transferência excluída.")
+            else:
+                messages.success(request, "Lançamento excluído.")
         except Exception as exc:
             messages.error(request, str(exc) or "Não foi possível excluir o lançamento.")
         return redirect(reverse("finance:transaction_list"))

@@ -14,6 +14,7 @@ urlpatterns = [
     path("contas/<int:pk>/editar/", views.AccountEditView.as_view(), name="account_edit"),
     path("contas/<int:pk>/arquivar/", views.AccountStatusView.as_view(action="archive"), name="account_archive"),
     path("contas/<int:pk>/reativar/", views.AccountStatusView.as_view(action="reactivate"), name="account_reactivate"),
+    path("contas/<int:pk>/excluir/", views.AccountDeleteView.as_view(), name="account_delete"),
     # Categorias
     path("categorias/", views.CategoryListView.as_view(), name="category_list"),
     path("categorias/nova/", views.CategoryCreateView.as_view(), name="category_create"),
