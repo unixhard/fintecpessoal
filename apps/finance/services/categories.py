@@ -35,22 +35,41 @@ def seed_default_categories(*, user):
 
 
 def _seed_category(user, name, kind, parent):
-    category, created = Category.objects.get_or_create(
-        owner=user,
-        name=name,
-        kind=kind,
-        parent=parent,
-        defaults={
-            "is_default": True,
-            "status": Category.Status.ACTIVE,
-        },
+    """Obtém (ou cria) uma categoria da taxonomia padrão.
+
+    O ``get_or_create`` estoura ``MultipleObjectsReturned`` quando existem
+    categorias duplicadas com o mesmo nome+kind+parent (possível em banco
+    legado, pois ``parent=NULL`` não é coberto pelo UniqueConstraint do
+    Postgres — NULL != NULL). Para ser idempotente e tolerante, busca pela
+    categoria mais antiga e só cria se realmente não existir.
+    """
+    category = (
+        Category.objects.filter(
+            owner=user,
+            name=name,
+            kind=kind,
+            parent=parent,
+        )
+        .order_by("pk")
+        .first()
     )
-    if not created:
-        # garante o flag de padrão mesmo se a categoria já existia (não destrutivo)
-        if not category.is_default:
-            category.is_default = True
-            category.save(update_fields=["is_default"])
-    return category, created
+
+    if category is None:
+        category = Category.objects.create(
+            owner=user,
+            name=name,
+            kind=kind,
+            parent=parent,
+            is_default=True,
+            status=Category.Status.ACTIVE,
+        )
+        return category, True
+
+    # garante o flag de padrão mesmo se a categoria já existia (não destrutivo)
+    if not category.is_default:
+        category.is_default = True
+        category.save(update_fields=["is_default"])
+    return category, False
 
 
 def create_category(
