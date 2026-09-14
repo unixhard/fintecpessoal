@@ -18,6 +18,8 @@ if [ -n "$DATABASE_URL" ]; then
   # São eles que permitem anexar boletos/extratos e classificar automaticamente.
   python manage.py seed_categories
   python manage.py seed_merchants
+  # Superusuário (dono) — sem interação; variáveis DJANGO_SU_*.
+  python manage.py ensure_superuser
 else
   echo "AVISO: DATABASE_URL não definida. Pulando migrações (first deploy)."
 fi
