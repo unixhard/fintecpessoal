@@ -5,11 +5,16 @@
 
 {% block app_content %}
 <div class="space-y-5">
- <form method="get" class="flex items-center gap-2">
+ <form method="get" class="flex flex-wrap items-center gap-2">
   <input type="search" name="q" value="{{ q }}" placeholder="Buscar por nome, email ou usuário…"
    class="w-full max-w-md rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+  <select name="status" class="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+   <option value="">Todos</option>
+   <option value="paying" {% if status == 'paying' %}selected{% endif %}>Pagantes</option>
+   <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inativos</option>
+  </select>
   <button type="submit" class="btn btn-ghost">Buscar</button>
-  {% if q %}<a href="{% url 'painel:user_list' %}" class="text-xs text-muted-foreground hover:text-brand-400">Limpar</a>{% endif %}
+  {% if q or status %}<a href="{% url 'painel:user_list' %}" class="text-xs text-muted-foreground hover:text-brand-400">Limpar</a>{% endif %}
  </form>
 
  <div class="rounded-xl border border-border bg-card">
@@ -39,7 +44,7 @@
       {% else %}
       <span class="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">Grátis</span>
       {% endif %}
-      {% if u.is_superuser %}<span class="ml-1 rounded-full bg-warning-500/15 px-2 py-0.5 text-xs font-semibold text-warning-400">Don</span>{% endif %}
+      {% if u.is_superuser %}<span class="ml-1 rounded-full bg-warning-500/15 px-2 py-0.5 text-xs font-semibold text-warning-400">Dono</span>{% endif %}
      </td>
      <td class="px-4 py-3">
       {% if u.is_active %}
@@ -61,7 +66,7 @@
        </form>
        <form method="post" action="{% url 'painel:user_toggle' u.pk 'is_active' %}">
         {% csrf_token %}
-        <button type="submit" class="btn btn-ghost btn-sm {% if u.is_active %}text-danger-400{% else %}text-success-400{% endif %}">
+        <button type="submit" class="btn btn-{% if u.is_active %}danger{% else %}success{% endif %} btn-sm">
          {{ u.is_active|yesno:"Bloquear,Ativar" }}
         </button>
        </form>
@@ -77,9 +82,9 @@
 
  {% if users.has_other_pages %}
  <div class="flex items-center gap-3 text-sm">
-  {% if users.has_previous %}<a href="?page={{ users.previous_page_number }}{% if q %}&q={{ q }}{% endif %}" class="text-brand-400 hover:text-brand-300">← Anterior</a>{% endif %}
+  {% if users.has_previous %}<a href="?page={{ users.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="text-brand-400 hover:text-brand-300">← Anterior</a>{% endif %}
   <span class="text-muted-foreground">Página {{ users.number }} de {{ users.paginator.num_pages }}</span>
-  {% if users.has_next %}<a href="?page={{ users.next_page_number }}{% if q %}&q={{ q }}{% endif %}" class="text-brand-400 hover:text-brand-300">Próxima →</a>{% endif %}
+  {% if users.has_next %}<a href="?page={{ users.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="text-brand-400 hover:text-brand-300">Próxima →</a>{% endif %}
  </div>
  {% endif %}
 </div>

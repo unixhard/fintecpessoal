@@ -6,15 +6,17 @@
 {% block app_content %}
 <div class="space-y-6 max-w-3xl">
 
+ {# Config de monetização #}
  <div class="rounded-xl border border-border bg-card p-6">
-  <h2 class="text-lg font-bold text-foreground">Cadastro pago</h2>
+  <h2 class="text-lg font-bold text-foreground">Configurações de cadastro</h2>
   <p class="mt-1 text-sm text-muted-foreground">
    Ao ativar, novos cadastros só serão aceitos com um código de acesso válido
-   (emitido por você após o pagamento). Usuários já existentes não são afetados.
+   (emitido por você após o pagamento).
   </p>
 
   <form method="post" class="mt-5 space-y-4">
    {% csrf_token %}
+
    <label class="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 p-4">
     <span>
      <span class="block text-sm font-semibold text-foreground">Exigir pagamento no cadastro</span>
@@ -25,32 +27,55 @@
      class="h-5 w-5 accent-brand-600">
    </label>
 
-   <div>
-    <label for="{{ form.price_label.id_for_label }}" class="mb-1 block text-sm font-medium text-foreground">Texto de preço</label>
-    {{ form.price_label }}
-    <p class="mt-1 text-xs text-muted-foreground">{{ form.price_label.help_text }}</p>
+   <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+     <label for="{{ form.default_plan.id_for_label }}" class="mb-1 block text-sm font-medium text-foreground">Plano padrão</label>
+     {{ form.default_plan }}
+     <p class="mt-1 text-xs text-muted-foreground">{{ form.default_plan.help_text }}</p>
+    </div>
+    <div>
+     <label for="{{ form.price_label.id_for_label }}" class="mb-1 block text-sm font-medium text-foreground">Texto de preço</label>
+     {{ form.price_label }}
+    </div>
    </div>
 
    <div>
     <label for="{{ form.payment_instructions.id_for_label }}" class="mb-1 block text-sm font-medium text-foreground">Instruções de pagamento</label>
     {{ form.payment_instructions }}
-    <p class="mt-1 text-xs text-muted-foreground">{{ form.payment_instructions.help_text }}</p>
+   </div>
+
+   <div>
+    <label for="{{ form.support_contact.id_for_label }}" class="mb-1 block text-sm font-medium text-foreground">Contato de suporte</label>
+    {{ form.support_contact }}
    </div>
 
    <button type="submit" class="btn btn-primary">Salvar configuração</button>
   </form>
  </div>
 
+ {# Geração de códigos #}
  <div class="rounded-xl border border-border bg-card p-6">
   <h2 class="text-lg font-bold text-foreground">Códigos de acesso</h2>
-  <p class="mt-1 text-sm text-muted-foreground">Emita códigos para vender (ex.: via Pix). Cada código libera um cadastro.</p>
+  <p class="mt-1 text-sm text-muted-foreground">
+   Emita códigos ligados a um plano (ex.: para vender via Pix).
+   Ao resgatar, o código cria automaticamente a assinatura do plano.
+  </p>
 
-  <form method="post" action="{% url 'painel:access_code_create' %}" class="mt-4 flex flex-wrap items-end gap-3">
+  <form method="post" action="{% url 'painel:access_code_create' %}" class="mt-4 flex flex-wrap items-end gap-3" id="access-code-form">
    {% csrf_token %}
    <label class="block">
     <span class="mb-1 block text-xs font-semibold text-muted-foreground">Quantidade</span>
     <input type="number" name="quantity" value="1" min="1" max="100"
      class="w-24 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+   </label>
+   <label class="block">
+    <span class="mb-1 block text-xs font-semibold text-muted-foreground">Plano vinculado</span>
+    <select name="plan" class="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+     <option value="">Nenhum (só cadastro)</option>
+     {% for plan in plans %}
+     <option value="{{ plan.pk }}">{{ plan.name }} — R$ {{ plan.price|floatformat:2 }}</option>
+     {% endfor %}
+    </select>
    </label>
    <label class="min-w-40 flex-1 block">
     <span class="mb-1 block text-xs font-semibold text-muted-foreground">Observação (opcional)</span>
@@ -61,6 +86,7 @@
   </form>
  </div>
 
+ {# Lista de códigos #}
  <div class="rounded-xl border border-border bg-card p-6">
   <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Códigos emitidos</h3>
   {% if codes %}
@@ -69,6 +95,7 @@
    <li class="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
     <div class="flex min-w-0 items-center gap-3">
      <code class="rounded bg-muted px-2 py-0.5 font-mono text-sm text-foreground">{{ code.code }}</code>
+     {% if code.plan %}<span class="rounded-full bg-brand-500/15 px-2 py-0.5 text-xs font-semibold text-brand-400">{{ code.plan.name }}</span>{% endif %}
      <span class="truncate text-xs text-muted-foreground">{{ code.note }}</span>
     </div>
     <div class="flex shrink-0 items-center gap-2">
@@ -90,6 +117,13 @@
   {% else %}
   <p class="mt-3 text-sm text-muted-foreground">Nenhum código emitido até agora.</p>
   {% endif %}
+ </div>
+
+ {# Links rápidos #}
+ <div class="flex flex-wrap gap-3 text-sm">
+  <a href="{% url 'painel:plan_list' %}" class="text-brand-400 hover:text-brand-300">→ Gerenciar planos</a>
+  <a href="{% url 'painel:coupon_list' %}" class="text-brand-400 hover:text-brand-300">→ Gerenciar cupons</a>
+  <a href="{% url 'painel:reports' %}" class="text-brand-400 hover:text-brand-300">→ Relatórios</a>
  </div>
 
  <a href="{% url 'painel:index' %}" class="text-sm text-brand-400 hover:text-brand-300">← Voltar para o painel</a>

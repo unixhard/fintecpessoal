@@ -9,12 +9,39 @@
  <div class="flex flex-wrap items-center justify-between gap-3">
   <div>
    <h2 class="text-xl font-bold tracking-tight text-foreground">Visão geral da plataforma</h2>
-   <p class="text-sm text-muted-foreground">Telemetria agregada por dia — custo desprezível.</p>
+   <p class="text-sm text-muted-foreground">Telemetria e vendas agregadas por dia.</p>
   </div>
-  <a href="{% url 'painel:monetization' %}" class="btn btn-ghost btn-sm">Monetização</a>
+  <div class="flex items-center gap-2">
+   <a href="{% url 'painel:reports' %}" class="btn btn-ghost btn-sm">Relatórios</a>
+   <a href="{% url 'painel:monetization' %}" class="btn btn-ghost btn-sm">Monetização</a>
+  </div>
  </div>
 
- {# KPIs #}
+ {# KPIs de vendas #}
+ <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+  <div class="rounded-xl border border-border bg-card p-4">
+   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Receita ({{ days }}d)</p>
+   <p class="mt-1 text-2xl font-bold text-success-400">R$ {{ revenue.period_amount|floatformat:2 }}</p>
+   <p class="text-xs text-muted-foreground">{{ revenue.period_count }} pagamentos · Ticket R$ {{ revenue.ticket|floatformat:2 }}</p>
+  </div>
+  <div class="rounded-xl border border-border bg-card p-4">
+   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">MRR</p>
+   <p class="mt-1 text-2xl font-bold text-foreground">R$ {{ mrr|floatformat:2 }}</p>
+   <p class="text-xs text-muted-foreground">ARR R$ {{ arr|floatformat:0 }}/ano</p>
+  </div>
+  <div class="rounded-xl border border-border bg-card p-4">
+   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assinaturas ativas</p>
+   <p class="mt-1 text-2xl font-bold text-foreground">{{ overview.active_subscriptions }}</p>
+   <p class="text-xs text-muted-foreground">{{ overview.expiring_soon }} expiram em 7d</p>
+  </div>
+  <div class="rounded-xl border border-border bg-card p-4">
+   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Conversão / Churn</p>
+   <p class="mt-1 text-2xl font-bold text-foreground">{{ conversion }}%</p>
+   <p class="text-xs text-muted-foreground">churn {{ churn }}% ({{ days }}d)</p>
+  </div>
+ </div>
+
+ {# KPIs de produto #}
  <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
   <div class="rounded-xl border border-border bg-card p-4">
    <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Usuários</p>
@@ -40,17 +67,13 @@
   </div>
  </div>
 
- {# Top recursos #}
+ {# Top recursos + Top usuários #}
  <div class="grid gap-6 lg:grid-cols-2">
   <div class="rounded-xl border border-border bg-card p-5">
    <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Opções e botões mais usados</h3>
    <p class="text-xs text-muted-foreground">Últimos {{ days }} dias — o que os usuários mais querem.</p>
    {% if top_features %}
    <ul class="mt-4 space-y-2.5">
-    <li class="flex flex-wrap items-center justify-between gap-2">
-     <span class="text-xs font-semibold text-foreground">{{ top_features.0.feature }}</span>
-     <span class="text-sm font-bold text-foreground">{{ top_features.0.total }} cliques</span>
-    </li>
     {% for row in top_features %}
     <li>
      <div class="flex items-center justify-between gap-2 text-xs">
@@ -69,7 +92,6 @@
    {% endif %}
   </div>
 
-  {# Top usuários #}
   <div class="rounded-xl border border-border bg-card p-5">
    <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Quem usa mais ({{ days }}d)</h3>
    {% if top_users %}

@@ -41,7 +41,9 @@ Thumbs.db
 
 # ---- Segredos ----
 .env.local
+.env.prod
 .server.pid
+backups/
 
 # ---- Ferramentas locais (opencode/agentes) ----
 .agents/

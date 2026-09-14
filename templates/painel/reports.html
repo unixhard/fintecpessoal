@@ -1,0 +1,121 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}Relatórios de Vendas — Painel do Dono{% endblock %}
+{% block shell_title %}Relatórios de Vendas{% endblock %}
+
+{% block app_content %}
+<div class="space-y-6">
+
+ {# Filtro de período #}
+ <div class="flex items-center gap-3 text-sm">
+  <span class="text-muted-foreground">Período:</span>
+  {% for d in "7 15 30 90" %}
+   {% with days_val=d|add:"0" %}
+   <a href="?days={{ d }}" class="rounded-full px-3 py-1 font-semibold {% if days == days_val %}bg-brand-500/15 text-brand-400{% else %}text-muted-foreground hover:bg-muted{% endif %}">{{ d }}d</a>
+   {% endwith %}
+  {% endfor %}
+ </div>
+
+ {# KPIs de receita #}
+ <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+  <div class="rounded-xl border border-border bg-card p-4">
+   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Receita total ({{ days }}d)</p>
+   <p class="mt-1 text-2xl font-bold text-success-400">R$ {{ revenue.period_amount|floatformat:2 }}</p>
+   <p class="text-xs text-muted-foreground">{{ revenue.period_count }} pagos</p>
+  </div>
+  <div class="rounded-xl border border-border bg-card p-4">
+   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descontos ({{ days }}d)</p>
+   <p class="mt-1 text-2xl font-bold text-warning-400">R$ {{ revenue.period_discount|floatformat:2 }}</p>
+   <p class="text-xs text-muted-foreground">em cupons/descontos</p>
+  </div>
+  <div class="rounded-xl border border-border bg-card p-4">
+   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ticket médio</p>
+   <p class="mt-1 text-2xl font-bold text-foreground">R$ {{ revenue.ticket|floatformat:2 }}</p>
+   <p class="text-xs text-muted-foreground">por pagamento pago</p>
+  </div>
+  <div class="rounded-xl border border-border bg-card p-4">
+   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Receita lifetime</p>
+   <p class="mt-1 text-2xl font-bold text-foreground">R$ {{ revenue.total|floatformat:2 }}</p>
+   <p class="text-xs text-muted-foreground">total desde o início</p>
+  </div>
+ </div>
+
+ <div class="grid gap-6 lg:grid-cols-2">
+  {# MRR / ARR #}
+  <div class="rounded-xl border border-border bg-card p-5">
+   <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Receita recorrente</h3>
+   <div class="mt-4 space-y-3">
+    <div class="flex items-center justify-between">
+     <span class="text-sm text-muted-foreground">MRR (mensal)</span>
+     <span class="text-lg font-bold text-foreground">R$ {{ mrr|floatformat:2 }}</span>
+    </div>
+    <div class="flex items-center justify-between">
+     <span class="text-sm text-muted-foreground">ARR (anual)</span>
+     <span class="text-lg font-bold text-foreground">R$ {{ arr|floatformat:2 }}</span>
+    </div>
+    <div class="flex items-center justify-between">
+     <span class="text-sm text-muted-foreground">Churn ({{ days }}d)</span>
+     <span class="text-lg font-bold text-foreground">{{ churn }}%</span>
+    </div>
+    <div class="flex items-center justify-between">
+     <span class="text-sm text-muted-foreground">Conversão (grátis → pago)</span>
+     <span class="text-lg font-bold text-foreground">{{ conversion }}%</span>
+    </div>
+   </div>
+  </div>
+
+  {# Receita por plano #}
+  <div class="rounded-xl border border-border bg-card p-5">
+   <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Receita por plano</h3>
+   {% if revenue_by_plan %}
+   <ul class="mt-4 space-y-2">
+    {% for row in revenue_by_plan %}
+    <li class="flex items-center justify-between text-sm">
+     <span class="text-foreground">{{ row.plan__name|default:"Sem plano" }}</span>
+     <span class="font-semibold text-foreground">R$ {{ row.total|floatformat:2 }} <span class="text-xs text-muted-foreground">({{ row.count }})</span></span>
+    </li>
+    {% endfor %}
+   </ul>
+   {% else %}
+   <p class="mt-4 text-sm text-muted-foreground">Sem dados no período.</p>
+   {% endif %}
+  </div>
+
+  {# Receita por método #}
+  <div class="rounded-xl border border-border bg-card p-5">
+   <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Receita por método</h3>
+   {% if revenue_by_method %}
+   <ul class="mt-4 space-y-2">
+    {% for row in revenue_by_method %}
+    <li class="flex items-center justify-between text-sm">
+     <span class="text-foreground">{{ row.get_method_display|default:row.method }}</span>
+     <span class="font-semibold text-foreground">R$ {{ row.total|floatformat:2 }} <span class="text-xs text-muted-foreground">({{ row.count }})</span></span>
+    </li>
+    {% endfor %}
+   </ul>
+   {% else %}
+   <p class="mt-4 text-sm text-muted-foreground">Sem dados no período.</p>
+   {% endif %}
+  </div>
+
+  {# Top clientes #}
+  <div class="rounded-xl border border-border bg-card p-5">
+   <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Top clientes</h3>
+   {% if top_customers %}
+   <ul class="mt-4 space-y-2">
+    {% for row in top_customers %}
+    <li class="flex items-center justify-between text-sm">
+     <a href="{% url 'painel:user_detail' row.user %}" class="text-foreground hover:text-brand-400">
+      Usuário #{{ row.user }}
+     </a>
+     <span class="font-semibold text-foreground">R$ {{ row.total|floatformat:2 }} <span class="text-xs text-muted-foreground">({{ row.count }} pagos)</span></span>
+    </li>
+    {% endfor %}
+   </ul>
+   {% else %}
+   <p class="mt-4 text-sm text-muted-foreground">Sem dados no período.</p>
+   {% endif %}
+  </div>
+ </div>
+</div>
+{% endblock %}

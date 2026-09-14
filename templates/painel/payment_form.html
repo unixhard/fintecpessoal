@@ -1,0 +1,28 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}Registrar pagamento — {{ target.get_full_name|default:target.username }}{% endblock %}
+{% block shell_title %}Registrar pagamento{% endblock %}
+
+{% block app_content %}
+<div class="max-w-lg space-y-5">
+ <h2 class="text-lg font-bold text-foreground">
+  Pagamento para {{ target.get_full_name|default:target.username }}
+ </h2>
+
+ <form method="post" class="space-y-4 rounded-xl border border-border bg-card p-6">
+  {% csrf_token %}
+  {% for field in form %}
+  <div>
+   <label for="{{ field.id_for_label }}" class="mb-1 block text-sm font-medium text-foreground">{{ field.label }}</label>
+   {{ field }}
+   {% if field.help_text %}<p class="mt-1 text-xs text-muted-foreground">{{ field.help_text }}</p>{% endif %}
+   {% if field.errors %}<p class="mt-1 text-xs text-danger-400">{{ field.errors.0 }}</p>{% endif %}
+  </div>
+  {% endfor %}
+  <div class="flex items-center gap-2 pt-2">
+   <button type="submit" class="btn btn-primary">Registrar pagamento</button>
+   <a href="{% url 'painel:user_detail' target.pk %}" class="btn btn-ghost">Cancelar</a>
+  </div>
+ </form>
+</div>
+{% endblock %}
