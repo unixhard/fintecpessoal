@@ -91,6 +91,7 @@ LOCAL_APPS = [
     "apps.comprovantes",
     "apps.imports",
     "apps.user_settings",
+    "apps.painel",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS

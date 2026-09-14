@@ -1,0 +1,131 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}Painel do Dono — FINTECPESSOAL{% endblock %}
+{% block shell_title %}Painel do Dono{% endblock %}
+
+{% block app_content %}
+<div class="space-y-6">
+
+ <div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+   <h2 class="text-xl font-bold tracking-tight text-foreground">Visão geral da plataforma</h2>
+   <p class="text-sm text-muted-foreground">Telemetria agregada por dia — custo desprezível.</p>
+  </div>
+  <a href="{% url 'painel:monetization' %}" class="btn btn-ghost btn-sm">Monetização</a>
+ </div>
+
+ {# KPIs #}
+ <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+  <div class="rounded-xl border border-border bg-card p-4">
+   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Usuários</p>
+   <p class="mt-1 text-2xl font-bold text-foreground">{{ overview.total_users }}</p>
+   <p class="text-xs text-muted-foreground">{{ overview.new_users }} novos ({{ days }}d)</p>
+  </div>
+  <div class="rounded-xl border border-border bg-card p-4">
+   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pagantes</p>
+   <p class="mt-1 text-2xl font-bold text-success-400">{{ overview.paying_users }}</p>
+   <p class="text-xs text-muted-foreground">assinantes/planos ativos</p>
+  </div>
+  <div class="rounded-xl border border-border bg-card p-4">
+   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Eventos ({{ days }}d)</p>
+   <p class="mt-1 text-2xl font-bold text-foreground">{{ overview.events_total }}</p>
+   <p class="text-xs text-muted-foreground">{{ overview.events_users }} usuários ativos</p>
+  </div>
+  <div class="rounded-xl border border-border bg-card p-4">
+   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cadastro pago?</p>
+   <p class="mt-1 text-2xl font-bold {% if monetization.signup_requires_payment %}text-warning-400{% else %}text-muted-foreground{% endif %}">
+    {{ monetization.signup_requires_payment|yesno:"Sim,Não" }}
+   </p>
+   <p class="text-xs text-muted-foreground">{{ monetization.price_label }}</p>
+  </div>
+ </div>
+
+ {# Top recursos #}
+ <div class="grid gap-6 lg:grid-cols-2">
+  <div class="rounded-xl border border-border bg-card p-5">
+   <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Opções e botões mais usados</h3>
+   <p class="text-xs text-muted-foreground">Últimos {{ days }} dias — o que os usuários mais querem.</p>
+   {% if top_features %}
+   <ul class="mt-4 space-y-2.5">
+    <li class="flex flex-wrap items-center justify-between gap-2">
+     <span class="text-xs font-semibold text-foreground">{{ top_features.0.feature }}</span>
+     <span class="text-sm font-bold text-foreground">{{ top_features.0.total }} cliques</span>
+    </li>
+    {% for row in top_features %}
+    <li>
+     <div class="flex items-center justify-between gap-2 text-xs">
+      <span class="truncate font-medium text-foreground">{{ row.feature }}</span>
+      <span class="shrink-0 text-muted-foreground">{{ row.total }}</span>
+     </div>
+     <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+      <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent"
+       style="width: {% widthratio row.total top_features.0.total 100 %}%"></div>
+     </div>
+    </li>
+    {% endfor %}
+   </ul>
+   {% else %}
+   <p class="mt-4 text-sm text-muted-foreground">Sem eventos registrados ainda — a telemetria começa a coletar assim que os usuários navegarem.</p>
+   {% endif %}
+  </div>
+
+  {# Top usuários #}
+  <div class="rounded-xl border border-border bg-card p-5">
+   <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Quem usa mais ({{ days }}d)</h3>
+   {% if top_users %}
+   <ul class="mt-4 space-y-1">
+    {% for row in top_users %}
+    <li class="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 hover:bg-muted">
+     <a href="{% url 'painel:user_detail' row.user.pk %}" class="min-w-0 flex-1 truncate text-sm font-medium text-foreground hover:text-brand-400">
+      {{ row.user.get_full_name|default:row.user.username }}
+     </a>
+     <span class="shrink-0 text-xs text-muted-foreground">{{ row.events }} eventos · {{ row.days_active }}d</span>
+    </li>
+    {% endfor %}
+   </ul>
+   {% else %}
+   <p class="mt-4 text-sm text-muted-foreground">Sem atividade no período.</p>
+   {% endif %}
+   <a href="{% url 'painel:user_list' %}" class="mt-3 inline-block text-xs font-semibold text-brand-400 hover:text-brand-300">Gerenciar usuários →</a>
+  </div>
+ </div>
+
+ {# Gráfico de atividade #}
+ <div class="rounded-xl border border-border bg-card p-5">
+  <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Atividade diária ({{ days }}d)</h3>
+  <div class="mt-4 h-40">
+   {% if daily_series %}
+   <canvas id="daily-chart"></canvas>
+   {% else %}
+   <p class="text-sm text-muted-foreground">Sem dados para o gráfico.</p>
+   {% endif %}
+  </div>
+ </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+(function () {
+  var data = {
+    labels: [{% for row in daily_series %}"{{ row.date|date:'d/m' }}",{% endfor %}],
+    values: [{% for row in daily_series %}{{ row.total }},{% endfor %}],
+  };
+  var canvas = document.getElementById("daily-chart");
+  if (canvas && data.labels.length) {
+    var ctx = canvas.getContext("2d");
+    var barW = 14, gap = 4, max = Math.max.apply(null, data.values) || 1;
+    var totalW = data.values.length * (barW + gap);
+    canvas.width = Math.max(totalW, 400);
+    canvas.height = 150;
+    ctx.clearRect(0, 0, canvas.width, 150);
+    data.values.forEach(function (v, i) {
+      var h = Math.round((v / max) * 120);
+      var x = i * (barW + gap);
+      ctx.fillStyle = "#8b5cf6";
+      ctx.fillRect(x, 140 - h, barW, h);
+    });
+  }
+})();
+</script>
+{% endblock %}

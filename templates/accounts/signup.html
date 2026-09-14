@@ -12,6 +12,17 @@
 
 <form method="post" action="{% url 'accounts:signup' %}" class="space-y-4" novalidate>
  {% csrf_token %}
+ {% if payment_required %}
+ <div class="rounded-lg border border-brand-500/30 bg-brand-500/10 p-3 text-xs text-brand-400">
+  <p class="font-semibold">Cadastro pago — {{ price_label|default:"plano mensal" }}</p>
+  {% if payment_instructions %}
+  <p class="mt-1">{{ payment_instructions }}</p>
+  {% else %}
+  <p class="mt-1">Informe o código de acesso que você recebeu após realizar o pagamento.</p>
+  {% endif %}
+ </div>
+ {% include "components/field.html" with field=form.access_code %}
+ {% endif %}
  {% include "components/field.html" with field=form.name %}
  {% include "components/field.html" with field=form.email %}
  {% include "components/field.html" with field=form.password %}

@@ -1,0 +1,86 @@
+{% extends "app/_shell.html" %}
+
+{% block title %}Usuários — Painel do Dono{% endblock %}
+{% block shell_title %}Usuários{% endblock %}
+
+{% block app_content %}
+<div class="space-y-5">
+ <form method="get" class="flex items-center gap-2">
+  <input type="search" name="q" value="{{ q }}" placeholder="Buscar por nome, email ou usuário…"
+   class="w-full max-w-md rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+  <button type="submit" class="btn btn-ghost">Buscar</button>
+  {% if q %}<a href="{% url 'painel:user_list' %}" class="text-xs text-muted-foreground hover:text-brand-400">Limpar</a>{% endif %}
+ </form>
+
+ <div class="rounded-xl border border-border bg-card">
+  <table class="w-full text-left text-sm">
+   <thead>
+    <tr class="border-b border-border text-xs uppercase tracking-wider text-muted-foreground">
+     <th class="px-4 py-3">Usuário</th>
+     <th class="px-4 py-3">Plano</th>
+     <th class="px-4 py-3">Status</th>
+     <th class="px-4 py-3">Cadastrado</th>
+     <th class="px-4 py-3">Último acesso</th>
+     <th class="px-4 py-3 text-right">Ações</th>
+    </tr>
+   </thead>
+   <tbody>
+    {% for u in users %}
+    <tr class="border-b border-border/60 last:border-0 hover:bg-muted/40">
+     <td class="px-4 py-3">
+      <a href="{% url 'painel:user_detail' u.pk %}" class="font-semibold text-foreground hover:text-brand-400">
+       {{ u.get_full_name|default:u.username }}
+      </a>
+      <p class="text-xs text-muted-foreground">{{ u.email }}</p>
+     </td>
+     <td class="px-4 py-3">
+      {% if u.is_paying %}
+      <span class="rounded-full bg-success-500/15 px-2 py-0.5 text-xs font-semibold text-success-400">Pagante</span>
+      {% else %}
+      <span class="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">Grátis</span>
+      {% endif %}
+      {% if u.is_superuser %}<span class="ml-1 rounded-full bg-warning-500/15 px-2 py-0.5 text-xs font-semibold text-warning-400">Don</span>{% endif %}
+     </td>
+     <td class="px-4 py-3">
+      {% if u.is_active %}
+      <span class="text-xs font-medium text-success-400">Ativo</span>
+      {% else %}
+      <span class="text-xs font-medium text-danger-400">Inativo</span>
+      {% endif %}
+     </td>
+     <td class="px-4 py-3 text-xs text-muted-foreground">{{ u.date_joined|date:"d/m/Y" }}</td>
+     <td class="px-4 py-3 text-xs text-muted-foreground">{{ u.last_login|date:"d/m/Y H:i"|default:"—" }}</td>
+     <td class="px-4 py-3">
+      <div class="flex items-center justify-end gap-2">
+       <form method="post" action="{% url 'painel:user_toggle' u.pk 'is_paying' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-sm"
+         {% if u.is_paying %}title="Remover plano"{% else %}title="Marcar como pagante"{% endif %}>
+         {{ u.is_paying|yesno:"Remover plano,Adicionar plano" }}
+        </button>
+       </form>
+       <form method="post" action="{% url 'painel:user_toggle' u.pk 'is_active' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-sm {% if u.is_active %}text-danger-400{% else %}text-success-400{% endif %}">
+         {{ u.is_active|yesno:"Bloquear,Ativar" }}
+        </button>
+       </form>
+      </div>
+     </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-muted-foreground">Nenhum usuário encontrado.</td></tr>
+    {% endfor %}
+   </tbody>
+  </table>
+ </div>
+
+ {% if users.has_other_pages %}
+ <div class="flex items-center gap-3 text-sm">
+  {% if users.has_previous %}<a href="?page={{ users.previous_page_number }}{% if q %}&q={{ q }}{% endif %}" class="text-brand-400 hover:text-brand-300">← Anterior</a>{% endif %}
+  <span class="text-muted-foreground">Página {{ users.number }} de {{ users.paginator.num_pages }}</span>
+  {% if users.has_next %}<a href="?page={{ users.next_page_number }}{% if q %}&q={{ q }}{% endif %}" class="text-brand-400 hover:text-brand-300">Próxima →</a>{% endif %}
+ </div>
+ {% endif %}
+</div>
+{% endblock %}

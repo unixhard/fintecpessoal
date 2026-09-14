@@ -39,15 +39,43 @@ class FintroLogoutView(LogoutView):
 class SignUpView(View):
     template_name = "accounts/signup.html"
 
+    def _monetization(self):
+        from apps.painel.models import MonetizationConfig
+
+        return MonetizationConfig.get_singleton()
+
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect("core:home")
-        return render(request, self.template_name, {"form": SignUpForm()})
+        monetization = self._monetization()
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": SignUpForm(
+                    payment_required=monetization.signup_requires_payment
+                ),
+                "payment_required": monetization.signup_requires_payment,
+                "price_label": monetization.price_label,
+                "payment_instructions": monetization.payment_instructions,
+            },
+        )
 
     def post(self, request, *args, **kwargs):
-        form = SignUpForm(request.POST)
+        monetization = self._monetization()
+        payment_required = monetization.signup_requires_payment
+        form = SignUpForm(request.POST, payment_required=payment_required)
         if not form.is_valid():
-            return render(request, self.template_name, {"form": form})
+            return render(
+                request,
+                self.template_name,
+                {
+                    "form": form,
+                    "payment_required": payment_required,
+                    "price_label": monetization.price_label,
+                    "payment_instructions": monetization.payment_instructions,
+                },
+            )
         user = form.save()
         # Autentica automaticamente após o cadastro (sem redigitar a senha).
         login(self.request, user, backend="django.contrib.auth.backends.ModelBackend")

@@ -19,6 +19,12 @@ class User(AbstractUser):
     com sua própria FK para `User` (owner).
     """
 
+    is_paying = models.BooleanField(
+        "pagante",
+        default=False,
+        help_text="Indica se o usuário pagou ou possui plano ativo.",
+    )
+
     class Meta:
         verbose_name = "usuário"
         verbose_name_plural = "usuários"

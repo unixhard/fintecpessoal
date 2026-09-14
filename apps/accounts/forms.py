@@ -34,7 +34,12 @@ def _make_username_from_email(email):
 
 
 class SignUpForm(forms.Form):
-    """Cadastro de novo usuário (nome, email, senha, confirmação)."""
+    """Cadastro de novo usuário (nome, email, senha, confirmação).
+
+    Quando a monetização está ativa (``payment_required=True``), um campo
+    ``access_code`` é adicionado ao formulário e o cadastro só é concluído com
+    um código de acesso válido (emitido pelo dono após o pagamento).
+    """
 
     name = forms.CharField(
         label="Nome",
@@ -65,6 +70,22 @@ class SignUpForm(forms.Form):
         ),
     )
 
+    def __init__(self, *args, **kwargs):
+        self.payment_required = kwargs.pop("payment_required", False)
+        self.redeemed_code = None
+        super().__init__(*args, **kwargs)
+        if self.payment_required:
+            self.fields["access_code"] = forms.CharField(
+                label="Código de acesso",
+                max_length=40,
+                widget=forms.TextInput(
+                    attrs={
+                        "placeholder": "Código recebido após o pagamento",
+                        "autocomplete": "off",
+                    }
+                ),
+            )
+
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
         if User.objects.filter(email__iexact=email).exists():
@@ -77,6 +98,25 @@ class SignUpForm(forms.Form):
         password_validation.validate_password(password)
         return password
 
+    def clean_access_code(self):
+        if not self.payment_required:
+            return ""
+        code = self.cleaned_data.get("access_code", "").strip()
+        if not code:
+            raise forms.ValidationError(
+                "Informe o código de acesso recebido após o pagamento."
+            )
+        from apps.painel.models import AccessCode
+
+        if not AccessCode.objects.filter(
+            code__iexact=code, used_by__isnull=True, revoked=False
+        ).exists():
+            raise forms.ValidationError(
+                "Código de acesso inválido, revogado ou já utilizado."
+            )
+        self.redeemed_code = code
+        return code
+
     def clean(self):
         cleaned = super().clean()
         password = cleaned.get("password")
@@ -86,6 +126,8 @@ class SignUpForm(forms.Form):
                 "password_confirmation",
                 "A confirmação de senha não confere com a senha.",
             )
+        if self.payment_required and cleaned.get("access_code"):
+            cleaned["access_code"] = cleaned["access_code"].strip()
         return cleaned
 
     def save(self, commit=True):
@@ -97,10 +139,15 @@ class SignUpForm(forms.Form):
             email=cleaned["email"],
             first_name=first,
             last_name=last.strip(),
+            is_paying=self.redeemed_code is not None,
         )
         user.set_password(cleaned["password"])
         if commit:
             user.save()
+            if self.redeemed_code is not None:
+                from apps.painel.models import AccessCode
+
+                AccessCode.redeem(self.redeemed_code, user)
         return user
 
 

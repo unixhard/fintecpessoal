@@ -221,5 +221,49 @@
         if (el) el.style.display = "none";
       });
     });
+
+    // ----- Telemetria de uso (beacon agregado, barato) -----
+    // Cliques em elementos com [data-track] são acumulados e enviados em lote
+    // sem bloquear a navegação. O servidor guarda apenas contadores por dia.
+    var trackQueue = [];
+    var trackTimer = null;
+    var trackUrl = "/app/dono/track/";
+    function getCookie(name) {
+      var v = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)");
+      return v ? v.pop() : "";
+    }
+    function flushTrack() {
+      trackTimer = null;
+      if (!trackQueue.length) return;
+      var payload = trackQueue.splice(0, trackQueue.length);
+      try {
+        fetch(trackUrl, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify({ features: payload }),
+          keepalive: true,
+        }).catch(function () {});
+      } catch (e) {}
+    }
+    function scheduleTrack() {
+      if (trackTimer) return;
+      trackTimer = setTimeout(flushTrack, 1500);
+    }
+    document.addEventListener("click", function (e) {
+      var el = e.target && e.target.closest ? e.target.closest("[data-track]") : null;
+      if (!el) return;
+      var slug = el.getAttribute("data-track");
+      if (!slug) return;
+      trackQueue.push(slug.slice(0, 64));
+      scheduleTrack();
+    });
+    window.addEventListener("pagehide", flushTrack);
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") flushTrack();
+    });
   });
 })();

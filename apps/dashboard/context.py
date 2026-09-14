@@ -100,6 +100,14 @@ _ACTIVE_BY_NAME = {
     "user_settings:backup_restore": "mais",
     "user_settings:wipe": "mais",
     "user_settings:delete_account": "mais",
+    # Painel do Dono
+    "painel:index": "painel",
+    "painel:user_list": "painel",
+    "painel:user_detail": "painel",
+    "painel:user_toggle": "painel",
+    "painel:monetization": "painel",
+    "painel:access_code_create": "painel",
+    "painel:access_code_revoke": "painel",
 }
 
 
@@ -171,9 +179,39 @@ def _nav_items():
     ]
 
 
+def _nav_items_with_track():
+    """Adiciona o slug de telemetria a cada item da navegação."""
+    items = _nav_items()
+    for item in items:
+        item["track"] = "nav." + item["key"]
+        for child in item["children"]:
+            child["track"] = f"nav.{item['key']}.{child['key']}"
+    return items
+
+
 def app_navigation(request):
     """Fornece `nav_items`, `active_nav` e `review_pending` para o shell."""
-    nav_items = _nav_items()
+    nav_items = _nav_items_with_track()
+    # Painel do Dono — exposto apenas para superusuários.
+    if getattr(request, "user", None) and request.user.is_authenticated and request.user.is_superuser:
+        try:
+            nav_items.append(
+                {
+                    "group": "painel", "key": "painel", "label": "Painel do Dono",
+                    "icon": "◈", "url": reverse("painel:index"),
+                    "track": "nav.painel",
+                    "children": [
+                        {"key": "painel_index", "label": "Visão Geral", "icon": "◈",
+                         "url": reverse("painel:index"), "track": "nav.painel.index"},
+                        {"key": "painel_usuarios", "label": "Usuários", "icon": "☰",
+                         "url": reverse("painel:user_list"), "track": "nav.painel.usuarios"},
+                        {"key": "painel_monetizacao", "label": "Monetização", "icon": "R$",
+                         "url": reverse("painel:monetization"), "track": "nav.painel.monetizacao"},
+                    ],
+                }
+            )
+        except Exception:
+            pass
     active = ""
     review_pending = 0
     try:
