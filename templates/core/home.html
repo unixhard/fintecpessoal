@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% comment %}
- Landing 2026 — Flux Dark: mesmo design system do produto (tokens, vidro,
- gradiente indigo→violet) com preview da interface autenticada.
+ Landing 2026 · Layout inspirado na home da Nubank (hero com captura de email,
+ cards grandes por momento de uso, grid de features, preços, prova social,
+ segurança, FAQ e CTA final) adaptado ao design system Flux Dark do produto.
 {% endcomment %}
 
 {% block title %}FINTECPESSOAL — Controle e inteligência financeira pessoal{% endblock %}
@@ -9,370 +10,519 @@
 {% block content %}
 
 {# ============================ HEADER ============================ #}
-<header class="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md"
+<header class="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md"
  style="-webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);">
  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
- {% include "components/brand.html" with size="md" light=False %}
+  {% include "components/brand.html" with size="md" light=False %}
 
- <nav aria-label="Navegação principal" class="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex">
- <a href="#historia" class="transition-colors hover:text-foreground">A história</a>
- <a href="#recursos" class="transition-colors hover:text-foreground">Recursos</a>
- <a href="#como-funciona" class="transition-colors hover:text-foreground">Como funciona</a>
- <a href="#seguranca" class="transition-colors hover:text-foreground">Segurança</a>
- <a href="#faq" class="transition-colors hover:text-foreground">FAQ</a>
- </nav>
+  <nav aria-label="Navegação principal" class="hidden items-center gap-7 text-sm font-medium text-muted-foreground lg:flex">
+   <a href="#momentos" class="transition-colors hover:text-foreground">Produto</a>
+   <a href="#recursos" class="transition-colors hover:text-foreground">Recursos</a>
+   <a href="#planos" class="transition-colors hover:text-foreground">Planos</a>
+   <a href="#seguranca" class="transition-colors hover:text-foreground">Segurança</a>
+   <a href="#faq" class="transition-colors hover:text-foreground">FAQ</a>
+  </nav>
 
- <div class="flex items-center gap-3">
- <a href="{% url 'accounts:login' %}" class="btn btn-ghost btn-sm hidden sm:inline-flex">Entrar</a>
- <a href="{% url 'accounts:signup' %}" class="btn btn-gradient btn-sm">Criar conta</a>
- </div>
+  <div class="flex items-center gap-3">
+   <a href="{% url 'accounts:login' %}" class="btn btn-ghost btn-sm hidden sm:inline-flex">Entrar</a>
+   <a href="{% url 'accounts:signup' %}" class="btn btn-gradient btn-sm">Criar conta</a>
+  </div>
  </div>
 </header>
 
 {# ============================ HERO ============================ #}
 <section class="relative overflow-hidden">
- <div class="hero-aura pointer-events-none absolute inset-x-0 top-0 mx-auto h-[52rem] max-w-6xl opacity-60" aria-hidden="true"></div>
- <div class="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-14 sm:px-6 sm:pb-24 sm:pt-20 lg:grid-cols-12 lg:gap-12 lg:pb-32 lg:pt-24">
- <div class="lg:col-span-5">
- <p class="eyebrow">Controle e inteligência financeira pessoal</p>
- <h1 class="display-1 mt-4 anim-rise text-4xl leading-[1.08] text-foreground sm:text-5xl lg:text-[3.4rem]">
- Sua vida financeira,<br>contada <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-accent-light">como uma história.</span>
- </h1>
- <p class="mt-6 anim-rise max-w-lg text-lg leading-relaxed text-muted-foreground" style="--d: 90ms">
- Onde você está, o que aconteceu, o que preocupa e para onde vai. Um painel
- que responde às perguntas que importam — com clareza, sem ruído, sem planilhas.
- </p>
- <div class="mt-8 anim-rise flex flex-col gap-3 sm:flex-row sm:items-center" style="--d: 160ms">
- <a href="{% url 'accounts:signup' %}" class="btn btn-gradient btn-lg">Começar agora — é grátis</a>
- <a href="{% url 'accounts:login' %}" class="btn btn-ghost btn-lg">Já tenho conta</a>
- </div>
- <p class="mt-6 anim-rise text-xs font-medium text-muted-foreground" style="--d: 220ms">
- Sem cartão de crédito · Dados sob seu controle · Setup em 5 minutos
- </p>
- </div>
+ <div class="hero-aura pointer-events-none absolute inset-x-0 top-0 mx-auto h-[54rem] max-w-6xl opacity-70" aria-hidden="true"></div>
 
- {# ---- Preview da interface (Flux) ---- #}
- <div class="hidden lg:col-span-7 anim-blur lg:block" style="--d: 120ms" aria-hidden="true">
- <div class="relative mx-auto max-w-[560px]">
- <div class="pointer-events-none absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-brand-500/25 via-accent/15 to-transparent blur-2xl"></div>
- <div class="relative overflow-hidden rounded-2xl border border-border bg-card/90 shadow-pop backdrop-blur">
- <div class="flex items-center justify-between border-b border-border px-5 py-3">
- <div class="flex items-center gap-1.5" aria-hidden="true">
- <span class="h-2.5 w-2.5 rounded-full bg-danger-500/70"></span>
- <span class="h-2.5 w-2.5 rounded-full bg-warning-500/70"></span>
- <span class="h-2.5 w-2.5 rounded-full bg-success-500/70"></span>
- </div>
- <p class="eyebrow">Visão geral</p>
- <span class="w-10"></span>
- </div>
+ <div class="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pb-16 pt-14 sm:px-6 sm:pb-24 sm:pt-20 lg:grid-cols-12 lg:gap-12 lg:pb-32 lg:pt-24">
 
- <div class="grid gap-3 p-5 sm:grid-cols-3">
- <div class="rounded-xl border border-border bg-muted/40 p-4">
- <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Saldo disponível</p>
- <p class="num-display mt-1 text-xl font-bold text-foreground">R$ 4.820</p>
- <span class="badge-pill mt-2 bg-success-500/12 text-success-400">+12,4%</span>
- </div>
- <div class="rounded-xl border border-border bg-muted/40 p-4">
- <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Entradas</p>
- <p class="num-display mt-1 text-xl font-bold text-success-400">+R$ 9.150</p>
- </div>
- <div class="rounded-xl border border-border bg-muted/40 p-4">
- <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Saídas</p>
- <p class="num-display mt-1 text-xl font-bold text-danger-400">−R$ 4.330</p>
- </div>
- </div>
+  {# ---- Texto + captura de email (como o hero do Nubank) ---- #}
+  <div class="lg:col-span-6">
+   <p class="eyebrow">Controle e inteligência financeira pessoal</p>
+   <h1 class="anim-rise mt-4 text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-[3.5rem]">
+    Sua vida financeira,<br>
+    <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-accent-light">contada como uma história.</span>
+   </h1>
+   <p class="anim-rise mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground" style="--d: 90ms">
+    Onde você está, o que aconteceu, o que preocupa e para onde vai.
+    Um painel que responde às perguntas que importam — sem planilhas, sem ruído.
+   </p>
 
- <div class="px-5">
- <div class="mt-2 flex h-24 items-end gap-2 rounded-xl border border-border bg-muted/30 p-3">
- {% for h in "123456789012" %}{% cycle 45 62 55 72 65 48 58 70 60 75 50 68 as ch silent %}
- <div class="flex-1 rounded-t-sm bg-emerald-500/70" style="height:{{ ch }}%"></div>
- {% endfor %}
- </div>
- </div>
+   <form method="get" action="{% url 'accounts:signup' %}" class="anim-rise mt-8 flex max-w-md flex-col gap-3 sm:flex-row" style="--d: 160ms">
+    <label class="sr-only" for="hero-email">Seu e-mail</label>
+    <input id="hero-email" name="email" type="email" required placeholder="Digite seu e-mail"
+     class="w-full rounded-xl border border-border bg-card px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25">
+    <button type="submit" class="btn btn-gradient btn-lg shrink-0">Criar minha conta</button>
+   </form>
 
- <div class="space-y-2 px-5 py-4">
- <div class="flex items-center justify-between border-b border-border py-2 text-sm">
- <span class="font-medium text-foreground">Supermercado</span>
- <span class="num font-semibold text-danger-400">−R$ 247,30</span>
- </div>
- <div class="flex items-center justify-between border-b border-border py-2 text-sm">
- <span class="font-medium text-foreground">Salário</span>
- <span class="num font-semibold text-success-400">+R$ 5.400,00</span>
- </div>
- <div class="flex items-center justify-between py-2 text-sm">
- <span class="font-medium text-foreground">Internet</span>
- <span class="num font-semibold text-danger-400">−R$ 129,90</span>
- </div>
- </div>
- </div>
- </div>
- </div>
+   <p class="anim-rise mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-muted-foreground" style="--d: 220ms">
+    <span class="inline-flex items-center gap-1.5"><svg class="h-3.5 w-3.5 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Grátis para começar</span>
+    <span class="inline-flex items-center gap-1.5"><svg class="h-3.5 w-3.5 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Sem cartão de crédito</span>
+    <span class="inline-flex items-center gap-1.5"><svg class="h-3.5 w-3.5 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Setup em 5 minutos</span>
+   </p>
+  </div>
+
+  {# ---- Visual do produto (grande, com cartões flutuantes) ---- #}
+  <div class="anim-blur relative lg:col-span-6 lg:pl-6" style="--d: 120ms" aria-hidden="true">
+   <div class="relative mx-auto max-w-[560px]">
+    <div class="pointer-events-none absolute -inset-8 rounded-[2.5rem] bg-gradient-to-br from-brand-500/25 via-accent/15 to-transparent blur-3xl"></div>
+
+    <div class="relative overflow-hidden rounded-3xl border border-border bg-card/90 shadow-card">
+     <div class="flex items-center justify-between border-b border-border px-6 py-4">
+      <div class="flex items-center gap-1.5">
+       <span class="h-2.5 w-2.5 rounded-full bg-danger-500/70"></span>
+       <span class="h-2.5 w-2.5 rounded-full bg-warning-500/70"></span>
+       <span class="h-2.5 w-2.5 rounded-full bg-success-500/70"></span>
+      </div>
+      <p class="eyebrow">Visão geral</p>
+      <span class="w-10"></span>
+     </div>
+
+     <div class="grid gap-3 p-6 sm:grid-cols-3">
+      <div class="rounded-xl border border-border bg-muted/40 p-4">
+       <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Saldo disponível</p>
+       <p class="num-display mt-1 text-2xl font-bold text-foreground">R$ 4.820</p>
+       <span class="badge-pill mt-2 bg-success-500/12 text-success-400">+12,4%</span>
+      </div>
+      <div class="rounded-xl border border-border bg-muted/40 p-4">
+       <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Entradas</p>
+       <p class="num-display mt-1 text-2xl font-bold text-success-400">+R$ 9.150</p>
+      </div>
+      <div class="rounded-xl border border-border bg-muted/40 p-4">
+       <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Saídas</p>
+       <p class="num-display mt-1 text-2xl font-bold text-danger-400">−R$ 4.330</p>
+      </div>
+     </div>
+
+     <div class="px-6">
+      <div class="flex h-24 items-end gap-2 rounded-xl border border-border bg-muted/30 p-3">
+       {% for h in "123456789012" %}{% cycle 45 62 55 72 65 48 58 70 60 75 50 68 as ch silent %}
+       <div class="flex-1 rounded-t-sm bg-emerald-500/70" style="height:{{ ch }}%"></div>
+       {% endfor %}
+      </div>
+     </div>
+
+     <div class="space-y-2 px-6 py-5">
+      <div class="flex items-center justify-between border-b border-border py-2 text-sm">
+       <span class="font-medium text-foreground">Supermercado</span><span class="num font-semibold text-danger-400">−R$ 247,30</span>
+      </div>
+      <div class="flex items-center justify-between border-b border-border py-2 text-sm">
+       <span class="font-medium text-foreground">Salário</span><span class="num font-semibold text-success-400">+R$ 5.400,00</span>
+      </div>
+      <div class="flex items-center justify-between py-2 text-sm">
+       <span class="font-medium text-foreground">Internet</span><span class="num font-semibold text-danger-400">−R$ 129,90</span>
+      </div>
+     </div>
+    </div>
+
+    {# Cartão flutuante — meta #}
+    <div class="glass absolute -left-3 top-14 hidden w-44 rounded-2xl p-4 shadow-pop sm:block lg:-left-10">
+     <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Meta · Viagem</p>
+     <p class="num-display mt-1 text-lg font-bold text-foreground">R$ 3.120 <span class="text-xs font-normal text-muted-foreground">/ R$ 6.000</span></p>
+     <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+      <div class="h-full w-[52%] rounded-full bg-gradient-to-r from-brand-500 to-accent"></div>
+     </div>
+    </div>
+
+    {# Cartão flutuante — fatura #}
+    <div class="glass absolute -bottom-6 right-0 hidden w-48 rounded-2xl p-4 shadow-pop sm:block lg:-right-6">
+     <div class="flex items-center justify-between">
+      <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fatura do cartão</p>
+      <span class="badge-pill bg-warning-500/15 text-warning-400">Em dia</span>
+     </div>
+     <p class="num-display mt-1 text-lg font-bold text-foreground">R$ 1.240</p>
+     <p class="mt-1 text-[10px] text-muted-foreground">Vence em 12 dias · R$ 60 restantes do limite</p>
+    </div>
+   </div>
+  </div>
  </div>
 </section>
 
-{# ============================ SIGNAL STRIP ============================ #}
+{# ============================ DIFERENCIAIS (STRIP) ============================ #}
 <section class="border-y border-border bg-card/50" aria-label="Diferenciais">
  <div class="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-6 sm:px-6 lg:grid-cols-4">
- <div class="flex items-center gap-3">
- <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 9 9 6 9-6"/></svg></span>
- <span class="text-sm font-medium text-foreground">Seus dados, só seus</span>
- </div>
- <div class="flex items-center gap-3">
- <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h3l2-5 4 10 2-5h3"/></svg></span>
- <span class="text-sm font-medium text-foreground">Análise que prioriza</span>
- </div>
- <div class="flex items-center gap-3">
- <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M6 6l12 12M18 6 6 18"/></svg></span>
- <span class="text-sm font-medium text-foreground">Sem anúncios, sem rastreio</span>
- </div>
- <div class="flex items-center gap-3">
- <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6M12 3v13M12 16l-4-4M12 16l4-4"/></svg></span>
- <span class="text-sm font-medium text-foreground">Exportação e backup</span>
- </div>
- </div>
-</section>
-
-{# ============================ HISTÓRIA / RECURSOS ============================ #}
-<section id="historia" class="py-16 sm:py-24">
- <div class="mx-auto max-w-6xl px-4 sm:px-6">
- <div class="mx-auto max-w-2xl text-center">
- <p class="eyebrow">A história</p>
- <h2 class="display-2 mt-4 text-3xl text-foreground sm:text-4xl">
- Cinco perguntas. Um painel.
- </h2>
- <p class="mt-4 text-lg text-muted-foreground">
- Seu painel segue a jornada natural do dinheiro — do seu saldo até as suas decisões.
- </p>
- </div>
-
- <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
- <div class="glass-card card-hover p-6">
- <p class="eyebrow">01 · Onde estou</p>
- <h3 class="display-2 mt-3 text-lg text-foreground">Saldo disponível</h3>
- <p class="mt-2 text-sm leading-relaxed text-muted-foreground">O número que importa agora, com a leitura certa de quanto é realmente seu.</p>
- </div>
- <div class="glass-card card-hover p-6">
- <p class="eyebrow">02 · O que aconteceu</p>
- <h3 class="display-2 mt-3 text-lg text-foreground">Fluxo e categorias</h3>
- <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Entradas, saídas e o padrão dos seus gastos contados com clareza.</p>
- </div>
- <div class="glass-card card-hover p-6">
- <p class="eyebrow">03 · O que preocupa</p>
- <h3 class="display-2 mt-3 text-lg text-foreground">Faturas e dívidas</h3>
- <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Alerta precoce sobre o que pode afetar sua tranquilidade orçamentária.</p>
- </div>
- <div class="glass-card card-hover p-6">
- <p class="eyebrow">04 · Para onde vou</p>
- <h3 class="display-2 mt-3 text-lg text-foreground">Metas e patrimônio</h3>
- <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Seus objetivos e o caminho para construí-los, com progresso visível.</p>
- </div>
- <div class="glass-card card-hover p-6">
- <p class="eyebrow">05 · O que faço agora</p>
- <h3 class="display-2 mt-3 text-lg text-foreground">Ações sugeridas</h3>
- <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Próximos passos concretos, na ordem certa, quando você mais precisa.</p>
- </div>
- <div class="glass-card card-hover p-6">
- <p class="eyebrow">Inteligência</p>
- <h3 class="display-2 mt-3 text-lg text-foreground">Análise que prioriza</h3>
- <p class="mt-2 text-sm leading-relaxed text-muted-foreground">A IA que categoriza, encontra padrões e aponta o que merece atenção — sem excessos.</p>
- </div>
- </div>
+  <div class="flex items-center gap-3">
+   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5Z"/></svg></span>
+   <span class="text-sm font-medium text-foreground">Seus dados, só seus</span>
+  </div>
+  <div class="flex items-center gap-3">
+   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 3-3m-3 3-3-3M5 21h14"/></svg></span>
+   <span class="text-sm font-medium text-foreground">Análise com IA</span>
+  </div>
+  <div class="flex items-center gap-3">
+   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 9 9 6 9-6"/></svg></span>
+   <span class="text-sm font-medium text-foreground">Importe seus extratos</span>
+  </div>
+  <div class="flex items-center gap-3">
+   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6M12 3v13M12 16l-4-4M12 16l4-4"/></svg></span>
+   <span class="text-sm font-medium text-foreground">Backup e exportação</span>
+  </div>
  </div>
 </section>
 
-{# ============================ COMO FUNCIONA ============================ #}
-<section id="como-funciona" class="border-y border-border bg-card/50 py-16 sm:py-24">
+{# ============================ PRODUTO: "PARA CADA MOMENTO" ============================ #}
+<section id="momentos" class="hero-aura py-16 sm:py-24">
  <div class="mx-auto max-w-6xl px-4 sm:px-6">
- <div class="mx-auto max-w-2xl text-center">
- <p class="eyebrow">Como funciona</p>
- <h2 class="display-2 mt-4 text-3xl text-foreground sm:text-4xl">Clareza em três passos</h2>
+  <div class="mx-auto max-w-2xl text-center">
+   <p class="eyebrow">Produto</p>
+   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+    Para cada momento, um FINTECPESSOAL diferente
+   </h2>
+   <p class="mt-4 text-lg text-muted-foreground">
+    Do primeiro lançamento à decisão do mês — um lugar para a sua vida financeira inteira.
+   </p>
+  </div>
+
+  <div class="mt-12 grid gap-6 md:grid-cols-2">
+   {# Card grande 1 — Controle total #}
+   <a href="{% url 'accounts:signup' %}" class="group relative overflow-hidden rounded-3xl border border-border bg-card p-7 card-hover lg:p-9">
+    <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gradient-to-br from-brand-500/20 to-accent/10 blur-2xl transition-opacity group-hover:opacity-100"></div>
+    <div class="flex items-start justify-between gap-4">
+     <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-accent text-white" aria-hidden="true"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>
+     <span class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-brand-400">Mais popular</span>
+    </div>
+    <h3 class="mt-6 text-xl font-bold text-foreground">Controle total da sua vida financeira</h3>
+    <p class="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+     Saldo, fluxo, categorias e a leitura certa do que é realmente seu — em um painel que conta a sua história.
+    </p>
+    <span class="link-accent mt-5">Começar agora <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+   </a>
+
+   {# Card grande 2 — Orçamento sem surpresa #}
+   <a href="{% url 'accounts:signup' %}" class="group relative overflow-hidden rounded-3xl border border-border bg-card p-7 card-hover lg:p-9">
+    <div class="pointer-events-none absolute -right-16 -bottom-16 h-56 w-56 rounded-full bg-gradient-to-br from-accent/20 to-brand-500/10 blur-2xl"></div>
+    <div class="flex items-start justify-between gap-4">
+     <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-brand-600 text-white" aria-hidden="true"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+     <span class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">Orçamento</span>
+    </div>
+    <h3 class="mt-6 text-xl font-bold text-foreground">Orçamento sem surpresa no fim do mês</h3>
+    <p class="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+     Orçamentos por categoria, alertas e lembretes que chegam na hora certa.
+    </p>
+    <span class="link-accent mt-5">Começar agora <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+   </a>
+
+   {# Card grande 3 — Faturas e cartões #}
+   <a href="{% url 'accounts:signup' %}" class="group relative overflow-hidden rounded-3xl border border-border bg-card p-7 card-hover lg:p-9">
+    <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gradient-to-br from-success-500/15 to-brand-500/10 blur-2xl"></div>
+    <div class="flex items-start justify-between gap-4">
+     <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-success-500 to-brand-600 text-white" aria-hidden="true"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><path d="M6 15h4"/></svg></span>
+     <span class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">Cartões</span>
+    </div>
+    <h3 class="mt-6 text-xl font-bold text-foreground">Faturas claras, antes do vencimento</h3>
+    <p class="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+     Acompanhe faturas, compras parceladas e o limite que ainda resta — sem letra miúda.
+    </p>
+    <span class="link-accent mt-5">Começar agora <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+   </a>
+
+   {# Card grande 4 — Metas e patrimônio #}
+   <a href="{% url 'accounts:signup' %}" class="group relative overflow-hidden rounded-3xl border border-border bg-card p-7 card-hover lg:p-9">
+    <div class="pointer-events-none absolute -right-16 -bottom-16 h-56 w-56 rounded-full bg-gradient-to-br from-warning-500/15 to-accent/10 blur-2xl"></div>
+    <div class="flex items-start justify-between gap-4">
+     <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-warning-500 to-brand-600 text-white" aria-hidden="true"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9.5l-4.7 1.9L12 16l-1.8-4.6-4.7-1.9 4.7-1.9Z"/><path d="M18.5 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"/></svg></span>
+     <span class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">Metas</span>
+    </div>
+    <h3 class="mt-6 text-xl font-bold text-foreground">Do sonho ao patrimônio, com progresso visível</h3>
+    <p class="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+     Metas de curto e longo prazo, patrimônio que evolui e o caminho claramente desenhado.
+    </p>
+    <span class="link-accent mt-5">Começar agora <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+   </a>
+  </div>
  </div>
- <div class="mt-12 grid gap-6 md:grid-cols-3">
- <div class="panel p-6">
- <span class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent text-sm font-bold text-white">1</span>
- <h3 class="mt-4 text-base font-bold text-foreground">Cadastre sua base</h3>
- <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Sua primeira conta, saldo inicial e perfil — menos de cinco minutos.</p>
+</section>
+
+{# ============================ RECURSOS: COLUNAS (CAIXINHAS/CONTA/EMPRÉSTIMOS) ============================ #}
+<section id="recursos" class="border-y border-border bg-card/50 py-16 sm:py-24">
+ <div class="mx-auto max-w-6xl px-4 sm:px-6">
+  <div class="mx-auto max-w-2xl text-center">
+   <p class="eyebrow">Recursos</p>
+   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Ferramentas que trabalham por você</h2>
+   <p class="mt-4 text-lg text-muted-foreground">Cada peça do FINTECPESSOAL foi feita para simplificar uma parte da sua rotina.</p>
+  </div>
+
+  <div class="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+   <div class="panel p-7 card-hover">
+    <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 3-3m-3 3-3-3M5 21h14"/></svg></span>
+    <h3 class="mt-4 text-base font-bold text-foreground">Análise com IA</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+     A IA categoriza seus lançamentos, encontra padrões e gera relatórios com os próximos passos — na medida certa, sem excessos.
+    </p>
+   </div>
+
+   <div class="panel p-7 card-hover">
+    <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 9 9 6 9-6"/></svg></span>
+    <h3 class="mt-4 text-base font-bold text-foreground">Importação de extratos</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+     Importe seus extratos e deixe que tudo seja categorizado automaticamente — sem digitar lançamento por lançamento.
+    </p>
+   </div>
+
+   <div class="panel p-7 card-hover">
+    <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a2 2 0 0 0 4 0c0-1-.8-2-2-3s-2-2-2-3a2 2 0 0 1 4 0"/><circle cx="12" cy="12" r="9"/></svg></span>
+    <h3 class="mt-4 text-base font-bold text-foreground">Alertas e lembretes</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+     Lembretes de contas, alertas de dívidas e o que merece atenção — de forma discreta e no momento certo.
+    </p>
+   </div>
+
+   <div class="panel p-7 card-hover">
+    <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+    <h3 class="mt-4 text-base font-bold text-foreground">Orçamentos inteligentes</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+     Defina limites por categoria, acompanhe o progresso e receba o aviso antes de estourar o mês.
+    </p>
+   </div>
+
+   <div class="panel p-7 card-hover">
+    <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><path d="M6 15h4"/></svg></span>
+    <h3 class="mt-4 text-base font-bold text-foreground">Cartões e faturas</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+     Acompanhe compras, parcelas e faturas em um só lugar — com vista clara do que vem pela frente.
+    </p>
+   </div>
+
+   <div class="panel p-7 card-hover">
+    <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9.5l-4.7 1.9L12 16l-1.8-4.6-4.7-1.9 4.7-1.9Z"/><path d="M18.5 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"/></svg></span>
+    <h3 class="mt-4 text-base font-bold text-foreground">Metas e patrimônio</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+     Transforme planos em progresso visível — do primeiro aporte à evolução do seu patrimônio.
+    </p>
+   </div>
+  </div>
  </div>
- <div class="panel p-6">
- <span class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent text-sm font-bold text-white">2</span>
- <h3 class="mt-4 text-base font-bold text-foreground">Registre ou importe</h3>
- <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Lançamentos manualmente ou via importação de extrato — a IA categoriza por você.</p>
+</section>
+
+{# ============================ PLANOS ============================ #}
+<section id="planos" class="hero-aura py-16 sm:py-24">
+ <div class="mx-auto max-w-6xl px-4 sm:px-6">
+  <div class="mx-auto max-w-2xl text-center">
+   <p class="eyebrow">Planos</p>
+   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Comece grátis. Evolua quando quiser.</h2>
+   <p class="mt-4 text-lg text-muted-foreground">
+    {% if monetization.signup_requires_payment %}
+     O cadastro é liberado por código de acesso. {{ monetization.price_label }}
+     {% if monetization.support_contact %} · Dúvidas: {{ monetization.support_contact }}{% endif %}
+    {% else %}
+     Sem cartão de crédito. Sem pegadinhas. Você decide quando pagar.
+    {% endif %}
+   </p>
+  </div>
+
+  {% if plans %}
+  <div class="mt-12 grid gap-6 lg:grid-cols-3">
+   {% for plan in plans %}
+   <div class="relative rounded-3xl border {% if plan.is_featured %}border-brand-500/50 bg-card shadow-pop{% else %}border-border bg-card{% endif %} p-7">
+    {% if plan.is_featured %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-brand-500 to-accent px-3 py-1 text-xs font-bold text-white">Mais popular</span>{% endif %}
+    <h3 class="text-base font-bold text-foreground">{{ plan.name }}</h3>
+    {% if plan.description %}<p class="mt-1 min-h-10 text-sm text-muted-foreground">{{ plan.description }}</p>{% endif %}
+    <div class="mt-5 flex items-end gap-1">
+     <span class="num-display text-4xl font-bold text-foreground">R$ {{ plan.price|floatformat:2 }}</span>
+     <span class="pb-1 text-sm text-muted-foreground">/ {{ plan.get_billing_cycle_display }}</span>
+    </div>
+    <p class="mt-1 text-xs text-muted-foreground">
+     {% if plan.is_lifetime %}Acesso vitalício{% else %}{{ plan.duration_days }} dias de acesso{% endif %}
+    </p>
+    <ul class="mt-5 space-y-2 text-sm">
+     <li class="flex items-center gap-2 text-foreground"><svg class="h-4 w-4 shrink-0 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Painel completo com IA</li>
+     <li class="flex items-center gap-2 text-foreground"><svg class="h-4 w-4 shrink-0 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Importação e categorização</li>
+     {% if plan.is_featured or plan.billing_cycle != 'lifetime' %}
+     <li class="flex items-center gap-2 text-foreground"><svg class="h-4 w-4 shrink-0 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Suporte priorizado</li>
+     {% endif %}
+    </ul>
+    <a href="{% if monetization.signup_requires_payment %}{% url 'accounts:signup' %}{% else %}{% url 'accounts:signup' %}{% endif %}"
+     class="btn {% if plan.is_featured %}btn-gradient{% else %}btn-ghost{% endif %} w-full mt-6">
+     {% if monetization.signup_requires_payment %}Solicitar acesso{% else %}Começar com {{ plan.name }}{% endif %}
+    </a>
+   </div>
+   {% endfor %}
+  </div>
+  {% else %}
+  <div class="mx-auto mt-12 max-w-2xl rounded-3xl border border-border bg-card p-8 text-center">
+   <h3 class="text-xl font-bold text-foreground">Grátis para começar</h3>
+   <p class="mt-2 text-sm text-muted-foreground">
+    Enquanto a fase de lançamento durar, todos os recursos ficam liberados por igual.
+    Quando você quiser apoiar o produto, o plano pago vai aparecer aqui.
+   </p>
+   <a href="{% url 'accounts:signup' %}" class="btn btn-gradient btn-lg mt-6">Criar minha conta agora</a>
+  </div>
+  {% endif %}
  </div>
- <div class="panel p-6">
- <span class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent text-sm font-bold text-white">3</span>
- <h3 class="mt-4 text-base font-bold text-foreground">Decida com visão</h3>
- <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Seu painel conta a história e sugere os próximos passos, todo mês.</p>
- </div>
- </div>
+</section>
+
+{# ============================ PROVA SOCIAL ============================ #}
+<section class="border-y border-border bg-card/50 py-14">
+ <div class="mx-auto grid max-w-6xl items-center gap-8 px-4 sm:px-6 md:grid-cols-3">
+  {% if total_users %}
+  <div class="text-center">
+   <p class="num-display text-4xl font-bold text-foreground">{{ total_users }}</p>
+   <p class="mt-1 text-sm text-muted-foreground">pessoas já organizam<br>suas finanças por aqui</p>
+  </div>
+  {% endif %}
+  <div class="text-center">
+   <p class="num-display text-4xl font-bold text-foreground">5 min<span class="text-2xl text-muted-foreground"></span></p>
+   <p class="mt-1 text-sm text-muted-foreground">para cadastrar<br>e ver seu painel</p>
+  </div>
+  <div class="text-center">
+   <p class="num-display text-4xl font-bold text-foreground">1 painel<span class="text-2xl text-muted-foreground"></span></p>
+   <p class="mt-1 text-sm text-muted-foreground">para entender<br>sua história inteira</p>
+  </div>
  </div>
 </section>
 
 {# ============================ SEGURANÇA ============================ #}
 <section id="seguranca" class="py-16 sm:py-24">
  <div class="mx-auto max-w-6xl px-4 sm:px-6">
- <div class="mx-auto max-w-2xl text-center">
- <p class="eyebrow">Segurança</p>
- <h2 class="display-2 mt-4 text-3xl text-foreground sm:text-4xl">Seus dados, seus. Simples assim.</h2>
- <p class="mt-4 text-lg text-muted-foreground">Privacidade não é um extra — é o padrão.</p>
- </div>
- <div class="mt-12 grid gap-5 sm:grid-cols-3">
- <div class="glass-card p-6 text-center">
- <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5Z"/><path d="m9 12 2 2 4-4"/></svg></span>
- <h3 class="mt-4 text-base font-bold text-foreground">Nada é conectado</h3>
- <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Nenhuma conta bancária é acessada. Você registra o que quiser, quando quiser.</p>
- </div>
- <div class="glass-card p-6 text-center">
- <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6M12 3v13M12 16l-4-4M12 16l4-4"/></svg></span>
- <h3 class="mt-4 text-base font-bold text-foreground">Backup completo</h3>
- <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Exporte seus dados a qualquer momento, no formato que você quiser.</p>
- </div>
- <div class="glass-card p-6 text-center">
- <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><circle cx="18" cy="9" r="1"/></svg></span>
- <h3 class="mt-4 text-base font-bold text-foreground">Sem rastreamento</h3>
- <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Zero rastreadores, zero anúncios. O produto é para você — nunca para anunciantes.</p>
- </div>
- </div>
+  <div class="mx-auto max-w-2xl text-center">
+   <p class="eyebrow">Segurança e privacidade</p>
+   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Seus dados, seus. Simples assim.</h2>
+   <p class="mt-4 text-lg text-muted-foreground">Privacidade não é um extra — é o padrão.</p>
+  </div>
+  <div class="mt-12 grid gap-5 sm:grid-cols-3">
+   <div class="glass-card p-7 text-center">
+    <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+    <h3 class="mt-4 text-base font-bold text-foreground">Nada é conectado</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Nenhuma conta bancária é acessada. Você registra o que quiser, quando quiser.</p>
+   </div>
+   <div class="glass-card p-7 text-center">
+    <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6M12 3v13M12 16l-4-4M12 16l4-4"/></svg></span>
+    <h3 class="mt-4 text-base font-bold text-foreground">Backup completo</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Exporte seus dados a qualquer momento, no formato que você quiser.</p>
+   </div>
+   <div class="glass-card p-7 text-center">
+    <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><circle cx="18" cy="9" r="1"/></svg></span>
+    <h3 class="mt-4 text-base font-bold text-foreground">Sem rastreamento</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Zero rastreadores, zero anúncios. O produto é para você — nunca para anunciantes.</p>
+   </div>
+  </div>
  </div>
 </section>
 
 {# ============================ FAQ ============================ #}
 <section id="faq" class="border-t border-border bg-card/50 py-16 sm:py-24">
  <div class="mx-auto max-w-3xl px-4 sm:px-6">
- <div class="text-center">
- <p class="eyebrow">FAQ</p>
- <h2 class="display-2 mt-4 text-3xl text-foreground sm:text-4xl">Perguntas frequentes</h2>
- </div>
- <div class="mt-10 space-y-3">
- <details class="group rounded-xl border border-border bg-card">
- <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
- Preciso saber contabilidade?
- <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true">
- <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
- </span>
- </summary>
- <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
- Não. O FINTECPESSOAL foi feito para quem não quer pensar em contabilidade.
- Tudo é organizado de forma simples — a análise cuida da categorização e da visão para você.
- </div>
- </details>
+  <div class="text-center">
+   <p class="eyebrow">FAQ</p>
+   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Perguntas frequentes</h2>
+  </div>
+  <div class="mt-10 space-y-3">
+   <details class="group rounded-xl border border-border bg-card">
+    <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+     Preciso saber contabilidade?
+     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    </summary>
+    <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
+     Não. O FINTECPESSOAL foi feito para quem não quer pensar em contabilidade. Tudo é organizado de forma simples — a análise cuida da categorização e da visão para você.
+    </div>
+   </details>
 
- <details class="group rounded-xl border border-border bg-card">
- <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
- Meus dados estão seguros?
- <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true">
- <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
- </span>
- </summary>
- <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
- Sim. Cada conta é isolada das demais e nada é conectado ao seu banco.
- Não há rastreamento, não há anúncios e não vendemos seus dados.
- </div>
- </details>
+   <details class="group rounded-xl border border-border bg-card">
+    <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+     Meus dados estão seguros?
+     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    </summary>
+    <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
+     Sim. Cada conta é isolada das demais e nada é conectado ao seu banco. Não há rastreamento, não há anúncios e não vendemos seus dados.
+    </div>
+   </details>
 
- <details class="group rounded-xl border border-border bg-card">
- <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
- Posso importar meus extratos?
- <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true">
- <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
- </span>
- </summary>
- <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
- Sim. Você pode importar extratos em formatos comuns e a análise categoriza
- automaticamente o que foi importado — sem digitação manual.
- </div>
- </details>
+   <details class="group rounded-xl border border-border bg-card">
+    <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+     Posso importar meus extratos?
+     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    </summary>
+    <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
+     Sim. Importe extratos em formatos comuns e a análise categoriza automaticamente — sem digitação manual.
+    </div>
+   </details>
 
- <details class="group rounded-xl border border-border bg-card">
- <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
- Vale a pena com uma única conta?
- <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true">
- <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
- </span>
- </summary>
- <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
- Vale. Mesmo com uma única conta, você ganha visibilidade sobre gastos,
- orçamentos e alertas que ajudam a evitar surpresas no fim do mês.
- </div>
- </details>
+   <details class="group rounded-xl border border-border bg-card">
+    <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+     Como funciona a contratação?
+     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    </summary>
+    <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
+     {% if monetization.signup_requires_payment %}
+      O cadastro é feito por código de acesso: você faz o pagamento ({{ monetization.price_label }}), recebe o código e é liberado na hora.
+      {% if monetization.support_contact %}Em caso de dúvida, fale com {{ monetization.support_contact }}.{% endif %}
+     {% else %}
+      Por enquanto criar a conta é grátis e sem cartão de crédito. Quando os planos pagos forem ativados, você escolhe o que faz sentido para você.
+     {% endif %}
+    </div>
+   </details>
 
- <details class="group rounded-xl border border-border bg-card">
- <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
- Funciona no celular?
- <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true">
- <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
- </span>
- </summary>
- <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
- Sim. A interface é responsiva e funciona perfeitamente no navegador do seu
- celular — sem precisar instalar nada.
- </div>
- </details>
-
- <details class="group rounded-xl border border-border bg-card">
- <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
- E se eu quiser parar de usar?
- <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true">
- <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
- </span>
- </summary>
- <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
- Pode parar a qualquer momento. Exporte seus dados, encerre a conta e pronto —
- sem burocracia, sem multa, sem retenção.
- </div>
- </details>
- </div>
+   <details class="group rounded-xl border border-border bg-card">
+    <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+     Funciona no celular?
+     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    </summary>
+    <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
+     Sim. A interface é responsiva e funciona perfeitamente no navegador do seu celular — sem instalar nada.
+    </div>
+   </details>
+  </div>
  </div>
 </section>
 
-{# ============================ FINAL CTA ============================ #}
+{# ============================ CTA FINAL ============================ #}
 <section class="py-16 sm:py-24">
  <div class="mx-auto max-w-6xl px-4 sm:px-6">
- <div class="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-brand-600 via-brand-500 to-accent px-6 py-14 text-center sm:px-12 sm:py-16">
- <div class="hero-aura pointer-events-none absolute inset-0 opacity-40" aria-hidden="true"></div>
- <div class="relative">
- <h2 class="display-2 mx-auto max-w-2xl text-3xl text-white sm:text-4xl">Comece a entender seu dinheiro hoje</h2>
- <p class="mx-auto mt-4 max-w-xl text-lg text-white/80">Clareza que transforma decisão em ação — sem planilhas e sem complicação.</p>
- <a href="{% url 'accounts:signup' %}" class="mt-8 inline-flex h-12 items-center justify-center rounded-xl bg-white px-8 text-sm font-bold text-brand-700 shadow-pop transition-all hover:bg-brand-50">Criar minha conta grátis</a>
- <p class="mt-4 text-sm font-medium text-white/70">Grátis para começar · Sem cartão de crédito</p>
- </div>
- </div>
+  <div class="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-brand-600 via-brand-500 to-accent px-6 py-14 text-center sm:px-12 sm:py-16">
+   <div class="hero-aura pointer-events-none absolute inset-0 opacity-40" aria-hidden="true"></div>
+   <div class="relative">
+    <h2 class="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl">Comece a entender seu dinheiro hoje</h2>
+    <p class="mx-auto mt-4 max-w-xl text-lg text-white/60">Clareza que transforma decisão em ação — sem planilhas e sem complicação.</p>
+    <form method="get" action="{% url 'accounts:signup' %}" class="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row">
+     <label class="sr-only" for="cta-email">Seu e-mail</label>
+     <input id="cta-email" name="email" type="email" required placeholder="Digite seu e-mail"
+      class="w-full rounded-xl bg-white/95 px-4 py-3.5 text-sm text-brand-950 placeholder:text-brand-900/50 focus:outline-none focus:ring-2 focus:ring-white/60">
+     <button type="submit" class="btn btn-light btn-lg shrink-0">Criar minha conta grátis</button>
+    </form>
+    <p class="mt-4 text-sm font-medium text-white/60">Grátis para começar · Sem cartão de crédito · Setup em 5 minutos</p>
+   </div>
+  </div>
  </div>
 </section>
 
 {# ============================ FOOTER ============================ #}
 <footer class="border-t border-border bg-background">
  <div class="mx-auto max-w-6xl px-4 sm:px-6">
- <div class="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
- <div>
- {% include "components/brand.html" with size="md" light=False %}
- <p class="mt-3 max-w-xs text-sm text-muted-foreground">Controle e inteligência financeira pessoal em um único lugar.</p>
- </div>
- <div>
- <h5 class="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Produto</h5>
- <ul class="space-y-2 text-sm">
- <li><a href="#historia" class="text-muted-foreground transition-colors hover:text-foreground">A história</a></li>
- <li><a href="#recursos" class="text-muted-foreground transition-colors hover:text-foreground">Recursos</a></li>
- <li><a href="#seguranca" class="text-muted-foreground transition-colors hover:text-foreground">Segurança</a></li>
- </ul>
- </div>
- <div>
- <h5 class="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Conta</h5>
- <ul class="space-y-2 text-sm">
- <li><a href="{% url 'accounts:signup' %}" class="text-muted-foreground transition-colors hover:text-foreground">Criar conta</a></li>
- <li><a href="{% url 'accounts:login' %}" class="text-muted-foreground transition-colors hover:text-foreground">Entrar</a></li>
- </ul>
- </div>
- <div>
- <h5 class="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Ajuda</h5>
- <ul class="space-y-2 text-sm">
- <li><a href="#faq" class="text-muted-foreground transition-colors hover:text-foreground">Perguntas frequentes</a></li>
- </ul>
- </div>
- </div>
- <div class="flex flex-col items-center justify-between gap-3 border-t border-border py-6 sm:flex-row">
- <p class="text-xs text-muted-foreground">FINTECPESSOAL &copy; 2026</p>
- <p class="text-xs text-muted-foreground">Controle e inteligência financeira pessoal.</p>
- </div>
+  <div class="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
+   <div>
+    {% include "components/brand.html" with size="md" light=False %}
+    <p class="mt-3 max-w-xs text-sm text-muted-foreground">Controle e inteligência financeira pessoal em um único lugar.</p>
+   </div>
+   <div>
+    <h5 class="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Produto</h5>
+    <ul class="space-y-2 text-sm">
+     <li><a href="#momentos" class="text-muted-foreground transition-colors hover:text-foreground">Para cada momento</a></li>
+     <li><a href="#recursos" class="text-muted-foreground transition-colors hover:text-foreground">Recursos</a></li>
+     <li><a href="#planos" class="text-muted-foreground transition-colors hover:text-foreground">Planos</a></li>
+     <li><a href="#seguranca" class="text-muted-foreground transition-colors hover:text-foreground">Segurança</a></li>
+    </ul>
+   </div>
+   <div>
+    <h5 class="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Conta</h5>
+    <ul class="space-y-2 text-sm">
+     <li><a href="{% url 'accounts:signup' %}" class="text-muted-foreground transition-colors hover:text-foreground">Criar conta</a></li>
+     <li><a href="{% url 'accounts:login' %}" class="text-muted-foreground transition-colors hover:text-foreground">Entrar</a></li>
+    </ul>
+   </div>
+   <div>
+    <h5 class="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Ajuda</h5>
+    <ul class="space-y-2 text-sm">
+     <li><a href="#faq" class="text-muted-foreground transition-colors hover:text-foreground">Perguntas frequentes</a></li>
+     {% if monetization.support_contact %}
+     <li class="text-muted-foreground">{{ monetization.support_contact }}</li>
+     {% endif %}
+    </ul>
+   </div>
+  </div>
+  <div class="flex flex-col items-center justify-between gap-3 border-t border-border py-6 sm:flex-row">
+   <p class="text-xs text-muted-foreground">FINTECPESSOAL &copy; 2026</p>
+   <p class="text-xs text-muted-foreground">Controle e inteligência financeira pessoal.</p>
+  </div>
  </div>
 </footer>
 

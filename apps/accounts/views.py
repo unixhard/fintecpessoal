@@ -48,12 +48,14 @@ class SignUpView(View):
         if request.user.is_authenticated:
             return redirect("core:home")
         monetization = self._monetization()
+        initial = {"email": request.GET.get("email", "")} if request.GET.get("email") else None
         return render(
             request,
             self.template_name,
             {
                 "form": SignUpForm(
-                    payment_required=monetization.signup_requires_payment
+                    payment_required=monetization.signup_requires_payment,
+                    initial=initial,
                 ),
                 "payment_required": monetization.signup_requires_payment,
                 "price_label": monetization.price_label,

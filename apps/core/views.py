@@ -13,7 +13,18 @@ from django.shortcuts import redirect, render
 def home(request):
     """Roteia o visitante conforme o estado de autenticação/onboarding."""
     if not request.user.is_authenticated:
-        return render(request, "core/home.html")
+        from django.contrib.auth import get_user_model
+
+        from apps.painel.models import MonetizationConfig, Plan
+
+        plans = list(Plan.objects.filter(is_active=True).order_by("order", "price"))
+        cfg = MonetizationConfig.get_singleton()
+        ctx = {
+            "plans": plans,
+            "monetization": cfg,
+            "total_users": get_user_model().objects.count(),
+        }
+        return render(request, "core/home.html", ctx)
     # Usuário autenticado: direciona para onboarding ou aplicação.
     onboarded = getattr(getattr(request.user, "profile", None), "onboarding_completed", False)
     if not onboarded:
