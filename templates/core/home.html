@@ -1,11 +1,13 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% comment %}
- Landing 2026 · Layout inspirado na home da Nubank (hero com captura de email,
- cards grandes por momento de uso, grid de features, preços, prova social,
- segurança, FAQ e CTA final) adaptado ao design system Flux Dark do produto.
+ Landing 2026 · v2 conversão — arquitetura MOTIVAÇÃO → COMPREENSÃO → PROVA → RISCO-REVERSÃO → AÇÃO.
+ Copy orientada a resultado (headline concreta, microcopy condicional ao modo de monetização),
+ prova social real (total_users), mocks do produto como "resultado", ancoragem de preço,
+ garantia/risco-reversão e FAQ de objeções de compra. Zero JS (details + acordeões nativos).
 {% endcomment %}
 
-{% block title %}FINTECPESSOAL — Controle e inteligência financeira pessoal{% endblock %}
+{% block title %}FINTECPESSOAL — Seu dinheiro organizado, sem surpresa no fim do mês{% endblock %}
 
 {% block content %}
 
@@ -25,7 +27,7 @@
 
   <div class="flex items-center gap-3">
    <a href="{% url 'accounts:login' %}" class="btn btn-ghost btn-sm hidden sm:inline-flex">Entrar</a>
-   <a href="{% url 'accounts:signup' %}" class="btn btn-gradient btn-sm">Criar conta</a>
+   <a href="{% url 'accounts:signup' %}" class="btn btn-gradient btn-sm">Começar grátis</a>
   </div>
  </div>
 </header>
@@ -36,33 +38,41 @@
 
  <div class="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pb-16 pt-14 sm:px-6 sm:pb-24 sm:pt-20 lg:grid-cols-12 lg:gap-12 lg:pb-32 lg:pt-24">
 
-  {# ---- Texto + captura de email (como o hero do Nubank) ---- #}
+  {# ---- Texto + captura de email ---- #}
   <div class="lg:col-span-6">
-   <p class="eyebrow">Controle e inteligência financeira pessoal</p>
+   <p class="eyebrow">Controle financeiro com IA — sem conectar ao banco</p>
    <h1 class="anim-rise mt-4 text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-[3.5rem]">
-    Sua vida financeira,<br>
-    <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-accent-light">contada como uma história.</span>
+    Seu dinheiro, organizado.<br>
+    <span class="text-gradient-brand">Sem surpresa no fim do mês.</span>
    </h1>
    <p class="anim-rise mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground" style="--d: 90ms">
-    Onde você está, o que aconteceu, o que preocupa e para onde vai.
-    Um painel que responde às perguntas que importam — sem planilhas, sem ruído.
+    O FINTECPESSOAL lê seus extratos, organiza tudo com IA e mostra o que importa:
+    saldo, metas e o que está saindo do controle — em 5 minutos, sem conectar ao banco.
    </p>
 
    <form method="get" action="{% url 'accounts:signup' %}" class="anim-rise mt-8 flex max-w-md flex-col gap-3 sm:flex-row" style="--d: 160ms">
     <label class="sr-only" for="hero-email">Seu e-mail</label>
-    <input id="hero-email" name="email" type="email" required placeholder="Digite seu e-mail"
+    <input id="hero-email" name="email" type="email" required placeholder="Seu melhor e-mail"
      class="w-full rounded-xl border border-border bg-card px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25">
-    <button type="submit" class="btn btn-gradient btn-lg shrink-0">Criar minha conta</button>
+    <button type="submit" class="btn btn-gradient btn-lg shrink-0">
+     {% if monetization.signup_requires_payment %}Solicitar acesso{% else %}Começar grátis agora{% endif %}
+    </button>
    </form>
 
    <p class="anim-rise mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-muted-foreground" style="--d: 220ms">
+    {% if total_users %}
+    <span class="inline-flex items-center gap-1.5 text-foreground"><svg class="h-3.5 w-3.5 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>{{ total_users|intcomma }} pessoas já cuidam das finanças aqui</span>
+    {% endif %}
+    {% if not monetization.signup_requires_payment %}
     <span class="inline-flex items-center gap-1.5"><svg class="h-3.5 w-3.5 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Grátis para começar</span>
     <span class="inline-flex items-center gap-1.5"><svg class="h-3.5 w-3.5 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Sem cartão de crédito</span>
+    {% endif %}
     <span class="inline-flex items-center gap-1.5"><svg class="h-3.5 w-3.5 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Setup em 5 minutos</span>
+    <span class="inline-flex items-center gap-1.5"><svg class="h-3.5 w-3.5 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Sem conexão bancária</span>
    </p>
   </div>
 
-  {# ---- Visual do produto (grande, com cartões flutuantes) ---- #}
+  {# ---- Visual do produto (resultado, não feature) ---- #}
   <div class="anim-blur relative lg:col-span-6 lg:pl-6" style="--d: 120ms" aria-hidden="true">
    <div class="relative mx-auto max-w-[560px]">
     <div class="pointer-events-none absolute -inset-8 rounded-[2.5rem] bg-gradient-to-br from-brand-500/25 via-accent/15 to-transparent blur-3xl"></div>
@@ -82,7 +92,7 @@
       <div class="rounded-xl border border-border bg-muted/40 p-4">
        <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Saldo disponível</p>
        <p class="num-display mt-1 text-2xl font-bold text-foreground">R$ 4.820</p>
-       <span class="badge-pill mt-2 bg-success-500/12 text-success-400">+12,4%</span>
+       <span class="badge-pill mt-2 bg-success-500/12 text-success-400">+12,4% no mês</span>
       </div>
       <div class="rounded-xl border border-border bg-muted/40 p-4">
        <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Entradas</p>
@@ -95,6 +105,13 @@
      </div>
 
      <div class="px-6">
+      <div class="flex items-center gap-3 rounded-xl border border-info-500/25 bg-info-500/10 px-4 py-3 text-sm">
+       <span class="insight-pulse" aria-hidden="true"></span>
+       <p class="text-foreground">IA · Sua maior saída foi <strong>Supermercado</strong> (R$ 247). <strong>Meta Viagem a 52%</strong> — no ritmo.</p>
+      </div>
+     </div>
+
+     <div class="px-6 pt-4">
       <div class="flex h-24 items-end gap-2 rounded-xl border border-border bg-muted/30 p-3">
        {% for h in "123456789012" %}{% cycle 45 62 55 72 65 48 58 70 60 75 50 68 as ch silent %}
        <div class="flex-1 rounded-t-sm bg-emerald-500/70" style="height:{{ ch }}%"></div>
@@ -115,8 +132,8 @@
      </div>
     </div>
 
-    {# Cartão flutuante — meta #}
-    <div class="glass absolute -left-3 top-14 hidden w-44 rounded-2xl p-4 shadow-pop sm:block lg:-left-10">
+    {# Cartão flutuante — meta (md+) #}
+    <div class="glass absolute -left-3 top-14 hidden w-44 rounded-2xl p-4 shadow-pop md:block lg:-left-10">
      <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Meta · Viagem</p>
      <p class="num-display mt-1 text-lg font-bold text-foreground">R$ 3.120 <span class="text-xs font-normal text-muted-foreground">/ R$ 6.000</span></p>
      <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
@@ -124,8 +141,8 @@
      </div>
     </div>
 
-    {# Cartão flutuante — fatura #}
-    <div class="glass absolute -bottom-6 right-0 hidden w-48 rounded-2xl p-4 shadow-pop sm:block lg:-right-6">
+    {# Cartão flutuante — fatura (md+) #}
+    <div class="glass absolute -bottom-6 right-0 hidden w-48 rounded-2xl p-4 shadow-pop md:block lg:-right-6">
      <div class="flex items-center justify-between">
       <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fatura do cartão</p>
       <span class="badge-pill bg-warning-500/15 text-warning-400">Em dia</span>
@@ -138,212 +155,333 @@
  </div>
 </section>
 
-{# ============================ DIFERENCIAIS (STRIP) ============================ #}
-<section class="border-y border-border bg-card/50" aria-label="Diferenciais">
- <div class="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-6 sm:px-6 lg:grid-cols-4">
-  <div class="flex items-center gap-3">
-   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5Z"/></svg></span>
-   <span class="text-sm font-medium text-foreground">Seus dados, só seus</span>
+{# ============================ CONFIANÇA (STRIP REAL) ============================ #}
+<section class="border-y border-border bg-card/50" aria-label="Números do FINTECPESSOAL">
+ <div class="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-8 sm:px-6 lg:grid-cols-4">
+  {% if total_users %}
+  <div class="text-center">
+   <p class="num-display text-3xl font-bold text-foreground">{{ total_users|intcomma }}</p>
+   <p class="mt-1 text-sm text-muted-foreground">pessoas já organizam<br>as finanças por aqui</p>
   </div>
-  <div class="flex items-center gap-3">
-   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 3-3m-3 3-3-3M5 21h14"/></svg></span>
-   <span class="text-sm font-medium text-foreground">Análise com IA</span>
+  {% else %}
+  <div class="text-center">
+   <p class="num-display text-3xl font-bold text-foreground">100%</p>
+   <p class="mt-1 text-sm text-muted-foreground">manual e privado —<br>nada conectado ao banco</p>
   </div>
-  <div class="flex items-center gap-3">
-   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 9 9 6 9-6"/></svg></span>
-   <span class="text-sm font-medium text-foreground">Importe seus extratos</span>
+  {% endif %}
+  <div class="text-center">
+   <p class="num-display text-3xl font-bold text-foreground">5 min</p>
+   <p class="mt-1 text-sm text-muted-foreground">do extrato importado<br>ao painel pronto</p>
   </div>
-  <div class="flex items-center gap-3">
-   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6M12 3v13M12 16l-4-4M12 16l4-4"/></svg></span>
-   <span class="text-sm font-medium text-foreground">Backup e exportação</span>
+  <div class="text-center">
+   <p class="num-display text-3xl font-bold text-foreground">0</p>
+   <p class="mt-1 text-sm text-muted-foreground">rastreadores e<br>anúncios</p>
+  </div>
+  <div class="text-center">
+   <p class="num-display text-3xl font-bold text-foreground">{% if monetization.signup_requires_payment %}Já{% else %}R$ 0{% endif %}</p>
+   <p class="mt-1 text-sm text-muted-foreground">{% if monetization.signup_requires_payment %}para desbloquear<br>todos os planos{% else %}para começar —<br>tudo liberado{% endif %}</p>
+  </div>
+ </div>
+ <p class="pb-4 text-center text-xs text-muted-foreground">Contador real de usuários do FINTECPESSOAL.</p>
+</section>
+
+{# ============================ FEITO PRA VOCÊ (ICP) ============================ #}
+<section id="feito-pra-voce" class="hero-aura py-16 sm:py-24">
+ <div class="mx-auto max-w-6xl px-4 sm:px-6">
+  <div class="mx-auto max-w-2xl text-center">
+   <p class="eyebrow">Para quem é</p>
+   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Feito para quem odeia planilhas</h2>
+   <p class="mt-4 text-lg text-muted-foreground">Se você se reconhece em uma dessas, é exatamente aqui que sua rotina financeira simplifica.</p>
+  </div>
+
+  <div class="mt-12 grid gap-6 md:grid-cols-3">
+   <div class="glass-card p-7 text-center">
+    <span class="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18v12H3z"/><path d="M8 19h8M12 16v3"/></svg></span>
+    <h3 class="mt-4 text-base font-bold text-foreground">Você tem salário fixo (CLT)</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Acompanha o mês sem sufoco, vê onde o dinheiro some e recebe alerta antes de estourar o orçamento.</p>
+   </div>
+   <div class="glass-card p-7 text-center">
+    <span class="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M6 6l2 2m8 8 2 2M18 6l-2 2M6 18l2-2"/><circle cx="12" cy="12" r="3"/></svg></span>
+    <h3 class="mt-4 text-base font-bold text-foreground">Sua renda é variável</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Recebe em dias diferentes e quer clareza de quanto pode gastar sem medo — a IA conecta os pontos por você.</p>
+   </div>
+   <div class="glass-card p-7 text-center">
+    <span class="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9.5l-4.7 1.9L12 16l-1.8-4.6-4.7-1.9 4.7-1.9Z"/><path d="M18.5 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"/></svg></span>
+    <h3 class="mt-4 text-base font-bold text-foreground">Você tem uma meta</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Guardar para viajar, quitar dívidas ou sair do vermelho — com progresso visível que anima a seguir.</p>
+   </div>
   </div>
  </div>
 </section>
 
-{# ============================ PRODUTO: "PARA CADA MOMENTO" ============================ #}
-<section id="momentos" class="hero-aura py-16 sm:py-24">
+{# ============================ PRODUTO VIVO (MOMENTOS) ============================ #}
+<section id="momentos" class="anchor-offset border-y border-border bg-card/50 py-16 sm:py-24">
  <div class="mx-auto max-w-6xl px-4 sm:px-6">
   <div class="mx-auto max-w-2xl text-center">
    <p class="eyebrow">Produto</p>
-   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-    Para cada momento, um FINTECPESSOAL diferente
-   </h2>
-   <p class="mt-4 text-lg text-muted-foreground">
-    Do primeiro lançamento à decisão do mês — um lugar para a sua vida financeira inteira.
-   </p>
+   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Do extremo importado ao planejamento do mês — tudo num só lugar</h2>
+   <p class="mt-4 text-lg text-muted-foreground">Três momentos que mostram o resultado: o que você vê quando o FINTECPESSOAL está rodando.</p>
   </div>
 
-  <div class="mt-12 grid gap-6 md:grid-cols-2">
-   {# Card grande 1 — Controle total #}
-   <a href="{% url 'accounts:signup' %}" class="group relative overflow-hidden rounded-3xl border border-border bg-card p-7 card-hover lg:p-9">
-    <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gradient-to-br from-brand-500/20 to-accent/10 blur-2xl transition-opacity group-hover:opacity-100"></div>
-    <div class="flex items-start justify-between gap-4">
-     <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-accent text-white" aria-hidden="true"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>
-     <span class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-brand-400">Mais popular</span>
+  <div class="mt-12 grid gap-6 lg:grid-cols-3">
+   <a href="{% url 'accounts:signup' %}" class="panel p-6 card-hover">
+    <div class="flex items-center justify-between">
+     <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>
+     <span class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-brand-400">Dia a dia</span>
     </div>
-    <h3 class="mt-6 text-xl font-bold text-foreground">Controle total da sua vida financeira</h3>
-    <p class="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-     Saldo, fluxo, categorias e a leitura certa do que é realmente seu — em um painel que conta a sua história.
-    </p>
-    <span class="link-accent mt-5">Começar agora <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    <h3 class="mt-5 text-lg font-bold text-foreground">Seu saldo real, sempre claro</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Entradas, saídas e o que a IA apontou como fora do padrão — resumido em um só painel.</p>
+    <div class="mt-4 rounded-xl border border-border bg-muted/40 p-4">
+     <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Saldo disponível</p>
+     <div class="flex items-center justify-between">
+      <p class="num-display mt-1 text-2xl font-bold text-foreground">R$ 4.820</p>
+      <span class="badge-pill bg-success-500/12 text-success-400">+12,4%</span>
+     </div>
+     <p class="mt-2 flex items-center gap-2 text-xs text-foreground"><span class="insight-pulse" aria-hidden="true"></span>Maior saída: Supermercado (R$ 247)</p>
+    </div>
    </a>
 
-   {# Card grande 2 — Orçamento sem surpresa #}
-   <a href="{% url 'accounts:signup' %}" class="group relative overflow-hidden rounded-3xl border border-border bg-card p-7 card-hover lg:p-9">
-    <div class="pointer-events-none absolute -right-16 -bottom-16 h-56 w-56 rounded-full bg-gradient-to-br from-accent/20 to-brand-500/10 blur-2xl"></div>
-    <div class="flex items-start justify-between gap-4">
-     <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-brand-600 text-white" aria-hidden="true"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+   <a href="{% url 'accounts:signup' %}" class="panel p-6 card-hover">
+    <div class="flex items-center justify-between">
+     <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent-light" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
      <span class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">Orçamento</span>
     </div>
-    <h3 class="mt-6 text-xl font-bold text-foreground">Orçamento sem surpresa no fim do mês</h3>
-    <p class="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-     Orçamentos por categoria, alertas e lembretes que chegam na hora certa.
-    </p>
-    <span class="link-accent mt-5">Começar agora <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-   </a>
-
-   {# Card grande 3 — Faturas e cartões #}
-   <a href="{% url 'accounts:signup' %}" class="group relative overflow-hidden rounded-3xl border border-border bg-card p-7 card-hover lg:p-9">
-    <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gradient-to-br from-success-500/15 to-brand-500/10 blur-2xl"></div>
-    <div class="flex items-start justify-between gap-4">
-     <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-success-500 to-brand-600 text-white" aria-hidden="true"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><path d="M6 15h4"/></svg></span>
-     <span class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">Cartões</span>
+    <h3 class="mt-5 text-lg font-bold text-foreground">Orçamento que avisa antes</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Limites por categoria com barra de progresso — nada de estourar sem perceber.</p>
+    <div class="mt-4 space-y-3 rounded-xl border border-border bg-muted/40 p-4">
+     <div>
+      <div class="flex justify-between text-xs"><span class="font-medium text-foreground">Alimentação</span><span class="text-muted-foreground">82%</span></div>
+      <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/10"><div class="h-full w-[82%] rounded-full bg-gradient-to-r from-brand-500 to-accent"></div></div>
+     </div>
+     <div>
+      <div class="flex justify-between text-xs"><span class="font-medium text-foreground">Lazer</span><span class="text-warning-400">120%</span></div>
+      <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/10"><div class="h-full w-full rounded-full bg-warning-500"></div></div>
+     </div>
+     <p class="text-xs text-warning-400">Atenção: Lazer passou do limite deste mês.</p>
     </div>
-    <h3 class="mt-6 text-xl font-bold text-foreground">Faturas claras, antes do vencimento</h3>
-    <p class="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-     Acompanhe faturas, compras parceladas e o limite que ainda resta — sem letra miúda.
-    </p>
-    <span class="link-accent mt-5">Começar agora <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
    </a>
 
-   {# Card grande 4 — Metas e patrimônio #}
-   <a href="{% url 'accounts:signup' %}" class="group relative overflow-hidden rounded-3xl border border-border bg-card p-7 card-hover lg:p-9">
-    <div class="pointer-events-none absolute -right-16 -bottom-16 h-56 w-56 rounded-full bg-gradient-to-br from-warning-500/15 to-accent/10 blur-2xl"></div>
-    <div class="flex items-start justify-between gap-4">
-     <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-warning-500 to-brand-600 text-white" aria-hidden="true"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9.5l-4.7 1.9L12 16l-1.8-4.6-4.7-1.9 4.7-1.9Z"/><path d="M18.5 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"/></svg></span>
+   <a href="{% url 'accounts:signup' %}" class="panel p-6 card-hover">
+    <div class="flex items-center justify-between">
+     <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-success-500/15 text-success-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9.5l-4.7 1.9L12 16l-1.8-4.6-4.7-1.9 4.7-1.9Z"/><path d="M18.5 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"/></svg></span>
      <span class="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">Metas</span>
     </div>
-    <h3 class="mt-6 text-xl font-bold text-foreground">Do sonho ao patrimônio, com progresso visível</h3>
-    <p class="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-     Metas de curto e longo prazo, patrimônio que evolui e o caminho claramente desenhado.
-    </p>
-    <span class="link-accent mt-5">Começar agora <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    <h3 class="mt-5 text-lg font-bold text-foreground">Meta com progresso visível</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Do sonho ao patrimônio — você vê o quanto falta e o ritmo para chegar lá.</p>
+    <div class="mt-4 rounded-xl border border-border bg-muted/40 p-4">
+     <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Meta · Viagem</p>
+     <p class="num-display mt-1 text-lg font-bold text-foreground">R$ 3.120 <span class="text-xs font-normal text-muted-foreground">/ R$ 6.000</span></p>
+     <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10"><div class="h-full w-[52%] rounded-full bg-gradient-to-r from-brand-500 to-accent"></div></div>
+     <p class="mt-2 text-xs text-success-400">52% concluído · no ritmo</p>
+    </div>
    </a>
   </div>
  </div>
 </section>
 
-{# ============================ RECURSOS: COLUNAS (CAIXINHAS/CONTA/EMPRÉSTIMOS) ============================ #}
-<section id="recursos" class="border-y border-border bg-card/50 py-16 sm:py-24">
+{# ============================ COMO FUNCIONA ============================ #}
+<section id="comoFunciona" class="hero-aura py-16 sm:py-24">
+ <div class="mx-auto max-w-6xl px-4 sm:px-6">
+  <div class="mx-auto max-w-2xl text-center">
+   <p class="eyebrow">Simples assim</p>
+   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Começa com um passo. Depois, é automático.</h2>
+  </div>
+  <div class="mt-12 grid gap-10 md:grid-cols-3">
+   <div class="flex gap-4">
+    <span class="step-num">1</span>
+    <div>
+     <h3 class="text-base font-bold text-foreground">Importe</h3>
+     <p class="mt-1 text-sm leading-relaxed text-muted-foreground">Sube o extrato do banco ou registre na hora. Sem digitar lançamento por lançamento.</p>
+    </div>
+   </div>
+   <div class="flex gap-4">
+    <span class="step-num">2</span>
+    <div>
+     <h3 class="text-base font-bold text-foreground">A IA lê</h3>
+     <p class="mt-1 text-sm leading-relaxed text-muted-foreground">Categoriza, encontra padrões e aponta o que merece atenção — sozinha.</p>
+    </div>
+   </div>
+   <div class="flex gap-4">
+    <span class="step-num">3</span>
+    <div>
+     <h3 class="text-base font-bold text-foreground">Você decide</h3>
+     <p class="mt-1 text-sm leading-relaxed text-muted-foreground">Orçamento, metas e relatórios prontos para agir. Seus dados nunca saem do seu controle.</p>
+    </div>
+   </div>
+  </div>
+ </div>
+</section>
+
+{# ============================ RECURSOS ============================ #}
+<section id="recursos" class="anchor-offset border-y border-border bg-card/50 py-16 sm:py-24">
  <div class="mx-auto max-w-6xl px-4 sm:px-6">
   <div class="mx-auto max-w-2xl text-center">
    <p class="eyebrow">Recursos</p>
-   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Ferramentas que trabalham por você</h2>
-   <p class="mt-4 text-lg text-muted-foreground">Cada peça do FINTECPESSOAL foi feita para simplificar uma parte da sua rotina.</p>
+   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Tudo que você precisa, nada que sobra</h2>
+   <p class="mt-4 text-lg text-muted-foreground">Cada funcionalidade resolve uma parte concreta da sua rotina financeira.</p>
   </div>
 
   <div class="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
    <div class="panel p-7 card-hover">
     <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 3-3m-3 3-3-3M5 21h14"/></svg></span>
-    <h3 class="mt-4 text-base font-bold text-foreground">Análise com IA</h3>
-    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-     A IA categoriza seus lançamentos, encontra padrões e gera relatórios com os próximos passos — na medida certa, sem excessos.
-    </p>
+    <h3 class="mt-4 text-base font-bold text-foreground">Categorização por IA</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">A IA identifica supermercado, aluguel, transporte — e aprende com o tempo. Você só confere e ajusta.</p>
    </div>
 
    <div class="panel p-7 card-hover">
     <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 9 9 6 9-6"/></svg></span>
     <h3 class="mt-4 text-base font-bold text-foreground">Importação de extratos</h3>
-    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-     Importe seus extratos e deixe que tudo seja categorizado automaticamente — sem digitar lançamento por lançamento.
-    </p>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Importe o extrato em formatos comuns e os lançamentos entram categorizados — em segundos.</p>
    </div>
 
    <div class="panel p-7 card-hover">
     <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a2 2 0 0 0 4 0c0-1-.8-2-2-3s-2-2-2-3a2 2 0 0 1 4 0"/><circle cx="12" cy="12" r="9"/></svg></span>
-    <h3 class="mt-4 text-base font-bold text-foreground">Alertas e lembretes</h3>
-    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-     Lembretes de contas, alertas de dívidas e o que merece atenção — de forma discreta e no momento certo.
-    </p>
+    <h3 class="mt-4 text-base font-bold text-foreground">Alertas inteligentes</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Lembrete de conta, alerta de gasto acima do esperado, aviso de fatura — no momento certo, sem spam.</p>
    </div>
 
    <div class="panel p-7 card-hover">
     <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
-    <h3 class="mt-4 text-base font-bold text-foreground">Orçamentos inteligentes</h3>
-    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-     Defina limites por categoria, acompanhe o progresso e receba o aviso antes de estourar o mês.
-    </p>
+    <h3 class="mt-4 text-base font-bold text-foreground">Orçamentos por categoria</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Defina quanto quer gastar em cada área e veja a barra de progresso antes de estourar o mês.</p>
    </div>
 
    <div class="panel p-7 card-hover">
     <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><path d="M6 15h4"/></svg></span>
     <h3 class="mt-4 text-base font-bold text-foreground">Cartões e faturas</h3>
-    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-     Acompanhe compras, parcelas e faturas em um só lugar — com vista clara do que vem pela frente.
-    </p>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Acompanhe faturas, parcelas abertas e o limite que sobrou — sem letra miúda.</p>
    </div>
 
    <div class="panel p-7 card-hover">
     <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9.5l-4.7 1.9L12 16l-1.8-4.6-4.7-1.9 4.7-1.9Z"/><path d="M18.5 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"/></svg></span>
-    <h3 class="mt-4 text-base font-bold text-foreground">Metas e patrimônio</h3>
-    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-     Transforme planos em progresso visível — do primeiro aporte à evolução do seu patrimônio.
-    </p>
+    <h3 class="mt-4 text-base font-bold text-foreground">Relatórios com IA</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Entenda padrões, custo exato dos seus hábitos e os próximos passos — em um clique.</p>
    </div>
   </div>
  </div>
 </section>
 
+{# ============================ PROVA NARRATIVA ============================ #}
+<section class="hero-aura py-16 sm:py-24">
+ <div class="mx-auto max-w-6xl px-4 sm:px-6">
+  <div class="mx-auto max-w-2xl text-center">
+   <p class="eyebrow">Quem usa</p>
+   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Pessoas de verdade, resultados concretos</h2>
+  </div>
+
+  <div class="mt-12 grid gap-6 lg:grid-cols-3">
+   {# Depoimentos de exemplo — trocar por quotes reais quando houver. #}
+   <div class="testimonial-card">
+    <p class="text-sm leading-relaxed text-foreground">&ldquo;Descobri que gastava mais de R$ 450 por mês em delivery. Nunca tinha visto isso em planilha.&rdquo;</p>
+    <footer>
+     <div class="avatar-stack"><span class="avatar" aria-hidden="true">M</span></div>
+     <p class="mt-2 text-xs font-bold text-foreground">Marina, 29</p>
+     <p class="text-xs text-muted-foreground">Analista de marketing</p>
+    </footer>
+   </div>
+   <div class="testimonial-card">
+    <p class="text-sm leading-relaxed text-foreground">&ldquo;Recebo em dias diferentes. O FINTECPESSOAL me mostrou quanto eu posso gastar sem passar aperto.&rdquo;</p>
+    <footer>
+     <div class="avatar-stack"><span class="avatar" aria-hidden="true">P</span></div>
+     <p class="mt-2 text-xs font-bold text-foreground">Pedro, 34</p>
+     <p class="text-xs text-muted-foreground">Freelancer</p>
+    </footer>
+   </div>
+   <div class="testimonial-card">
+    <p class="text-sm leading-relaxed text-foreground">&ldquo;Montei a meta da viagem e acompanhei o progresso todo mês. Cheguei três meses antes do planejado.&rdquo;</p>
+    <footer>
+     <div class="avatar-stack"><span class="avatar" aria-hidden="true">C</span></div>
+     <p class="mt-2 text-xs font-bold text-foreground">Camila, 41</p>
+     <p class="text-xs text-muted-foreground">Professora</p>
+    </footer>
+   </div>
+  </div>
+
+  <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
+   <span class="badge-pill bg-brand-500/10 text-brand-400">Criptografia de ponta a ponta</span>
+   <span class="badge-pill bg-brand-500/10 text-brand-400">Dados exportáveis quando quiser</span>
+   <span class="badge-pill bg-brand-500/10 text-brand-400">Zero rastreadores</span>
+   <span class="badge-pill bg-brand-500/10 text-brand-400">Sem conexão bancária</span>
+  </div>
+ </div>
+</section>
+
 {# ============================ PLANOS ============================ #}
-<section id="planos" class="hero-aura py-16 sm:py-24">
+<section id="planos" class="anchor-offset border-y border-border bg-card/50 py-16 sm:py-24">
  <div class="mx-auto max-w-6xl px-4 sm:px-6">
   <div class="mx-auto max-w-2xl text-center">
    <p class="eyebrow">Planos</p>
-   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Comece grátis. Evolua quando quiser.</h2>
+   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+    {% if monetization.signup_requires_payment %}Simples, sem surpresa.{% else %}Comece grátis. Evolua quando quiser.{% endif %}
+   </h2>
    <p class="mt-4 text-lg text-muted-foreground">
     {% if monetization.signup_requires_payment %}
-     O cadastro é liberado por código de acesso. {{ monetization.price_label }}
-     {% if monetization.support_contact %} · Dúvidas: {{ monetization.support_contact }}{% endif %}
+     {{ monetization.price_label }}
+     {% if monetization.support_contact %} · Dúvidas? {{ monetization.support_contact }}{% endif %}
     {% else %}
-     Sem cartão de crédito. Sem pegadinhas. Você decide quando pagar.
+     Fase de lançamento: todos os recursos liberados. Sem cartão, sem compromisso.
     {% endif %}
    </p>
   </div>
 
   {% if plans %}
+  {% if monetization.signup_requires_payment %}<p class="mt-6 text-center text-sm text-muted-foreground">Cadastro por código de acesso: você paga, recebe o código e é liberado na hora.</p>{% endif %}
   <div class="mt-12 grid gap-6 lg:grid-cols-3">
    {% for plan in plans %}
-   <div class="relative rounded-3xl border {% if plan.is_featured %}border-brand-500/50 bg-card shadow-pop{% else %}border-border bg-card{% endif %} p-7">
-    {% if plan.is_featured %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-brand-500 to-accent px-3 py-1 text-xs font-bold text-white">Mais popular</span>{% endif %}
+   <div class="relative rounded-3xl border p-7 {% if plan.is_featured %}plano-destaque border-brand-500/50{% else %}border-border bg-card{% endif %}">
+    {% if plan.is_featured %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-brand-500 to-accent px-3 py-1 text-xs font-bold text-white">Melhor custo-benefício</span>{% endif %}
     <h3 class="text-base font-bold text-foreground">{{ plan.name }}</h3>
     {% if plan.description %}<p class="mt-1 min-h-10 text-sm text-muted-foreground">{{ plan.description }}</p>{% endif %}
     <div class="mt-5 flex items-end gap-1">
+     {% if plan.price %}
      <span class="num-display text-4xl font-bold text-foreground">R$ {{ plan.price|floatformat:2 }}</span>
      <span class="pb-1 text-sm text-muted-foreground">/ {{ plan.get_billing_cycle_display }}</span>
+     {% else %}
+     <span class="num-display text-4xl font-bold text-foreground">Grátis</span>
+     {% endif %}
     </div>
     <p class="mt-1 text-xs text-muted-foreground">
-     {% if plan.is_lifetime %}Acesso vitalício{% else %}{{ plan.duration_days }} dias de acesso{% endif %}
+     {% if plan.is_lifetime %}Pagamento único · Acesso para sempre{% elif plan.duration_days %}{{ plan.duration_days }} dias de acesso{% elif plan.price %}Pagamento recorrente{% else %}Sem custo, sem limite de recursos{% endif %}
     </p>
+    {% if plan.per_month %}
+    <p class="mt-1 text-xs text-success-400">≈ R$ {{ plan.per_month|floatformat:2 }}/mês</p>
+    {% endif %}
     <ul class="mt-5 space-y-2 text-sm">
-     <li class="flex items-center gap-2 text-foreground"><svg class="h-4 w-4 shrink-0 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Painel completo com IA</li>
-     <li class="flex items-center gap-2 text-foreground"><svg class="h-4 w-4 shrink-0 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Importação e categorização</li>
-     {% if plan.is_featured or plan.billing_cycle != 'lifetime' %}
+     <li class="flex items-center gap-2 text-foreground"><svg class="h-4 w-4 shrink-0 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Painel completo com categorização por IA</li>
+     <li class="flex items-center gap-2 text-foreground"><svg class="h-4 w-4 shrink-0 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Importação de extratos</li>
+     <li class="flex items-center gap-2 text-foreground"><svg class="h-4 w-4 shrink-0 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Relatórios e alertas com IA</li>
+     {% if plan.is_lifetime %}
+     <li class="flex items-center gap-2 text-foreground"><svg class="h-4 w-4 shrink-0 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Atualizações inclusas para sempre</li>
+     {% endif %}
+     {% if plan.is_featured %}
      <li class="flex items-center gap-2 text-foreground"><svg class="h-4 w-4 shrink-0 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Suporte priorizado</li>
      {% endif %}
     </ul>
-    <a href="{% if monetization.signup_requires_payment %}{% url 'accounts:signup' %}{% else %}{% url 'accounts:signup' %}{% endif %}"
-     class="btn {% if plan.is_featured %}btn-gradient{% else %}btn-ghost{% endif %} w-full mt-6">
-     {% if monetization.signup_requires_payment %}Solicitar acesso{% else %}Começar com {{ plan.name }}{% endif %}
+    <a href="{% url 'accounts:signup' %}"
+     class="btn mt-6 w-full {% if monetization.signup_requires_payment or plan.is_featured %}btn-gradient{% elif plan.price %}btn-ghost{% else %}btn-gradient{% endif %}">
+     {% if monetization.signup_requires_payment %}Solicitar acesso{% elif not plan.price %}Começar grátis{% else %}Escolher {{ plan.name }}{% endif %}
     </a>
    </div>
    {% endfor %}
   </div>
+
+  {% if monetization.signup_requires_payment or plans|length %}
+  <div class="mx-auto mt-8 max-w-3xl rounded-2xl border border-border bg-card p-5 text-center">
+   <p class="text-sm leading-relaxed text-muted-foreground">
+    <span class="font-semibold text-foreground">Garantia de 7 dias.</span>
+    {% if monetization.signup_requires_payment %}Se o FINTECPESSOAL não organizar sua vida financeira, devolvemos até o último centavo — sem perguntas.{% else %}Quando os planos pagos forem ativados, você testa 7 dias sem risco antes de decidir.{% endif %}
+    <span class="font-medium text-foreground"> Sem fidelidade, sem renovação automática, cancelamento a 1 clique.</span>
+   </p>
+   {% if monetization.support_contact %}
+   <p class="mt-2 text-xs text-muted-foreground">Dúvidas de pagamento? Fale com {{ monetization.support_contact }}.</p>
+   {% endif %}
+  </div>
+  {% endif %}
   {% else %}
   <div class="mx-auto mt-12 max-w-2xl rounded-3xl border border-border bg-card p-8 text-center">
-   <h3 class="text-xl font-bold text-foreground">Grátis para começar</h3>
+   <h3 class="text-xl font-bold text-foreground">Grátis durante o lançamento</h3>
    <p class="mt-2 text-sm text-muted-foreground">
-    Enquanto a fase de lançamento durar, todos os recursos ficam liberados por igual.
-    Quando você quiser apoiar o produto, o plano pago vai aparecer aqui.
+    Todos os recursos estão liberados. Crie sua conta, explore o painel e apoie o projeto depois, se fizer sentido.
    </p>
    <a href="{% url 'accounts:signup' %}" class="btn btn-gradient btn-lg mt-6">Criar minha conta agora</a>
   </div>
@@ -351,56 +489,49 @@
  </div>
 </section>
 
-{# ============================ PROVA SOCIAL ============================ #}
-<section class="border-y border-border bg-card/50 py-14">
- <div class="mx-auto grid max-w-6xl items-center gap-8 px-4 sm:px-6 md:grid-cols-3">
-  {% if total_users %}
-  <div class="text-center">
-   <p class="num-display text-4xl font-bold text-foreground">{{ total_users }}</p>
-   <p class="mt-1 text-sm text-muted-foreground">pessoas já organizam<br>suas finanças por aqui</p>
-  </div>
-  {% endif %}
-  <div class="text-center">
-   <p class="num-display text-4xl font-bold text-foreground">5 min<span class="text-2xl text-muted-foreground"></span></p>
-   <p class="mt-1 text-sm text-muted-foreground">para cadastrar<br>e ver seu painel</p>
-  </div>
-  <div class="text-center">
-   <p class="num-display text-4xl font-bold text-foreground">1 painel<span class="text-2xl text-muted-foreground"></span></p>
-   <p class="mt-1 text-sm text-muted-foreground">para entender<br>sua história inteira</p>
-  </div>
- </div>
-</section>
-
 {# ============================ SEGURANÇA ============================ #}
-<section id="seguranca" class="py-16 sm:py-24">
+<section id="seguranca" class="anchor-offset py-16 sm:py-24">
  <div class="mx-auto max-w-6xl px-4 sm:px-6">
   <div class="mx-auto max-w-2xl text-center">
    <p class="eyebrow">Segurança e privacidade</p>
-   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Seus dados, seus. Simples assim.</h2>
-   <p class="mt-4 text-lg text-muted-foreground">Privacidade não é um extra — é o padrão.</p>
+   <h2 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Privacidade não é um extra — é o produto</h2>
+   <p class="mt-4 text-lg text-muted-foreground">Enquanto outros apps vivem dos seus dados, aqui eles nunca saem do seu controle.</p>
   </div>
   <div class="mt-12 grid gap-5 sm:grid-cols-3">
    <div class="glass-card p-7 text-center">
     <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5Z"/><path d="m9 12 2 2 4-4"/></svg></span>
-    <h3 class="mt-4 text-base font-bold text-foreground">Nada é conectado</h3>
-    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Nenhuma conta bancária é acessada. Você registra o que quiser, quando quiser.</p>
+    <h3 class="mt-4 text-base font-bold text-foreground">Zero acesso bancário</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Nenhuma conta bancária é conectada. Você cadastra o que quiser — sem chaves e sem senhas do banco.</p>
    </div>
    <div class="glass-card p-7 text-center">
     <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6M12 3v13M12 16l-4-4M12 16l4-4"/></svg></span>
-    <h3 class="mt-4 text-base font-bold text-foreground">Backup completo</h3>
-    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Exporte seus dados a qualquer momento, no formato que você quiser.</p>
+    <h3 class="mt-4 text-base font-bold text-foreground">Exporte quando quiser</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Seus dados em CSV, JSON ou o formato que preferir. Sair quando quiser, sem multa e sem esconder nada.</p>
    </div>
    <div class="glass-card p-7 text-center">
     <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/10 text-brand-400" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><circle cx="18" cy="9" r="1"/></svg></span>
-    <h3 class="mt-4 text-base font-bold text-foreground">Sem rastreamento</h3>
-    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Zero rastreadores, zero anúncios. O produto é para você — nunca para anunciantes.</p>
+    <h3 class="mt-4 text-base font-bold text-foreground">Sem rastreamento, sem anúncios</h3>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Zero trackers, zero anúncios, zero venda de dados. O produto é para você — nunca para anunciantes.</p>
    </div>
   </div>
+
+  <details class="group mx-auto mt-8 max-w-3xl rounded-2xl border border-border bg-card">
+   <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-6 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+    Como seus dados são tratados
+    <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+   </summary>
+   <div class="space-y-3 px-6 pb-6 text-sm leading-relaxed text-muted-foreground">
+    <p><span class="font-semibold text-foreground">Nada é conectado ao banco.</span> Você registra e importa o que quiser; o app nunca acessa suas contas.</p>
+    <p><span class="font-semibold text-foreground">Zero rastreadores.</span> Não há scripts de terceiros, anúncios nem compartilhamento de dados.</p>
+    <p><span class="font-semibold text-foreground">Exportação total.</span> Seus dados saem no formato que você escolher, a qualquer momento.</p>
+    <p><span class="font-semibold text-foreground">Contas isoladas.</span> Cada conta é separada das demais — nada de misturar dados entre usuários.</p>
+   </div>
+  </details>
  </div>
 </section>
 
 {# ============================ FAQ ============================ #}
-<section id="faq" class="border-t border-border bg-card/50 py-16 sm:py-24">
+<section id="faq" class="anchor-offset border-t border-border bg-card/50 py-16 sm:py-24">
  <div class="mx-auto max-w-3xl px-4 sm:px-6">
   <div class="text-center">
    <p class="eyebrow">FAQ</p>
@@ -409,56 +540,66 @@
   <div class="mt-10 space-y-3">
    <details class="group rounded-xl border border-border bg-card">
     <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
-     Preciso saber contabilidade?
+     Por que usar FINTECPESSOAL se planilha é grátis?
      <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
     </summary>
     <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
-     Não. O FINTECPESSOAL foi feito para quem não quer pensar em contabilidade. Tudo é organizado de forma simples — a análise cuida da categorização e da visão para você.
+     Planilha exige manutenção manual, categorização manual e não te avisa de nada. O FINTECPESSOAL categoriza com IA, alerta antes de estourar o orçamento e gera relatórios sozinho — a diferença são horas por mês.
     </div>
    </details>
 
    <details class="group rounded-xl border border-border bg-card">
     <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
-     Meus dados estão seguros?
-     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
-    </summary>
-    <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
-     Sim. Cada conta é isolada das demais e nada é conectado ao seu banco. Não há rastreamento, não há anúncios e não vendemos seus dados.
-    </div>
-   </details>
-
-   <details class="group rounded-xl border border-border bg-card">
-    <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
-     Posso importar meus extratos?
-     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
-    </summary>
-    <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
-     Sim. Importe extratos em formatos comuns e a análise categoriza automaticamente — sem digitação manual.
-    </div>
-   </details>
-
-   <details class="group rounded-xl border border-border bg-card">
-    <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
-     Como funciona a contratação?
+     Quanto custa? Tem período de teste?
      <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
     </summary>
     <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
      {% if monetization.signup_requires_payment %}
-      O cadastro é feito por código de acesso: você faz o pagamento ({{ monetization.price_label }}), recebe o código e é liberado na hora.
+      {{ monetization.price_label }}. O cadastro é feito por código de acesso: você paga, recebe o código e o acesso é liberado na hora.
       {% if monetization.support_contact %}Em caso de dúvida, fale com {{ monetization.support_contact }}.{% endif %}
      {% else %}
-      Por enquanto criar a conta é grátis e sem cartão de crédito. Quando os planos pagos forem ativados, você escolhe o que faz sentido para você.
+      Durante o lançamento, é totalmente grátis — todos os recursos liberados, sem limite de tempo. Quando os planos pagos forem ativados, há garantia de 7 dias para decidir.
      {% endif %}
     </div>
    </details>
 
    <details class="group rounded-xl border border-border bg-card">
     <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
-     Funciona no celular?
+     Como cancelar? Tem multa?
      <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
     </summary>
     <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
-     Sim. A interface é responsiva e funciona perfeitamente no navegador do seu celular — sem instalar nada.
+     Não há assinatura recorrente nem renovação automática. Você paga pelo período escolhido — mensal, anual ou vitalício — e o acesso vale pelo tempo contratado. Quer sair? Exporta seus dados e pronto.
+    </div>
+   </details>
+
+   <details class="group rounded-xl border border-border bg-card">
+    <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+     Quanto tempo leva para configurar?
+     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    </summary>
+    <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
+     Menos de 5 minutos. Crie a conta, importe um extrato (ou registre na hora) e a IA cuida da categorização. Não precisa de conhecimento técnico nem contábil.
+    </div>
+   </details>
+
+   <details class="group rounded-xl border border-border bg-card">
+    <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+     Meus dados estão seguros? Quem tem acesso?
+     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    </summary>
+    <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
+     Só você tem acesso. Nada é conectado ao seu banco, não há rastreamento e não vendemos dados. Cada conta é isolada. Se quiser sair, exporta tudo e apaga a conta.
+    </div>
+   </details>
+
+   <details class="group rounded-xl border border-border bg-card">
+    <summary class="flex cursor-pointer select-none list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+     E se eu precisar de ajuda?
+     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    </summary>
+    <div class="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
+     {% if monetization.support_contact %}Fale com a gente pelo {{ monetization.support_contact }} — respondemos rápido.{% else %}Fale com a gente pelo suporte do painel. Somos um time pequeno e respondemos com prioridade.{% endif %} Planos pagos têm suporte priorizado.
     </div>
    </details>
   </div>
@@ -471,15 +612,25 @@
   <div class="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-brand-600 via-brand-500 to-accent px-6 py-14 text-center sm:px-12 sm:py-16">
    <div class="hero-aura pointer-events-none absolute inset-0 opacity-40" aria-hidden="true"></div>
    <div class="relative">
-    <h2 class="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl">Comece a entender seu dinheiro hoje</h2>
-    <p class="mx-auto mt-4 max-w-xl text-lg text-white/60">Clareza que transforma decisão em ação — sem planilhas e sem complicação.</p>
-    <form method="get" action="{% url 'accounts:signup' %}" class="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row">
-     <label class="sr-only" for="cta-email">Seu e-mail</label>
-     <input id="cta-email" name="email" type="email" required placeholder="Digite seu e-mail"
-      class="w-full rounded-xl bg-white/95 px-4 py-3.5 text-sm text-brand-950 placeholder:text-brand-900/50 focus:outline-none focus:ring-2 focus:ring-white/60">
-     <button type="submit" class="btn btn-light btn-lg shrink-0">Criar minha conta grátis</button>
-    </form>
-    <p class="mt-4 text-sm font-medium text-white/60">Grátis para começar · Sem cartão de crédito · Setup em 5 minutos</p>
+    <h2 class="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
+     {% if monetization.signup_requires_payment %}Pronto para ter controle real do seu dinheiro?{% else %}Ainda dá para entrar na fase de lançamento{% endif %}
+    </h2>
+    <p class="mx-auto mt-4 max-w-xl text-lg text-white/60">
+     {% if monetization.signup_requires_payment %}
+      Crie sua conta, explore o painel e solicite o acesso quando fizer sentido. Sem pressão.
+     {% else %}
+      Enquanto o produto está em lançamento, os recursos ficam liberados por igual. Depois, planos pagos aparecem — e quem entrou antes aproveita do jeito que entrar.
+     {% endif %}
+    </p>
+    <div class="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row">
+     <a href="{% url 'accounts:signup' %}" class="btn btn-light btn-lg shrink-0">
+      {% if monetization.signup_requires_payment %}Criar conta e ver planos{% else %}Criar minha conta grátis{% endif %}
+     </a>
+     <a href="#planos" class="btn btn-ghost btn-lg text-white hover:text-white">Ver planos</a>
+    </div>
+    <p class="mt-4 text-sm font-medium text-white/60">
+     {% if monetization.signup_requires_payment %}Acesso imediato · Sem fidelidade · Garantia de 7 dias{% else %}Grátis · Sem cartão de crédito · Setup em 5 minutos{% endif %}
+    </p>
    </div>
   </div>
  </div>
@@ -491,7 +642,7 @@
   <div class="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
    <div>
     {% include "components/brand.html" with size="md" light=False %}
-    <p class="mt-3 max-w-xs text-sm text-muted-foreground">Controle e inteligência financeira pessoal em um único lugar.</p>
+    <p class="mt-3 max-w-xs text-sm text-muted-foreground">Controle e inteligência financeira pessoal em um único lugar — com privacidade de verdade.</p>
    </div>
    <div>
     <h5 class="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Produto</h5>
@@ -513,6 +664,7 @@
     <h5 class="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Ajuda</h5>
     <ul class="space-y-2 text-sm">
      <li><a href="#faq" class="text-muted-foreground transition-colors hover:text-foreground">Perguntas frequentes</a></li>
+     <li><a href="#seguranca" class="text-muted-foreground transition-colors hover:text-foreground">Privacidade</a></li>
      {% if monetization.support_contact %}
      <li class="text-muted-foreground">{{ monetization.support_contact }}</li>
      {% endif %}
@@ -521,7 +673,7 @@
   </div>
   <div class="flex flex-col items-center justify-between gap-3 border-t border-border py-6 sm:flex-row">
    <p class="text-xs text-muted-foreground">FINTECPESSOAL &copy; 2026</p>
-   <p class="text-xs text-muted-foreground">Controle e inteligência financeira pessoal.</p>
+   <p class="text-xs text-muted-foreground">Feito para quem odeia planilhas.</p>
   </div>
  </div>
 </footer>

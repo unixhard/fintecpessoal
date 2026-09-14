@@ -13,11 +13,22 @@ from django.shortcuts import redirect, render
 def home(request):
     """Roteia o visitante conforme o estado de autenticação/onboarding."""
     if not request.user.is_authenticated:
+        from decimal import Decimal
+
         from django.contrib.auth import get_user_model
 
         from apps.painel.models import MonetizationConfig, Plan
 
         plans = list(Plan.objects.filter(is_active=True).order_by("order", "price"))
+        for plan in plans:
+            # Equivalência mensal usada na ancoragem de preço da grid de planos
+            # (aplicável a planos recorrentes com duração acima de um mês).
+            if not plan.is_lifetime and plan.price and plan.duration_days and plan.duration_days > 30:
+                plan.per_month = round(
+                    plan.price / (Decimal(plan.duration_days) / Decimal("30")), 2
+                )
+            else:
+                plan.per_month = None
         cfg = MonetizationConfig.get_singleton()
         ctx = {
             "plans": plans,

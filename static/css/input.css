@@ -982,3 +982,115 @@ html .app-shell dd, html .app-shell dt {
   min-height: 0;
   overflow-y: auto;
 }
+
+/* ========================================================================== #
+   Landing de conversão — componentes adicionais
+   # ========================================================================== */
+
+/* Gradiente de texto reutilizável (brand -> accent) */
+.text-gradient-brand {
+  background-image: linear-gradient(90deg, var(--color-brand-400), var(--color-accent-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Plano em destaque: elevação + aura discreta (decoy do grid de preços) */
+.plano-destaque {
+  background-color: var(--color-card);
+  box-shadow:
+    var(--shadow-pop),
+    0 0 0 1px rgb(99 102 241 / 0.4) inset,
+    0 0 34px -10px rgb(139 92 246 / 0.5);
+}
+@media (min-width: 1024px) {
+  .plano-destaque { transform: translateY(-6px); }
+}
+
+/* Dialog nativo de privacidade — abre/fecha sem JS (form method=dialog) */
+.dialog-card {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(92vw, 28rem);
+  max-height: 85vh;
+  overflow: auto;
+  border: 1px solid var(--color-surface-300);
+  border-radius: var(--radius-2xl);
+  background: var(--color-card);
+  box-shadow: var(--shadow-float);
+  padding: 1.5rem;
+  color: var(--color-foreground);
+}
+.dialog-card::backdrop {
+  background: rgb(10 17 32 / 0.7);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.dialog-card:focus-visible { outline: 2px solid var(--color-brand-500); outline-offset: 2px; }
+
+/* Bullet pulsante do insight da IA */
+.insight-pulse {
+  position: relative;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: var(--color-info-400);
+  animation: insight-pulse 1.6s ease-in-out infinite;
+}
+@keyframes insight-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.75); }
+}
+
+/* Número dos passos "Como funciona" */
+.step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: rgb(129 140 248 / 0.12);
+  color: var(--color-brand-400);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 700;
+}
+
+/* Card de depoimento */
+.testimonial-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid var(--color-surface-300);
+  border-radius: var(--radius-xl);
+  background: rgb(255 255 255 / 0.02);
+  padding: 1.5rem;
+}
+
+/* Pilha de avatares de iniciais (prova social sem imagens) */
+.avatar-stack { display: flex; }
+.avatar-stack .avatar { margin-left: -0.5rem; }
+.avatar-stack .avatar:first-child { margin-left: 0; }
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: 2px solid var(--color-card);
+  background: linear-gradient(135deg, var(--color-brand-500), var(--color-accent));
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+/* Âncoras sob o header sticky não podem ser cobertas */
+.anchor-offset { scroll-margin-top: 5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .insight-pulse { animation: none; opacity: 1; }
+  .plano-destaque { transform: none; }
+}
