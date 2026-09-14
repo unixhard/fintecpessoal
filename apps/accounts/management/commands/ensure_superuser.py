@@ -5,7 +5,7 @@ interação, criando o superuser somente se nenhum existir ainda. As credenciais
 vêm de variáveis de ambiente para não ficarem no código:
 
     DJANGO_SU_USERNAME   (padrão: "admin")
-    DJANGO_SU_EMAIL      (obrigatório)
+    DJANGO_SU_EMAIL      (obrigatório para criar; sem ela, o comando só avisa)
     DJANGO_SU_PASSWORD   (padrão: gerada aleatória e exibida no log)
 
 Usage:
@@ -40,8 +40,11 @@ class Command(BaseCommand):
         password = os.getenv("DJANGO_SU_PASSWORD", "")
 
         if not email:
-            self.stderr.write("DJANGO_SU_EMAIL não definida — abortando.")
-            raise SystemExit(1)
+            self.stderr.write(
+                "DJANGO_SU_EMAIL não definida — pulando criação do superusuário "
+                "(deploy não afetado)."
+            )
+            return
 
         user = User.objects.filter(username=username).first()
         if user is None:
