@@ -54,6 +54,7 @@ def card_summary(user, card):
         card.invoices.order_by("due_date").filter(
             status__in=[
                 CreditCardInvoice.Status.OPEN,
+                CreditCardInvoice.Status.CLOSED,
                 CreditCardInvoice.Status.OVERDUE,
             ]
         )

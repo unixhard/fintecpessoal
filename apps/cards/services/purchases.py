@@ -15,8 +15,33 @@ from apps.finance.services.base import (
 )
 from apps.finance.services.errors import InvalidAmountError, InvalidStateError
 
-from ..models import CreditCard, InstallmentPurchase
+from ..models import CreditCard, Installment, InstallmentPurchase
 from .invoices import get_or_create_invoice
+from .reads import card_usage
+
+
+def _assert_limit_available(*, card, amount_to_commit):
+    """Valida que ``amount_to_commit`` cabe no limite disponível do cartão.
+
+    Regra bancária: uma nova compra compromete o limite TOTAL (à vista ou
+    parcelada) imediatamente no ato — ``available >= total``. O cartão é
+    bloqueado com ``select_for_update`` para evitar corrida entre compras
+    simultâneas.
+
+    Se o cartão não tiver limite configurado (``limit == 0`` — campo opcional
+    no cadastro), nenhuma margem é validada e o cartão segue operando.
+    """
+    locked = CreditCard.objects.select_for_update().get(pk=card.pk)
+    if locked.limit <= 0:
+        return locked
+    usage = card_usage(locked)
+    available = locked.limit - usage["used"]
+    if amount_to_commit > available:
+        raise InvalidStateError(
+            "Limite insuficiente no cartão. Disponível: "
+            f"{max(available, 0)} centavos para {amount_to_commit} centavos."
+        )
+    return locked
 
 
 def update_purchase(
@@ -69,7 +94,9 @@ def update_purchase(
         structural = True
 
     if structural:
-        from ..models import Installment
+        from django.db import transaction as db_transaction
+        from django.db.models import Sum
+
         if purchase.installments.filter(status=Installment.Status.PAID).exists():
             raise InvalidStateError(
                 "Esta compra possui parcelas pagas. Estorne o pagamento da fatura "
@@ -85,13 +112,31 @@ def update_purchase(
         purchase.total_amount = new_total
         purchase.installment_count = new_count
         purchase.installment_amount = new_total // new_count
-        purchase.save()
 
-        # Recria as parcelas (limitado à compra; faturas antigas ficam sem
-        # parcelas e passam a zerar o valor — normalmente serão apagadas).
-        purchase.installments.all().delete()
-        from django.db import transaction as db_transaction
         with db_transaction.atomic():
+            # Revalida o limite: as parcelas atuais serão removidas e o novo
+            # total entrará no lugar — a folga é ``limit - uso_demais_compras``.
+            this_pending = (
+                purchase.installments.filter(
+                    status__in=[
+                        Installment.Status.PENDING,
+                        Installment.Status.OVERDUE,
+                    ]
+                ).aggregate(total=Sum("amount"))["total"]
+                or 0
+            )
+            usage_other = card_usage(purchase.card)["used"] - this_pending
+            available = purchase.card.limit - usage_other
+            if purchase.card.limit > 0 and new_total > available:
+                raise InvalidStateError(
+                    "Limite insuficiente no cartão para o novo valor da compra. "
+                    f"Disponível: {max(available, 0)} centavos."
+                )
+            purchase.save()
+
+            # Recria as parcelas (limitado à compra; faturas antigas ficam sem
+            # parcelas e passam a zerar o valor — normalmente serão apagadas).
+            purchase.installments.all().delete()
             installments = list(purchase.generate_installments())
             for installment in installments:
                 invoice = get_or_create_invoice(user, purchase.card, installment.due_date)
@@ -137,6 +182,8 @@ def create_card_purchase(
     Garantias:
     - ownership do cartão;
     - valores inteiros em centavos > 0;
+    - limite disponível suficiente (validação estrita da margem — a compra
+      compromete o limite TOTAL no ato, à vista ou parcelada);
     - atomicidade;
     - NÃO debita a conta bancária (a saída só ocorre no pagamento da fatura).
     """
@@ -156,9 +203,10 @@ def create_card_purchase(
     base_installment = total_amount // installment_count
 
     with db_transaction.atomic():
+        locked_card = _assert_limit_available(card=card, amount_to_commit=total_amount)
         purchase = InstallmentPurchase.objects.create(
             owner=user,
-            card=card,
+            card=locked_card,
             description=description,
             total_amount=total_amount,
             installment_count=installment_count,
@@ -168,7 +216,7 @@ def create_card_purchase(
         )
         installments = list(purchase.generate_installments())
         for installment in installments:
-            invoice = get_or_create_invoice(user, card, installment.due_date)
+            invoice = get_or_create_invoice(user, locked_card, installment.due_date)
             installment.invoice = invoice
             installment.save()
 

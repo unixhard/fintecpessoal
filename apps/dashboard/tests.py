@@ -385,3 +385,57 @@ class DashboardViewTests(BaseDashboardTestCase):
         resp = self.client.get(reverse("dashboard:index"))
         self.assertEqual(resp.status_code, 302)
         self.assertIn(reverse("accounts:login"), resp.url)
+
+
+class CardUsageBandsAndFutureTests(BaseDashboardTestCase):
+    """BUG 1 + BUG 4: tom de utilização do cartão segue faixas do limite e o
+    "futuro" do cartão exclui a fatura já aberta (vencimento recente)."""
+
+    def setUp(self):
+        super().setUp()
+        self.client.login(username="alice", password="x")
+
+    @mock.patch("apps.dashboard.queries._today", return_value=DashboardFixture.TODAY)
+    @mock.patch("apps.dashboard.viewmodel.queries._today", return_value=DashboardFixture.TODAY)
+    def test_card_usage_tone_follows_limit_band(self, _a, _b):
+        fx = DashboardFixture(self.user)
+        fx.seed_transactions()
+        fx.seed_card()
+        data = build_dashboard(self.user, today=DashboardFixture.TODAY)
+        card = data["cards"][0]
+        # 360.000 / 500.000 = 72% -> faixa "attention" (70%..90%).
+        self.assertEqual(card.used_pct, 72)
+        self.assertEqual(card.usage_tone, "attention")
+
+    @mock.patch("apps.dashboard.queries._today", return_value=DashboardFixture.TODAY)
+    @mock.patch("apps.dashboard.viewmodel.queries._today", return_value=DashboardFixture.TODAY)
+    def test_dashboard_renders_tone_progress_class(self, _a, _b):
+        fx = DashboardFixture(self.user)
+        fx.seed_transactions()
+        fx.seed_card()
+        resp = self.client.get(reverse("dashboard:index"))
+        self.assertEqual(resp.status_code, 200)
+        # Barra de 72% (attention) deve usar o classe warning do componente.
+        self.assertIn("!bg-warning-500", resp.content.decode())
+
+    @mock.patch("apps.dashboard.queries._today", return_value=date(2026, 3, 20))
+    def test_future_installment_total_excludes_current_segment(self, _m):
+        checking = create_account(
+            user=self.user, name="Banco", initial_balance=1000000
+        )
+        card = CreditCard.objects.create(
+            owner=self.user, name="Cartão", limit=500000,
+            payment_account=checking, closing_day=10, due_day=5,
+        )
+        create_card_purchase(
+            user=self.user, card=card, description="3x",
+            total_amount=30000, installment_count=3,
+            first_due_date=date(2026, 2, 10),
+        )
+        [row] = queries.committed_by_card(self.user)
+        # 3 parcelas pendentes (30.000). "Futuro" = faturas vencendo DEPOIS de
+        # hoje (20/03): 2ª e 3ª (20.000); a 1ª (vencida 05/03) está na fatura
+        # aberta — não no futuro.
+        self.assertEqual(row.used, 30000)
+        self.assertEqual(row.future_installment_total, 20000)
+        self.assertEqual(row.open_invoice_amount, 10000)

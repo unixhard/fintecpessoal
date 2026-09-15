@@ -208,6 +208,26 @@ class PurchaseTests(CardWebTestBase):
         )
         self.assertEqual(resp.status_code, 200)
 
+    def test_create_purchase_above_limit_rejected_with_message(self):
+        # self.card tem limite 500000 (R$ 5.000,00) — veja make_card.
+        resp = self.client.post(
+            reverse("cards:purchase_create"),
+            {
+                "card": self.card.pk,
+                "description": "Acima do limite",
+                "total_amount": "6000,00",
+                "installment_count": "1",
+                "first_due_date": "2026-09-10",
+            },
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(
+            InstallmentPurchase.objects.filter(description="Acima do limite").count(), 0
+        )
+        content = resp.content.decode()
+        self.assertIn("Limite insuficiente no cartão", content)
+        self.assertIn("5.000,00", content)
+
     def test_purchase_list_isolation(self):
         self.make_card(owner=self.bob, name="Bob")
         self.client.post(

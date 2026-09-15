@@ -468,14 +468,14 @@
  <li>
  <div class="flex items-center justify-between text-sm">
  <span class="font-medium text-foreground">{{ c.name }}</span>
- <span class="num text-xs {% if c.usage_tone == 'danger' %}text-danger-400{% elif c.usage_tone == 'warning' %}text-warning-400{% else %}text-success-400{% endif %}">
+ <span class="num text-xs {% if c.usage_tone == 'exceeded' %}text-danger-400{% elif c.usage_tone == 'attention' %}text-warning-400{% else %}text-success-400{% endif %}">
  {{ c.used_pct }}% usado
  </span>
  </div>
  <div class="mt-1.5">
- {% if c.usage_tone == 'danger' %}
+ {% if c.usage_tone == 'exceeded' %}
  {% include "components/progress.html" with percent=c.used_pct show_label=False tone="exceeded" %}
- {% elif c.usage_tone == 'warning' %}
+ {% elif c.usage_tone == 'attention' %}
  {% include "components/progress.html" with percent=c.used_pct show_label=False tone="attention" %}
  {% else %}
  {% include "components/progress.html" with percent=c.used_pct show_label=False %}

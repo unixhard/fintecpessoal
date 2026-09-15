@@ -227,6 +227,9 @@ def reverse_invoice_payment(*, user, invoice):
         new_status = CreditCardInvoice.Status.OPEN
 
     with db_transaction.atomic():
+        # O estorno devolve as parcelas ao estado "não pagas" (PENDING). O
+        # status OVERDUE é aplicado pela rotina roll_invoice_statuses() quando
+        # o calendário avança — a ordem natural do ciclo de fatura.
         invoice.installments.update(status=Installment.Status.PENDING)
         invoice.status = new_status
         invoice.payment_transaction = None
@@ -252,6 +255,9 @@ def roll_invoice_statuses(today=None):
       e a fatura segue não paga;
     - PAID nunca é alterado (pagamento já liquidou a obrigação).
 
+    Parcelas PENDING dentro de faturas que ficam OVERDUE também são marcadas
+    como OVERDUE para que a UI reflita o atraso corretamente.
+
     Idempotência: executar a mesma data várias vezes não altera nada depois da
     primeira passada (as condições só voltam a ser verdadeiras para faturas
     cujo status ainda não foi avançado).
@@ -273,5 +279,14 @@ def roll_invoice_statuses(today=None):
 
     closed = closing_qs.update(status=CreditCardInvoice.Status.CLOSED)
     overdue = overdue_qs.update(status=CreditCardInvoice.Status.OVERDUE)
+
+    # Marca parcelas PENDING dentro de faturas OVERDUE como OVERDUE.
+    overdue_invoices = CreditCardInvoice.objects.filter(
+        status=CreditCardInvoice.Status.OVERDUE,
+    )
+    Installment.objects.filter(
+        invoice__in=overdue_invoices,
+        status=Installment.Status.PENDING,
+    ).update(status=Installment.Status.OVERDUE)
 
     return {"closed": closed, "overdue": overdue}

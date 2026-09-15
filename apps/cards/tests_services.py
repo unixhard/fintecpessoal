@@ -27,7 +27,7 @@ from .services.invoices import (
     roll_invoice_statuses,
 )
 from .services.purchases import create_card_purchase
-from .services.reads import card_usage
+from .services.reads import card_summary, card_usage
 
 User = get_user_model()
 
@@ -282,8 +282,6 @@ class CardReadsTests(BaseCardServiceTestCase):
 
     def test_card_summary_rejects_other_users_card(self):
         with self.assertRaises(ForbiddenResourceError):
-            from .services.reads import card_summary
-
             card_summary(self.other, self.card)
 
 
@@ -405,3 +403,137 @@ class InvoiceCycleAutoTests(BaseCardServiceTestCase):
         self.assertEqual(r2, {"closed": 0, "overdue": 0})
         inv.refresh_from_db()
         self.assertEqual(inv.status, CreditCardInvoice.Status.OVERDUE)
+
+
+class CreditLimitValidationTests(BaseCardServiceTestCase):
+    """BUG 2: uma compra compromete o limite TOTAL imediatamente e nunca
+    pode ultrapassar o limite disponível do cartão."""
+
+    def test_purchase_above_available_limit_rejected(self):
+        with self.assertRaises(InvalidStateError):
+            create_card_purchase(
+                user=self.user, card=self.card, description="Casa",
+                total_amount=600000, installment_count=1,
+                first_due_date=date(2026, 2, 5),
+            )
+        self.assertEqual(
+            InstallmentPurchase.objects.for_user(self.user).count(), 0
+        )
+
+    def test_second_purchase_cannot_exceed_remaining_limit(self):
+        create_card_purchase(
+            user=self.user, card=self.card, description="Primeira",
+            total_amount=300000, installment_count=1,
+            first_due_date=date(2026, 2, 5),
+        )
+        with self.assertRaises(InvalidStateError):
+            create_card_purchase(
+                user=self.user, card=self.card, description="Segunda",
+                total_amount=250000, installment_count=1,
+                first_due_date=date(2026, 2, 6),
+            )
+
+    def test_purchase_at_exact_limit_allowed(self):
+        purchase = create_card_purchase(
+            user=self.user, card=self.card, description="Exato",
+            total_amount=500000, installment_count=1,
+            first_due_date=date(2026, 2, 5),
+        )
+        self.assertEqual(purchase.total_amount, 500000)
+
+    def test_card_without_configured_limit_skips_validation(self):
+        no_limit = CreditCard.objects.create(owner=self.user, name="Sem limite")
+        purchase = create_card_purchase(
+            user=self.user, card=no_limit, description="Sem margem",
+            total_amount=999999, installment_count=1,
+            first_due_date=date(2026, 2, 5),
+        )
+        self.assertEqual(purchase.total_amount, 999999)
+
+
+class InstallmentOverdueRollTests(BaseCardServiceTestCase):
+    """BUG 3: as parcelas acompanham o status da fatura — viram OVERDUE
+    quando a fatura atrasa (e nunca o contrário)."""
+
+    def _purchase_3x(self):
+        # closing_day=10, due_day=5. Parcelas de 10.000 cada em ciclos:
+        # 1ª -> fechada 10/02, vencimento 05/03
+        # 2ª -> fechada 10/03, vencimento 05/04
+        # 3ª -> fechada 10/04, vencimento 05/05
+        return create_card_purchase(
+            user=self.user, card=self.card, description="3x",
+            total_amount=30000, installment_count=3,
+            first_due_date=date(2026, 2, 10),
+        )
+
+    def test_installments_of_overdue_invoice_turn_overdue(self):
+        purchase = self._purchase_3x()
+        roll_invoice_statuses(today=date(2026, 3, 20))
+        self.assertEqual(
+            purchase.installments.get(number=1).status,
+            Installment.Status.OVERDUE,
+        )
+        # Fatura fechada mas ainda não vencida NÃO vira atrasada:
+        self.assertEqual(
+            purchase.installments.get(number=2).status,
+            Installment.Status.PENDING,
+        )
+        # Fatura ainda aberta segue pendente:
+        self.assertEqual(
+            purchase.installments.get(number=3).status,
+            Installment.Status.PENDING,
+        )
+
+    def test_installments_stay_overdue_across_runs(self):
+        purchase = self._purchase_3x()
+        roll_invoice_statuses(today=date(2026, 3, 20))
+        roll_invoice_statuses(today=date(2026, 4, 1))
+        self.assertEqual(
+            purchase.installments.get(number=1).status,
+            Installment.Status.OVERDUE,
+        )
+
+    def test_rollover_never_flips_paid_installments(self):
+        purchase = self._purchase_3x()
+        first_inv = purchase.installments.get(number=1).invoice
+        pay_invoice(
+            user=self.user, invoice=first_inv, account=self.bank,
+            date=date(2026, 3, 1),
+        )
+        roll_invoice_statuses(today=date(2026, 4, 1))
+        self.assertEqual(
+            purchase.installments.get(number=1).status,
+            Installment.Status.PAID,
+        )
+
+
+class CardSummaryIncludeClosedTests(BaseCardServiceTestCase):
+    """BUG 5: card_summary inclui faturas FECHADAS (vencimento futuro)
+    além de abertas e atrasadas."""
+
+    def test_closed_invoice_appears_in_future_invoices(self):
+        create_card_purchase(
+            user=self.user, card=self.card, description="3x",
+            total_amount=30000, installment_count=3,
+            first_due_date=date(2026, 2, 10),
+        )
+        roll_invoice_statuses(today=date(2026, 3, 20))
+        summary = card_summary(self.user, self.card)
+        statuses = {inv.status for inv in summary["future_invoices"]}
+        self.assertIn(CreditCardInvoice.Status.CLOSED, statuses)
+        self.assertEqual(len(summary["future_invoices"]), 3)
+
+    def test_paid_invoice_excluded_from_future_invoices(self):
+        purchase = create_card_purchase(
+            user=self.user, card=self.card, description="1x",
+            total_amount=10000, installment_count=1,
+            first_due_date=date(2026, 2, 10),
+        )
+        inv = purchase.installments.first().invoice
+        pay_invoice(
+            user=self.user, invoice=inv, account=self.bank,
+            date=date(2026, 3, 1),
+        )
+        roll_invoice_statuses(today=date(2026, 3, 20))
+        summary = card_summary(self.user, self.card)
+        self.assertEqual(summary["future_invoices"], [])

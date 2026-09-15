@@ -385,6 +385,8 @@ def committed(user) -> int:
 
 def committed_by_card(user) -> list[CreditCardSummary]:
     """Carteira resumida de cada cartão do usuário."""
+    today = _today()
+
     cards = list(
         CreditCard.objects.for_user(user).filter(status=CreditCard.Status.ACTIVE)
     )
@@ -421,6 +423,20 @@ def committed_by_card(user) -> list[CreditCardSummary]:
     invoice_ids = [inv["id"] for inv in open_invoices.values()]
     invoice_totals = _invoice_amounts(user, invoice_ids)
 
+    # Parcelas futuras: parcelas pendentes/atrasadas cuja fatura vence DEPOIS
+    # de hoje (não contabilizadas na fatura aberta mais próxima).
+    future_installment_total = 0
+    if cards:
+        future_installment_total = (
+            Installment.objects.filter(
+                purchase__owner=user,
+                purchase__card__in=cards,
+                status__in=[Installment.Status.PENDING, Installment.Status.OVERDUE],
+                invoice__due_date__gt=today,
+            ).aggregate(total=Sum("amount"))["total"]
+            or 0
+        )
+
     summaries = []
     for card in cards:
         used = used_by_card.get(card.pk, 0)
@@ -441,7 +457,7 @@ def committed_by_card(user) -> list[CreditCardSummary]:
                 usage_tone=_usage_tone(used, card.limit),
                 open_invoice_amount=open_amount,
                 next_invoice_due=next_due,
-                future_installment_total=used,
+                future_installment_total=future_installment_total,
             )
         )
     return summaries

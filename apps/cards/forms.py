@@ -11,6 +11,12 @@ from apps.core.forms import BRLField
 from apps.finance.models import Account
 
 from .models import CreditCard
+from .services.reads import card_usage
+
+
+def _brl(cents):
+    """Formata centavos no padrão brasileiro '5.000,00'."""
+    return f"{cents / 100:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
 class CardCreateForm(forms.Form):
@@ -82,6 +88,20 @@ class PurchaseForm(forms.Form):
                 status=CreditCard.Status.ACTIVE
             )
             self.fields["first_due_date"].initial = timezone.localdate()
+
+    def clean(self):
+        cleaned = super().clean()
+        card = cleaned.get("card")
+        total_amount = cleaned.get("total_amount")
+        if card is not None and total_amount is not None:
+            available = card_usage(card)["available"]
+            if card.limit > 0 and total_amount > available:
+                self.add_error(
+                    "total_amount",
+                    "Limite insuficiente no cartão. Disponível: "
+                    f"R$ {_brl(available)}.",
+                )
+        return cleaned
 
 
 class InvoicePayForm(forms.Form):
