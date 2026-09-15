@@ -68,6 +68,15 @@
  </ul>
  </nav>
 
+ {# Ajuda: tutorial completo do app #}
+ <div class="border-t border-sidebar-border px-3 py-2.5">
+ <a href="{% url 'accounts:tutorial' %}" class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-medium text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground">
+ <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.6 9.2a2.6 2.6 0 0 1 3.5-2.4c1 .4 1.6 1.4 1.6 2.5 0 1.6-2 2-2 3.4v.6M12 16.8v.01"/></svg>
+ Como usar o app
+ <span class="ml-auto text-[10px] font-semibold uppercase tracking-wider text-sidebar-muted">Tutorial</span>
+ </a>
+ </div>
+
  {# Perfil do usuário + sair #}
  <div class="border-t border-sidebar-border p-3">
  <div class="flex items-center gap-2">
@@ -138,7 +147,7 @@
  class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
  aria-label="Notificações" aria-haspopup="true" aria-expanded="false">
  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a6 6 0 0 0-6 6v4l-2 3h16l-2-3v-4a6 6 0 0 0-6-6ZM10 21a2 2 0 0 0 4 0"/></svg>
- {% if review_pending %}<span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive"></span>{% endif %}
+ {% if review_pending or cfo_alert %}<span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive"></span>{% endif %}
  </button>
  <div id="notif-menu" class="absolute right-0 top-[calc(100%+8px)] z-40 hidden w-80 rounded-xl border border-border bg-card p-4 shadow-pop">
  <p class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Notificações</p>
@@ -151,6 +160,16 @@
  <span class="min-w-0">
  <span class="block text-sm font-medium text-foreground">{{ review_pending }} lançamento{{ review_pending|pluralize }} aguardando revisão</span>
  <span class="block text-xs text-muted-foreground">Confira a fila de revisão do motor.</span>
+ </span>
+ </a>
+ {% elif cfo_alert %}
+ <a href="{% url 'dashboard:index' %}" class="flex items-start gap-3 rounded-lg p-2 transition-colors hover:bg-muted">
+ <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-danger-500/15 text-danger-400" aria-hidden="true">
+ <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 2.7 19.5h18.6Z"/><path d="M12 10v4M12 16.5v.01"/></svg>
+ </span>
+ <span class="min-w-0">
+ <span class="block text-sm font-medium text-foreground">Prioridade de hoje</span>
+ <span class="block text-xs text-muted-foreground">{{ cfo_alert }}</span>
  </span>
  </a>
  {% else %}

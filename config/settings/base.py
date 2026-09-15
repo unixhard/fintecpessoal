@@ -93,6 +93,7 @@ LOCAL_APPS = [
     "apps.imports",
     "apps.user_settings",
     "apps.painel",
+    "apps.ai",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS
@@ -136,6 +137,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.dashboard.context.app_navigation",
+                "apps.ai.context.cfo_notifications",
             ],
         },
     },

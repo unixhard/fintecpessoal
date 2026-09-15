@@ -80,6 +80,7 @@ def generate_json(
     user_prompt: str,
     image_bytes: bytes | None = None,
     image_mime: str | None = None,
+    max_output_tokens: int | None = None,
     timeout: int | None = None,
 ) -> dict:
     """Chama o Gemini e devolve o JSON estruturado.
@@ -115,6 +116,8 @@ def generate_json(
             "temperature": 0.1,
         },
     }
+    if max_output_tokens:
+        payload["generationConfig"]["maxOutputTokens"] = int(max_output_tokens)
 
     model = _model()
     api_key = settings.GEMINI_API_KEY
@@ -165,6 +168,7 @@ def generate_text(
     user_prompt: str,
     image_bytes: bytes | None = None,
     image_mime: str | None = None,
+    max_output_tokens: int | None = None,
     timeout: int | None = None,
 ) -> str:
     """Chama o Gemini e devolve texto livre (ex.: relatório em Markdown).
@@ -199,6 +203,8 @@ def generate_text(
             "temperature": 0.4,
         },
     }
+    if max_output_tokens:
+        payload["generationConfig"]["maxOutputTokens"] = int(max_output_tokens)
 
     model = _model()
     api_key = settings.GEMINI_API_KEY

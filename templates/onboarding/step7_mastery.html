@@ -1,0 +1,54 @@
+{% extends "onboarding/_base.html" %}
+{% comment %}
+ Etapa 7 — checklist mestre de domínio do app + plano dos primeiros 7 dias.
+ A conclusão efetiva acontece no POST deste formulário.
+{% endcomment %}
+
+{% block title %}Você domina o app — FINTECPESSOAL{% endblock %}
+
+{% block onboarding_body %}
+ <p class="eyebrow">Etapa 7 de 7 · Checklist mestre</p>
+ <h1 class="display-2 mt-1 text-2xl text-foreground">Você já conhece o app inteiro</h1>
+ <p class="mt-2 text-sm text-muted-foreground">
+ Isso aqui é o seu passaporte: marque mentalmente o que você já sabe usar.
+ O caminho até aqui já te deu tudo a seguir.
+ </p>
+
+ <div class="mt-6 rounded-xl border border-border bg-card p-4">
+ <h2 class="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">O que você aprendeu</h2>
+ <ul class="mt-3 space-y-2">
+ {% for item in checklist %}
+ <li class="flex items-start gap-2.5 text-sm text-foreground">
+ <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success-500/15 text-success-400" aria-hidden="true">
+ <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>
+ </span>
+ {{ item }}
+ </li>
+ {% endfor %}
+ </ul>
+ </div>
+
+ <div class="mt-5 rounded-xl border border-border bg-card p-4">
+ <h2 class="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Seus primeiros 7 dias</h2>
+ <ol class="mt-3 space-y-2">
+ {% for day, task in daily_plan %}
+ <li class="flex items-start gap-2.5 text-sm text-muted-foreground">
+ <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-muted text-[11px] font-bold text-foreground">{{ day|cut:"Dia " }}</span>
+ <span><span class="font-semibold text-foreground">{{ day }} —</span> {{ task }}</span>
+ </li>
+ {% endfor %}
+ </ol>
+ </div>
+
+ <form method="post" class="mt-7">
+ {% csrf_token %}
+ <div class="flex items-center justify-between gap-3">
+ <a href="{{ prev_step }}" class="btn btn-ghost">Voltar</a>
+ {% include "components/button.html" with label="Concluir e entrar no app" type="submit" style="primary" %}
+ </div>
+ </form>
+{% endblock %}
+
+{% block onboarding_hint %}
+ Você pode revisar este tutorial quando quiser pelo menu “Como usar o app”.
+{% endblock %}

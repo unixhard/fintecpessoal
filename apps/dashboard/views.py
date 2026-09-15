@@ -101,6 +101,20 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
         ctx["first_steps"] = _first_steps(user)
         ctx["dashboard"] = True
         ctx["ai_report_card"] = self._ai_report_card(user)
+        # Presença do CFO de bolso: reutiliza o contexto já construído acima
+        # para não recomputar as consultas (cache do dia + orçamento de IA).
+        from apps.ai.services import presence as ai_presence
+
+        ctx["cfo"] = ai_presence.daily_presence(user, data=ctx)
+        cfo = dict(ctx["cfo"])
+        cfo["consultoria_disponivel"] = True
+        cfo["chips"] = [
+            "Onde posso cortar gastos?",
+            "Quanto posso gastar até o fim do mês?",
+            "O que devo priorizar hoje?",
+        ]
+        ctx["cfo"] = cfo
+        ctx["cfo_status"] = ai_presence.ai_status(user)
         return ctx
 
     def _ai_report_card(self, user) -> dict:

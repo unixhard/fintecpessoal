@@ -1,0 +1,1 @@
+"""apps.ai — Presença e consultoria de IA (CFO de Bolso) com economia de tokens."""

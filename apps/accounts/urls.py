@@ -38,10 +38,16 @@ urlpatterns = [
         views.FintroPasswordResetCompleteView.as_view(),
         name="password_reset_complete",
     ),
-    # Onboarding (4 etapas)
+    # Onboarding + tutorial completo do app
     path(
         "onboarding/<int:step>/",
         onboarding._onboarding_step_view,
         name="onboarding_step",
+    ),
+    # Tutorial "Como usar" — sempre acessível (aponta para a etapa 4).
+    path(
+        "tutorial/",
+        onboarding.tutorial,
+        name="tutorial",
     ),
 ]

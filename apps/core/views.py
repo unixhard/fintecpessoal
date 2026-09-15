@@ -36,10 +36,15 @@ def home(request):
             "total_users": get_user_model().objects.count(),
         }
         return render(request, "core/home.html", ctx)
-    # Usuário autenticado: direciona para onboarding ou aplicação.
+    # Usuário autenticado: direciona para onboarding/tutorial ou aplicação.
+    from apps.finance.models import Account
+
     onboarded = getattr(getattr(request.user, "profile", None), "onboarding_completed", False)
     if not onboarded:
-        return redirect("accounts:onboarding_step", step=1)
+        # Já criou a primeira conta? Retoma o tutorial exatamente de onde parou
+        # (etapa 4) sem forçar uma segunda conta.
+        has_account = Account.objects.for_user(request.user).exists()
+        return redirect("accounts:onboarding_step", step=4 if has_account else 1)
     return redirect(settings.LOGIN_REDIRECT_URL or "dashboard:index")
 
 

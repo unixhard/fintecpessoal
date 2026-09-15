@@ -23,6 +23,9 @@ from datetime import date, timedelta
 from django.utils import timezone
 
 from apps.core.services.ai import AIServiceError, generate_text
+
+# Teto de saída (tokens) para o relatório mensal — contém o custo no free tier.
+_REPORT_MAX_TOKENS = 8192
 from apps.dashboard.viewmodel import build_dashboard
 from apps.finance.services.balances import net_worth
 
@@ -379,6 +382,7 @@ def generate_ai_report(*, user, today=None) -> AIReport:
     content = generate_text(
         system_prompt=_SYSTEM_PROMPT,
         user_prompt=_render_context(ctx),
+        max_output_tokens=_REPORT_MAX_TOKENS,
     )
     return AIReport.objects.create(
         owner=user,

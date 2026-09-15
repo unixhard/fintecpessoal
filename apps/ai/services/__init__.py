@@ -1,0 +1,1 @@
+"""Pacote de serviços internos do app de IA."""

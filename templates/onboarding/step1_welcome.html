@@ -3,32 +3,46 @@
 {% block title %}Boas-vindas — FINTECPESSOAL{% endblock %}
 
 {% block onboarding_body %}
- <h1 class="display-2 text-2xl text-foreground">
- Vamos organizar sua vida financeira.
+ <p class="eyebrow">Seu CFO de bolso te dá as boas-vindas</p>
+ <h1 class="display-2 mt-1 text-2xl text-foreground">
+ Vamos cuidar do seu dinheiro juntos.
  </h1>
- <p class="mt-3 text-muted-foreground">
- Com o FINTECPESSOAL você vai conseguir:
+ <p class="mt-3 text-sm leading-relaxed text-muted-foreground">
+ Aqui dentro você não usa planilha nem adivinha nada: o <strong class="text-foreground">FINTECPESSOAL</strong>
+ registra suas contas e o <strong class="text-foreground">CFO de bolso</strong> (uma inteligência
+ incansável) lê tudo e te responde onde seu dinheiro está, o que vigiar e o que fazer hoje.
  </p>
  <ul class="mt-5 space-y-3">
  <li class="flex items-start gap-3">
  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-400" aria-hidden="true">
  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg>
  </span>
- <span class="text-foreground">Entender para onde seu dinheiro está indo;</span>
+ <span class="text-foreground">Anotar o que entra e o que sai — em segundos, até por frase;</span>
  </li>
  <li class="flex items-start gap-3">
  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-400" aria-hidden="true">
  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg>
  </span>
- <span class="text-foreground">Organizar suas contas em um só lugar;</span>
+ <span class="text-foreground">Enxergar cartões, faturas, orçamentos, metas e dívidas em um lugar;</span>
  </li>
  <li class="flex items-start gap-3">
  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-400" aria-hidden="true">
  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg>
  </span>
- <span class="text-foreground">Acompanhar compromissos e planejar o futuro.</span>
+ <span class="text-foreground">Receber relatórios e respostas de um CFO que é só seu — e ver seu patrimônio crescer.</span>
  </li>
  </ul>
+
+ <div class="mt-6 rounded-xl border border-brand-500/25 bg-brand-500/10 p-4">
+ <h2 class="text-[11px] font-bold uppercase tracking-widest text-brand-300">O passeio que você vai fazer (4 passos)</h2>
+ <ol class="mt-2 space-y-1.5 text-sm text-muted-foreground">
+ <li><span class="font-semibold text-foreground">Conta e perfil:</span> quem você é e a primeira conta.</li>
+ <li><span class="font-semibold text-foreground">Seu dia a dia:</span> como anotar seu dinheiro.</li>
+ <li><span class="font-semibold text-foreground">Cartões e planos:</span> crédito, metas e orçamentos.</li>
+ <li><span class="font-semibold text-foreground">Inteligência:</span> relatório do CFO, patrimônio e backups.</li>
+ </ol>
+ </div>
+
  <div class="mt-8">
  <form method="get" action="{% url 'accounts:onboarding_step' 2 %}">
  {% include "components/button.html" with label="Começar" type="submit" style="primary" extra="w-full" %}

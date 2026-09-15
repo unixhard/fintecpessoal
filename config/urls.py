@@ -26,6 +26,7 @@ urlpatterns = [
     path("app/comprovantes/", include("apps.comprovantes.urls")),
     path("app/importar/", include("apps.imports.urls")),
     path("app/configuracoes/", include("apps.user_settings.urls")),
+    path("ia/", include("apps.ai.urls")),
     path("app/dono/", include("apps.painel.urls")),
     path("app/", include("apps.dashboard.urls")),
 ]

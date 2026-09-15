@@ -211,14 +211,15 @@ class OnboardingFlowTests(TestCase):
         self.assertRedirects(resp, reverse("accounts:onboarding_step", args=[3]))
         user.refresh_from_db()
         self.assertEqual(user.profile.display_name, "Ana")
-        # Etapa 3 (primeira conta) -> cria conta com ownership + conclui onboarding
+        # Etapa 3 (primeira conta) -> cria conta com ownership, MAS NÃO conclui
+        # (o tutorial continua nas etapas 4–7).
         resp = self.client.post(
             reverse("accounts:onboarding_step", args=[3]),
             {"name": "Conta Corrente", "type": "checking", "initial_balance": "1.500,00"},
         )
         self.assertRedirects(resp, reverse("accounts:onboarding_step", args=[4]))
         user.refresh_from_db()
-        self.assertTrue(user.profile.onboarding_completed)
+        self.assertFalse(user.profile.onboarding_completed)
         account = Account.objects.get(owner=user)
         self.assertEqual(account.name, "Conta Corrente")
         self.assertEqual(account.type, Account.Type.CHECKING)
@@ -227,16 +228,63 @@ class OnboardingFlowTests(TestCase):
         self.assertGreater(
             Category.objects.filter(owner=user, parent__isnull=True).count(), 0
         )
+        # Etapas 4–6 (módulos do tutorial) ficam acessíveis.
+        for step in (4, 5, 6):
+            with self.subTest(step=step):
+                resp = self.client.get(reverse("accounts:onboarding_step", args=[step]))
+                self.assertEqual(resp.status_code, 200)
+        # Etapa 7: checklists + POST conclui o onboarding.
+        resp = self.client.get(reverse("accounts:onboarding_step", args=[7]))
+        self.assertEqual(resp.status_code, 200)
+        resp = self.client.post(reverse("accounts:onboarding_step", args=[7]))
+        self.assertRedirects(resp, reverse("dashboard:index"))
+        user.refresh_from_db()
+        self.assertTrue(user.profile.onboarding_completed)
 
-    def test_onboarding_not_accessible_after_completion(self):
+    def test_user_with_account_resumes_tutorial_at_step4(self):
+        # Usuário no meio do tutorial (tem conta, mas não concluiu) volta direto
+        # para a etapa 4 (não é forçado a criar uma segunda conta).
         user = self._signup_auth()
-        # Completa rapidamente o onboarding.
+        self.client.post(reverse("accounts:onboarding_step", args=[3]),
+                         {"name": "Conta", "type": "checking", "initial_balance": "0"},
+                         )
+        self.assertFalse(user.profile.onboarding_completed)
+        resp = self.client.get(reverse("core:home"))
+        self.assertRedirects(
+            resp,
+            reverse("accounts:onboarding_step", args=[4]),
+            fetch_redirect_response=False,
+        )
+
+    def test_tutorial_accessible_after_completion(self):
+        user = self._signup_auth()
         self.client.post(reverse("accounts:onboarding_step", args=[3]),
                          {"name": "Carteira", "type": "cash", "initial_balance": "0"},
                          )
+        self.client.post(reverse("accounts:onboarding_step", args=[7]))
         user.refresh_from_db()
         self.assertTrue(user.profile.onboarding_completed)
-        # Acessar onboarding agora redireciona para a aplicação.
+        # "Como usar o app" continua disponível após a conclusão.
+        resp = self.client.get(reverse("accounts:tutorial"))
+        self.assertRedirects(resp, reverse("accounts:onboarding_step", args=[4]))
+        for step in (4, 5, 6, 7):
+            with self.subTest(step=step):
+                resp = self.client.get(reverse("accounts:onboarding_step", args=[step]))
+                self.assertEqual(resp.status_code, 200)
+        # As etapas obrigatórias (1–3) voltam a desviar para a aplicação.
+        resp = self.client.get(reverse("accounts:onboarding_step", args=[1]))
+        self.assertRedirects(resp, reverse("dashboard:index"))
+
+    def test_onboarding_not_accessible_after_completion(self):
+        user = self._signup_auth()
+        # Completa o tutorial (conta + checklist mestre).
+        self.client.post(reverse("accounts:onboarding_step", args=[3]),
+                         {"name": "Carteira", "type": "cash", "initial_balance": "0"},
+                         )
+        self.client.post(reverse("accounts:onboarding_step", args=[7]))
+        user.refresh_from_db()
+        self.assertTrue(user.profile.onboarding_completed)
+        # Acessar onboarding obrigatório agora redireciona para a aplicação.
         resp = self.client.get(reverse("accounts:onboarding_step", args=[1]))
         self.assertRedirects(resp, reverse("dashboard:index"))
 
@@ -245,6 +293,8 @@ class OnboardingFlowTests(TestCase):
         self.client.post(reverse("accounts:onboarding_step", args=[3]),
                          {"name": "Carteira", "type": "cash", "initial_balance": "0"},
                          )
+        self.client.post(reverse("accounts:onboarding_step", args=[7]))
+        self.assertTrue(user.profile.onboarding_completed)
         self.client.post(reverse("accounts:logout"))
         resp = self.client.post(
             reverse("accounts:login"),

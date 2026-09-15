@@ -1,0 +1,41 @@
+{% extends "onboarding/_base.html" %}
+{% comment %}
+ Módulo base das etapas 4–6 do tutorial: cartões com o que aprender + ação,
+ dica de mestre e navegação anterior/próxima.
+{% endcomment %}
+
+{% block onboarding_body %}
+ <p class="eyebrow">{{ eyebrow }}</p>
+ <h1 class="display-2 mt-1 text-2xl text-foreground">{{ heading }}</h1>
+ <p class="mt-2 text-sm text-muted-foreground">{{ subtitle }}</p>
+
+ <div class="mt-6 space-y-4">
+ {% for card in cards %}
+ <div class="rounded-xl border border-border bg-card p-4">
+ <div class="flex items-start justify-between gap-3">
+ <h2 class="text-sm font-bold tracking-tight text-foreground">{{ card.title }}</h2>
+ {% if card.url and card.action %}
+ <a href="{{ card.url }}" class="btn btn-ghost btn-sm shrink-0">{{ card.action }}</a>
+ {% endif %}
+ </div>
+ <p class="mt-1.5 text-sm leading-relaxed text-muted-foreground">{{ card.text }}</p>
+ {% if not card.url %}
+ <p class="mt-2 text-xs font-medium text-brand-400">{{ card.action }}</p>
+ {% endif %}
+ </div>
+ {% endfor %}
+ </div>
+
+ <p class="mt-5 rounded-lg border border-brand-500/25 bg-brand-500/10 p-3 text-sm text-foreground">
+ <span class="font-semibold text-brand-300">Dica de mestre:</span> {{ tip }}
+ </p>
+
+ <div class="mt-7 flex items-center justify-between gap-3">
+ <a href="{{ prev_step }}" class="btn btn-ghost">Voltar</a>
+ <a href="{{ next_step }}" class="btn btn-primary">Continuar</a>
+ </div>
+{% endblock %}
+
+{% block onboarding_hint %}
+ Simples, né? Cada tela desta lista está no menu do app, pronta para usar quando quiser.
+{% endblock %}
