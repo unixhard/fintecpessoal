@@ -265,5 +265,85 @@
     document.addEventListener("visibilitychange", function () {
       if (document.visibilityState === "hidden") flushTrack();
     });
+
+    // ----- Máscara de valores monetários (correção automática) -----
+    // O usuário digita "200" ou "3000"; a plataforma formata na hora como
+    // "200,00" / "3.000,00" para eliminar a confusão com zeros. A vírgula é o
+    // separador de centavos; o ponto (estilo americano, ex. "200.50") também é
+    // aceito e convertido para vírgula. Sempre que possível o inteiro é
+    // interpretado como REAIS (3000 = 3 mil), nunca como centavos.
+    function moneyNormalize(raw) {
+      raw = String(raw || "");
+      var neg = /^-/.test(raw);
+      var s = neg ? raw.slice(1) : raw;
+      if (s === "." || s === ",") return (neg ? "-" : "") + "0,";
+      var trailingSep = null;
+      var m = s.match(/([.,])$/);
+      if (m) trailingSep = m[1];
+      var body = trailingSep ? s.slice(0, -1) : s;
+
+      var intPart, frac = "";
+      if (!trailingSep) {
+        var commaIdx = body.lastIndexOf(",");
+        var dotIdx = body.lastIndexOf(".");
+        if (commaIdx !== -1 && (dotIdx === -1 || commaIdx > dotIdx)) {
+          var afterC = body.slice(commaIdx + 1).replace(/[^\d]/g, "");
+          if (/^\d{0,2}$/.test(afterC)) {
+            intPart = body.slice(0, commaIdx);
+            frac = afterC;
+          } else {
+            intPart = body;
+          }
+        } else if (dotIdx !== -1) {
+          var afterD = body.slice(dotIdx + 1).replace(/[^\d]/g, "");
+          if (/^\d{1,2}$/.test(afterD)) {
+            intPart = body.slice(0, dotIdx);
+            frac = afterD;
+          } else {
+            intPart = body;
+          }
+        } else {
+          intPart = body;
+        }
+      } else {
+        intPart = body;
+      }
+
+      var intDigits = intPart.replace(/[^\d]/g, "").replace(/^0+(?=\d)/, "");
+      var grouped = intDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      var out = (neg ? "-" : "") + grouped;
+      if (frac) out += "," + frac;
+      else if (trailingSep) out += ",";
+      return out;
+    }
+
+    function moneyBlur(el) {
+      var raw = el.value;
+      if (!raw) return;
+      var neg = raw.indexOf("-") === 0;
+      var body = neg ? raw.slice(1) : raw;
+      var commaIdx = body.lastIndexOf(",");
+      var out = body;
+      if (commaIdx === -1) {
+        out += ",00";
+      } else {
+        var fracLen = body.length - commaIdx - 1;
+        if (fracLen === 0) out += "00";
+        else if (fracLen === 1) out += "0";
+      }
+      el.value = (neg ? "-" : "") + out;
+    }
+
+    function initMoneyInputs() {
+      document.querySelectorAll("input[data-money-input]").forEach(function (el) {
+        el.addEventListener("input", function () {
+          var cur = el.value;
+          var norm = moneyNormalize(cur);
+          if (norm !== cur) el.value = norm;
+        });
+        el.addEventListener("blur", function () { moneyBlur(el); });
+      });
+    }
+    initMoneyInputs();
   });
 })();

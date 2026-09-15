@@ -1,5 +1,7 @@
 {% extends "app/_shell.html" %}
 
+{% load money %}
+
 {% block title %}{{ title }} · FINTECPESSOAL{% endblock %}
 
 {% block shell_title %}Lançamento{% endblock %}
@@ -35,8 +37,8 @@
  <label for="id_amount" class="block text-sm font-medium text-foreground">Valor<span class="text-danger-500" aria-hidden="true"> *</span></label>
  <div class="relative">
  <span aria-hidden="true" class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-semibold text-muted-foreground">R$</span>
- <input type="text" id="id_amount" name="{{ form.amount.html_name }}" inputmode="decimal" placeholder="0,00" autofocus
- value="{{ form.amount.value|default:'' }}"
+ <input type="text" id="id_amount" name="{{ form.amount.html_name }}" inputmode="decimal" placeholder="0,00" autofocus data-money-input
+ value="{{ form.amount.value|brlvalue }}"
  class="w-full rounded-md border border-border bg-card py-2.5 pr-3 pl-9 text-base font-semibold text-foreground focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
  </div>
  {% if form.amount.errors %}

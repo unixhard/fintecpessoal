@@ -8,7 +8,7 @@ contabilidade auditável e consistente.
 
 from django import forms
 
-from apps.core.forms import BRLField
+from apps.core.forms import BRLField, BRLInput
 
 from .models import Goal
 
@@ -20,7 +20,7 @@ class GoalForm(forms.Form):
     )
     target_amount = BRLField(
         label="Valor objetivo (R$)", min_value_cents=1, allow_zero=False,
-        widget=forms.TextInput(attrs={"placeholder": "0,00", "inputmode": "decimal"}),
+        widget=BRLInput(attrs={"placeholder": "0,00"}),
     )
     target_date = forms.DateField(
         label="Data objetivo (opcional)", required=False,
@@ -44,5 +44,5 @@ class GoalForm(forms.Form):
 class GoalContributionForm(forms.Form):
     amount = BRLField(
         label="Valor do aporte (R$)", min_value_cents=1, allow_zero=False,
-        widget=forms.TextInput(attrs={"placeholder": "0,00", "inputmode": "decimal"}),
+        widget=BRLInput(attrs={"placeholder": "0,00"}),
     )

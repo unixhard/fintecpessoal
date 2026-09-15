@@ -11,7 +11,7 @@ from django import forms
 from django.db.models import Q
 from django.utils import timezone
 
-from apps.core.forms import BRLField
+from apps.core.forms import BRLField, BRLInput
 
 from .models import Account, Category, ClassificationRule, Merchant, RecurringRule, Transaction
 
@@ -45,7 +45,7 @@ class AccountCreateForm(forms.Form):
     )
     initial_balance = BRLField(
         label="Saldo inicial (R$)", required=False,
-        widget=forms.TextInput(attrs={"placeholder": "0,00", "inputmode": "decimal"}),
+        widget=BRLInput(attrs={"placeholder": "0,00"}),
     )
 
     def clean_name(self):
@@ -112,7 +112,7 @@ class CategoryForm(forms.Form):
 class _TransactionFormBase(forms.Form):
     amount = BRLField(
         label="Valor (R$)", min_value_cents=1, allow_zero=False,
-        widget=forms.TextInput(attrs={"placeholder": "0,00", "inputmode": "decimal"}),
+        widget=BRLInput(attrs={"placeholder": "0,00"}),
     )
     date = forms.DateField(
         label="Data", widget=forms.DateInput(attrs={"type": "date"}),
@@ -175,7 +175,7 @@ class TransferForm(forms.Form):
     )
     amount = BRLField(
         label="Valor (R$)", min_value_cents=1, allow_zero=False,
-        widget=forms.TextInput(attrs={"placeholder": "0,00", "inputmode": "decimal"}),
+        widget=BRLInput(attrs={"placeholder": "0,00"}),
     )
     date = forms.DateField(
         label="Data", widget=forms.DateInput(attrs={"type": "date"}),
@@ -233,7 +233,7 @@ class RecurringForm(forms.Form):
     )
     amount = BRLField(
         label="Valor (R$)", min_value_cents=1, allow_zero=False,
-        widget=forms.TextInput(attrs={"placeholder": "0,00", "inputmode": "decimal"}),
+        widget=BRLInput(attrs={"placeholder": "0,00"}),
     )
     frequency = forms.ChoiceField(
         label="Frequência", choices=RecurringRule.Frequency.choices,

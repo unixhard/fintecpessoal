@@ -7,7 +7,7 @@ usuário via ``for_user``.
 from django import forms
 from django.utils import timezone
 
-from apps.core.forms import BRLField
+from apps.core.forms import BRLField, BRLInput
 from apps.finance.models import Account
 
 from .models import CreditCard
@@ -30,7 +30,7 @@ class CardCreateForm(forms.Form):
     )
     limit = BRLField(
         label="Limite (R$)", required=False,
-        widget=forms.TextInput(attrs={"placeholder": "0,00", "inputmode": "decimal"}),
+        widget=BRLInput(attrs={"placeholder": "0,00"}),
     )
     closing_day = forms.IntegerField(
         label="Dia de fechamento", min_value=1, max_value=31, initial=1,
@@ -70,7 +70,7 @@ class PurchaseForm(forms.Form):
     )
     total_amount = BRLField(
         label="Valor total (R$)", min_value_cents=1, allow_zero=False,
-        widget=forms.TextInput(attrs={"placeholder": "0,00", "inputmode": "decimal"}),
+        widget=BRLInput(attrs={"placeholder": "0,00"}),
     )
     installment_count = forms.IntegerField(
         label="Número de parcelas", min_value=1, initial=1,

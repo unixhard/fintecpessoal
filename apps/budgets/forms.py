@@ -8,7 +8,7 @@ aos services (nenhuma regra financeira na view/form). Categoria é filtrada por
 from django import forms
 from django.utils import timezone
 
-from apps.core.forms import BRLField
+from apps.core.forms import BRLField, BRLInput
 from apps.finance.models import Category
 
 from .models import Budget
@@ -24,7 +24,7 @@ class BudgetForm(forms.Form):
     )
     limit_amount = BRLField(
         label="Limite (R$)", min_value_cents=1, allow_zero=False,
-        widget=forms.TextInput(attrs={"placeholder": "0,00", "inputmode": "decimal"}),
+        widget=BRLInput(attrs={"placeholder": "0,00"}),
     )
     start_date = forms.DateField(
         label="Data inicial (opcional)", required=False,

@@ -18,9 +18,6 @@ Etapas:
 As etapas 4–7 ficam acessíveis depois da conclusão (tutorial "Como usar").
 """
 
-import decimal
-from decimal import Decimal
-
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -28,6 +25,11 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views import View
 from django.views.generic import TemplateView
+
+from decimal import Decimal
+
+from apps.core.forms import BRLInput
+from apps.core.money import parse_money_to_cents
 
 from apps.finance.models import Account
 from apps.finance.services.accounts import create_account
@@ -126,6 +128,8 @@ class _ReaisToCentavosField(forms.Field):
     regra financeira (inteiro em centavos, ownership) permanece no service.
     """
 
+    widget = BRLInput
+
     default_error_messages = {
         "invalid": "Informe um valor monetário válido (ex.: 1.500,00).",
         "negative": "O saldo inicial não pode ser negativo.",
@@ -134,17 +138,17 @@ class _ReaisToCentavosField(forms.Field):
     def to_python(self, value):
         if value in self.empty_values:
             return 0
+        if isinstance(value, (int, Decimal)) and not isinstance(value, bool):
+            value = str(value)
         if not isinstance(value, str):
             raise forms.ValidationError(self.error_messages["invalid"], code="invalid")
         value = value.strip()
         if not value:
             return 0
-        normalized = value.replace(".", "").replace(",", ".")
-        try:
-            amount = Decimal(normalized)
-        except (TypeError, ValueError, decimal.InvalidOperation):
+        cents = parse_money_to_cents(value)
+        if cents is None:
             raise forms.ValidationError(self.error_messages["invalid"], code="invalid")
-        return int((amount * 100).to_integral_value(rounding=decimal.ROUND_HALF_UP))
+        return cents
 
     def validate(self, value):
         super().validate(value)
@@ -162,9 +166,7 @@ class FirstAccountForm(forms.Form):
     initial_balance = _ReaisToCentavosField(
         label="Saldo inicial (R$)",
         required=False,
-        widget=forms.TextInput(
-            attrs={"placeholder": "0,00", "inputmode": "decimal"}
-        ),
+        widget=BRLInput(attrs={"placeholder": "0,00"}),
     )
 
     def clean_name(self):

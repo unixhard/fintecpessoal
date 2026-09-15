@@ -8,7 +8,7 @@ pagamento com conta de outro usuário.
 from django import forms
 from django.utils import timezone
 
-from apps.core.forms import BRLField
+from apps.core.forms import BRLField, BRLInput
 from apps.finance.models import Account
 
 from .models import Debt
@@ -22,7 +22,7 @@ class DebtForm(forms.Form):
     type = forms.ChoiceField(label="Tipo", choices=Debt.Type.choices)
     total_amount = BRLField(
         label="Valor total (R$)", min_value_cents=1, allow_zero=False,
-        widget=forms.TextInput(attrs={"placeholder": "0,00", "inputmode": "decimal"}),
+        widget=BRLInput(attrs={"placeholder": "0,00"}),
     )
     interest_rate = forms.DecimalField(
         label="Taxa de juros (% a.m., opcional)", required=False,
@@ -63,7 +63,7 @@ class DebtPaymentForm(forms.Form):
     )
     amount = BRLField(
         label="Valor do pagamento (R$)", min_value_cents=1, allow_zero=False,
-        widget=forms.TextInput(attrs={"placeholder": "0,00", "inputmode": "decimal"}),
+        widget=BRLInput(attrs={"placeholder": "0,00"}),
     )
     date = forms.DateField(
         label="Data", widget=forms.DateInput(attrs={"type": "date"}),
