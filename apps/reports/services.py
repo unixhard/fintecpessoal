@@ -60,7 +60,7 @@ def next_available_date(user, *, today=None) -> date:
     latest = latest_report(user)
     if latest is None:
         return today
-    return latest.generated_at.date() + timedelta(days=COOLDOWN_DAYS)
+    return timezone.localdate(latest.generated_at) + timedelta(days=COOLDOWN_DAYS)
 
 
 def can_generate(user, *, today=None) -> bool:
@@ -366,10 +366,10 @@ def generate_ai_report(*, user, today=None) -> AIReport:
     today = today or timezone.localdate()
     latest = latest_report(user)
     if latest is not None:
-        delta = (today - latest.generated_at.date()).days
+        delta = (today - timezone.localdate(latest.generated_at)).days
         if delta < COOLDOWN_DAYS:
             raise CooldownError(
-                next_allowed=latest.generated_at.date() + timedelta(days=COOLDOWN_DAYS)
+                next_allowed=timezone.localdate(latest.generated_at) + timedelta(days=COOLDOWN_DAYS)
             )
 
     ctx = collect_context(user)

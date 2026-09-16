@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from apps.finance.models import Account, Category, Transaction
+from apps.finance.models import Account, Category, RecurringRule, Transaction, Transfer
 
 from .services import (
     delete_account,
@@ -92,6 +92,135 @@ class BackupServiceTests(TestCase):
         report = restore_user_data(self.user, data)
         self.assertEqual(Account.objects.filter(owner=self.user).count(), 2)
         self.assertGreaterEqual(report["restored"], 1)
+
+    def test_restore_categories_pais_antes_de_filhos(self):
+        """O dump exporta categorias em ordem alfabética: um filho ("Academia")
+        aparece ANTES do pai ("Atividade Física"). O restore deve resolver os
+        pais mesmo assim, sem erro e sem FKs órfãs."""
+        parent = Category.objects.create(
+            owner=self.user, name="Atividade Física", kind=Category.Kind.EXPENSE
+        )
+        Category.objects.create(
+            owner=self.user, name="Academia", kind=Category.Kind.EXPENSE, parent=parent
+        )
+        self.assertLess(
+            export_user_data(self.user)["finance.category"][0]["name"],
+            export_user_data(self.user)["finance.category"][1]["name"],
+        )
+        data = export_user_data(self.user)
+
+        other = make_user("bob")
+        report = restore_user_data(other, data)
+        self.assertEqual(report["errors"], 0)
+
+        cats = Category.objects.filter(owner=other)
+        self.assertEqual(cats.count(), 2)
+        academia = cats.get(name="Academia")
+        self.assertIsNotNone(academia.parent)
+        self.assertEqual(academia.parent.owner, other)
+        self.assertEqual(academia.parent.name, "Atividade Física")
+
+    def test_restore_is_idempotent_for_unique_records(self):
+        """Restaurar o mesmo backup duas vezes não duplica categorias/regras
+        (registros idênticos são ignorados), mantendo referências válidas."""
+        acc = Account.objects.create(owner=self.user, name="Nubank", initial_balance=0)
+        cat = Category.objects.create(
+            owner=self.user, name="Casa", kind=Category.Kind.EXPENSE
+        )
+        Category.objects.create(
+            owner=self.user, name="Aluguel", kind=Category.Kind.EXPENSE, parent=cat
+        )
+        RecurringRule.objects.create(
+            owner=self.user,
+            kind=RecurringRule.Kind.EXPENSE,
+            title="Aluguel",
+            amount=224290,
+            account=acc,
+            category=cat,
+            frequency=RecurringRule.Frequency.MONTHLY,
+            start_date=date(2026, 1, 1),
+            day_of_month=10,
+        )
+        data = export_user_data(self.user)
+
+        other = make_user("bob")
+        first = restore_user_data(other, data)
+        self.assertEqual(first["errors"], 0)
+        self.assertEqual(Category.objects.filter(owner=other).count(), 2)
+
+        second = restore_user_data(other, data)
+        self.assertEqual(second["errors"], 0)
+        # Categorias (chave única) NÃO duplicam num segundo restore:
+        self.assertEqual(Category.objects.filter(owner=other).count(), 2)
+        # Regras sem chave única seguem o comportamento padrão (não sobrescreve);
+        # o importante é NÃO gerar erros e manter as referências válidas.
+        self.assertGreaterEqual(RecurringRule.objects.filter(owner=other).count(), 1)
+        self.assertEqual(
+            RecurringRule.objects.filter(owner=other).filter(account__owner=other).count(),
+            RecurringRule.objects.filter(owner=other).count(),
+        )
+
+    def test_restore_rule_loses_orphan_category_but_keeps_rule(self):
+        """Regra com categoria que não existe no dump é restaurada com categoria
+        nula (em vez de virar erro e desaparecer)."""
+        acc = Account.objects.create(owner=self.user, name="BB", initial_balance=0)
+        RecurringRule.objects.create(
+            owner=self.user,
+            kind=RecurringRule.Kind.EXPENSE,
+            title="Condomínio",
+            amount=60000,
+            account=acc,
+            frequency=RecurringRule.Frequency.MONTHLY,
+            start_date=date(2026, 1, 1),
+            day_of_month=10,
+        )
+        data = export_user_data(self.user)
+        data["finance.recurringrule"][0]["category"] = 999999  # órfã no dump
+
+        other = make_user("bob")
+        report = restore_user_data(other, data)
+        self.assertEqual(report["errors"], 0)
+        rule = RecurringRule.objects.filter(owner=other).first()
+        self.assertIsNotNone(rule)
+        self.assertIsNone(rule.category)
+        self.assertEqual(rule.account.owner, other)
+
+    def test_restore_remaps_transfer_legs(self):
+        """As pernas de um transfer (out/in_transaction) são preenchidas após a
+        restauração das transactions."""
+        acc_a = Account.objects.create(owner=self.user, name="BB", initial_balance=0)
+        acc_b = Account.objects.create(owner=self.user, name="Nubank", initial_balance=0)
+        out_tx = Transaction.objects.create(
+            owner=self.user, type=Transaction.Type.TRANSFER, amount=50000,
+            date=date(2026, 1, 1), account=acc_a,
+        )
+        in_tx = Transaction.objects.create(
+            owner=self.user, type=Transaction.Type.TRANSFER, amount=50000,
+            date=date(2026, 1, 1), account=acc_b,
+        )
+        transfer = Transfer.objects.create(
+            owner=self.user, from_account=acc_a, to_account=acc_b,
+            amount=50000, date=date(2026, 1, 1),
+            out_transaction=out_tx, in_transaction=in_tx,
+        )
+        out_tx.transfer = transfer
+        out_tx.save()
+        in_tx.transfer = transfer
+        in_tx.save()
+
+        data = export_user_data(self.user)
+        other = make_user("bob")
+        report = restore_user_data(other, data)
+        self.assertEqual(report["errors"], 0)
+
+        restored = Transfer.objects.get(owner=other)
+        self.assertIsNotNone(restored.out_transaction)
+        self.assertIsNotNone(restored.in_transaction)
+        self.assertEqual(restored.out_transaction.owner, other)
+        self.assertEqual(restored.in_transaction.owner, other)
+        self.assertEqual(
+            Transaction.objects.filter(owner=other, type=Transaction.Type.TRANSFER).count(), 2
+        )
 
 
 class WipeServiceTests(TestCase):

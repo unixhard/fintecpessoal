@@ -15,12 +15,14 @@ Restrições do Render free tier:
   - Arquivos (comprovantes) NÃO são serializados (apenas metadata).
 """
 
+import copy
 import json
 from datetime import datetime, timezone
 from typing import Any
 
 from django.apps import apps
 from django.db import transaction
+from django.db import models
 from django.db.models import ForeignKey
 
 
@@ -29,29 +31,32 @@ from django.db.models import ForeignKey
 # --------------------------------------------------------------------------- #
 
 # (app_label, model_name). A ordem respeita dependências FK (pais antes dos
-# filhos). ``owner`` é o nome típico do campo de propriedade; alguns modelos
-# usam ``user`` ou são híbridos (merchant/alias — owner pode ser null=global).
+# filhos), inclusive dependências "para trás" (ex.: transaction referencia
+# recurringrule, transfer e installmentpurchase — que devem vir antes).
+# ``owner`` é o nome típico do campo de propriedade; alguns modelos usam
+# ``user`` ou são híbridos (merchant/alias — owner pode ser null=global).
 # O campo de propriedade é detectado dinamicamente: preferimos ``owner``,
 # depois ``user``; Merchant/MerchantAlias usam ``owner`` (null = global).
 EXPORT_MODEL_ORDER = [
     # Conta e perfil primeiro (bases)
     ("accounts", "profile"),
-    # Finance
+    # Finance — bases
     ("finance", "account"),
     ("finance", "category"),
     ("finance", "merchant"),
     ("finance", "merchantalias"),
-    ("finance", "transfer"),
-    ("finance", "transaction"),
-    ("finance", "recurringrule"),
-    ("finance", "classificationrule"),
     ("finance", "userpreference"),
-    ("finance", "transactionanalysis"),
-    # Cards
+    # Cards — antes de transaction (transaction referencia card_purchase)
     ("cards", "creditcard"),
     ("cards", "creditcardinvoice"),
     ("cards", "installmentpurchase"),
     ("cards", "installment"),
+    # Finance — referências cruzadas (transfer/rule antes de transaction)
+    ("finance", "transfer"),
+    ("finance", "recurringrule"),
+    ("finance", "transaction"),
+    ("finance", "classificationrule"),
+    ("finance", "transactionanalysis"),
     # Budgets / Goals / Debts
     ("budgets", "budget"),
     ("goals", "goal"),
@@ -169,14 +174,28 @@ def _serialize_object(obj) -> dict:
 def restore_user_data(user, data: dict) -> dict:
     """Restaura dados a partir de um dump JSON (cria objetos novos).
 
-    FKs internas são remapeadas conforme a ordem de restauração.
+    FKs internas são remapeadas conforme a ordem de restauração. O restore é
+    idempotente: registros idênticos aos já existentes do usuário são
+    ignorados (contados como ``skipped``), nunca duplicados.
     """
     report: dict[str, int] = {"restored": 0, "skipped": 0, "errors": 0}
 
     if not isinstance(data, dict):
         raise ValueError("Formato de arquivo inválido. Esperado JSON.")
 
+    # Nunca mutamos o dict original (o backup pode ser reutilizado em novos
+    # restores após o primeiro — os FKs são reescritos no processo).
+    data = copy.deepcopy(data)
+
     pk_map: dict[str, dict[int, int]] = {}
+    # FKs que apontam para um modelo que só será restaurado depois (ex.:
+    # transfer.out_transaction → transaction) são deferidas e preenchidas no fim.
+    deferred: list[tuple] = []
+
+    order_index = {
+        f"{app_label}.{model_name}": idx
+        for idx, (app_label, model_name) in enumerate(EXPORT_MODEL_ORDER)
+    }
 
     with transaction.atomic():
         for app_label, model_name in EXPORT_MODEL_ORDER:
@@ -196,25 +215,150 @@ def restore_user_data(user, data: dict) -> dict:
                 report["skipped"] += len(rows)
                 continue
 
-            for row in rows:
+            for row in _order_rows(model, rows):
+                old_pk = row.get("_pk")
                 try:
-                    old_pk = row.get("_pk")
+                    defer = _defer_forward_fks(model, row, order_index)
                     _remap_fks(model, row, pk_map)
-                    obj = _create_row(user, model, row, owner_field)
-                    if obj is not None:
-                        if old_pk is not None:
-                            pk_map.setdefault(key, {})[old_pk] = obj.pk
-                        report["restored"] += 1
-                    else:
-                        report["skipped"] += 1
+                    _cleanup_orphan_fks(model, row, pk_map)
+                    obj = _create_row(user, model, row, owner_field, pk_map, key)
                 except Exception:
                     report["errors"] += 1
+                    continue
+                if obj is None:
+                    report["skipped"] += 1
+                    continue
+                if old_pk is not None:
+                    pk_map.setdefault(key, {})[old_pk] = obj.pk
+                for attname, target_key, old_target_id in defer:
+                    deferred.append(
+                        (model._meta.label_lower, obj.pk, attname, target_key, old_target_id)
+                    )
+                report["restored"] += 1
+
+        # Preenche referências adiadas (pernas de transfer, pagamento de fatura).
+        for source_key, obj_pk, attname, target_key, old_target_id in deferred:
+            new_id = pk_map.get(target_key, {}).get(old_target_id)
+            if new_id is None:
+                continue
+            try:
+                source_model = apps.get_model(*source_key.split("."))
+                source_model.objects.filter(pk=obj_pk).update(**{attname: new_id})
+            except Exception:
+                report["errors"] += 1
 
     return report
 
 
-def _create_row(user, model, row: dict, owner_field: str):
-    """Cria um objeto, garantindo ownership correto e campos válidos."""
+def _order_rows(model, rows: list) -> list:
+    """Ordena linhas de um mesmo modelo para que FKs internas (self) existam
+    antes dos registros que as referenciam (pais antes dos filhos)."""
+    self_refs = [
+        f.name
+        for f in model._meta.get_fields()
+        if isinstance(f, ForeignKey) and f.related_model is model
+    ]
+    if not self_refs:
+        return list(rows)
+
+    keyed = {r["_pk"]: r for r in rows if r.get("_pk") is not None}
+    placed: set[int] = set()
+    ordered: list = []
+    remaining = list(rows)
+
+    while remaining:
+        progress = False
+        for row in remaining:
+            if any(
+                row.get(ref) in keyed and row.get(ref) not in placed
+                for ref in self_refs
+            ):
+                continue
+            ordered.append(row)
+            pk = row.get("_pk")
+            if pk is not None:
+                placed.add(pk)
+            remaining.remove(row)
+            progress = True
+            break
+        if not progress:  # ciclo ou referência órfã — não bloqueia o restore
+            ordered.extend(remaining)
+            break
+    return ordered
+
+
+def _defer_forward_fks(model, row: dict, order_index: dict) -> list:
+    """Adia FKs para modelos que ainda não foram restaurados.
+
+    Exemplo: ``transfer.out_transaction``/``in_transaction`` apontam para
+    transactions (model restaurado depois) — o valor é zerado agora e
+    preenchido no fim do restore, após o mapeamento das transactions.
+    Retorna tuplas ``(attname, target_key, old_target_id)``.
+    """
+    deferred = []
+    for field in model._meta.get_fields():
+        if not isinstance(field, ForeignKey):
+            continue
+        if field.name not in row or row[field.name] is None:
+            continue
+        related = field.related_model
+        if related is None or related is model:
+            continue
+        target_key = f"{related._meta.app_label}.{related._meta.model_name}"
+        if order_index.get(target_key, -1) <= order_index.get(
+            model._meta.label_lower, -1
+        ):
+            continue
+        deferred.append((field.attname, target_key, row[field.name]))
+        row[field.name] = None
+    return deferred
+
+
+def _remap_fks(model, row: dict, pk_map: dict):
+    unchanged = True
+    for field in model._meta.get_fields():
+        if not isinstance(field, ForeignKey):
+            continue
+        if field.name not in row or row[field.name] is None:
+            continue
+        related = field.related_model
+        if related is None:
+            continue
+        target_key = f"{related._meta.app_label}.{related._meta.model_name}"
+        old_id = row[field.name]
+        new_id = pk_map.get(target_key, {}).get(old_id)
+        if new_id is not None:
+            row[field.name] = new_id
+            unchanged = False
+    return unchanged
+
+
+def _cleanup_orphan_fks(model, row: dict, pk_map: dict):
+    """Zera FKs opcionais que referenciam registros inexistentes nesta base
+    (ex.: categoria apontada por uma rule não veio no dump). Evita colisão com
+    IDs órfãos de outros usuários e validações "do mesmo usuário" falsas."""
+    for field in model._meta.get_fields():
+        if not isinstance(field, ForeignKey):
+            continue
+        if field.null is False:
+            continue
+        if field.name not in row or row[field.name] is None:
+            continue
+        related = field.related_model
+        if related is None:
+            continue
+        target_key = f"{related._meta.app_label}.{related._meta.model_name}"
+        mapping = pk_map.get(target_key, {})
+        if row[field.name] not in mapping.values():
+            row[field.name] = None
+
+
+def _create_row(user, model, row: dict, owner_field: str, pk_map: dict, key: str):
+    """Cria um objeto, garantindo ownership correto e campos válidos.
+
+    Retorna o objeto criado, ou ``None`` quando o registro já existe
+    idêntico para o mesmo dono (duplicado — não sobrescreve).
+    """
     valid = {f.name for f in model._meta.get_fields() if hasattr(f, "attname")}
     clean = {}
     for k, v in row.items():
@@ -244,25 +388,59 @@ def _create_row(user, model, row: dict, owner_field: str):
         return obj
 
     clean[owner_field] = user
+
+    # Idempotência: registros com a mesma chave única já existentes são
+    # ignorados (e referências a eles passam a apontar para a cópia existente).
+    old_pk = row.get("_pk")
+    existing = _find_existing(model, user, clean)
+    if existing is not None:
+        if old_pk is not None:
+            pk_map.setdefault(key, {})[old_pk] = existing.pk
+        return None
+
     obj = model(**clean)
     obj.save()
     return obj
 
 
-def _remap_fks(model, row: dict, pk_map: dict):
-    for field in model._meta.get_fields():
-        if not isinstance(field, ForeignKey):
+def _unique_keys_for(model):
+    """Chaves de unicidade (sem o campo owner, aplicado implicitamente)."""
+    keys = []
+    keys.extend(list(ut) for ut in model._meta.unique_together)
+    for const in getattr(model._meta, "constraints", []):
+        if isinstance(const, models.UniqueConstraint):
+            fields = list(const.expressions) if const.expressions else list(const.fields)
+            if fields:
+                keys.append([f for f in fields if isinstance(f, str)])
+    return keys
+
+
+def _find_existing(model, user, clean: dict):
+    """Localiza registro idêntico do mesmo dono (pelas chaves únicas)."""
+    keys = [k for k in _unique_keys_for(model) if k]
+    if not keys:
+        return None
+    for key in keys:
+        if "owner" in key:
+            key = [f for f in key if f != "owner"]
+        kwargs = {"owner": user}
+        for field_name in key:
+            field = model._meta.get_field(field_name)
+            attname = field.attname if isinstance(field, ForeignKey) else field_name
+            value = clean.get(attname)
+            if value is None and field.null:
+                kwargs[field_name] = None
+            elif value is None:
+                kwargs = None
+                break
+            else:
+                kwargs[field_name] = value
+        if kwargs is None:
             continue
-        if field.name not in row or row[field.name] is None:
-            continue
-        related = field.related_model
-        if related is None:
-            continue
-        target_key = f"{related._meta.app_label}.{related._meta.model_name}"
-        old_id = row[field.name]
-        new_id = pk_map.get(target_key, {}).get(old_id)
-        if new_id is not None:
-            row[field.name] = new_id
+        hit = model.objects.filter(**kwargs).first()
+        if hit is not None:
+            return hit
+    return None
 
 
 # --------------------------------------------------------------------------- #
